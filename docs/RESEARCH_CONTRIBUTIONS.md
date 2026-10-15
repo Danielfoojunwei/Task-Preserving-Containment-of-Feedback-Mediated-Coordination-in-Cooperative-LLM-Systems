@@ -2,7 +2,13 @@
 
 Prepared 15 October 2026 from completed studies and their interpretation audits. These are AI-assisted synthesis/review notes, not the team's submission report. “Our contribution” means original measurements, comparisons and artifacts from this project. It does not mean first-ever discovery of each mechanism. The retained targeted prior-art review found direct precedents for implicit channels, XOR composition, noninterference and coalition auditing; publication-level novelty remains unestablished.
 
-## Three supported empirical results
+## Central finding after held-out validation
+
+The presentation now centers one empirical result: **actual information and the security announcement independently affect receiver behavior**. Twenty fresh worlds and 1,320 new calls confirmed joint-metadata decoding against four ablations (all Holm-adjusted p<.004). The crossed announcement test showed 0/80 bets with an informative view described as uninformative, and 23/80 bets with a target-independent view described as informative. A behavioral success alone therefore did not identify whether the channel was closed. This is a measured synthetic result, not a new XOR theorem or a general collusion detector.
+
+See the [unified finding, exact results, error diagnostics and limitations](UNIFIED_RESEARCH_FINDING.md). Earlier findings below remain in the record as separate results; they are not one shared causal mechanism. The validation protocol was frozen before its own calls, after the earlier outcomes were known.
+
+## Earlier supported empirical results
 
 | Result | Evidence | Contribution and boundary |
 |---|---|---|
@@ -36,7 +42,7 @@ Prepared 15 October 2026 from completed studies and their interpretation audits.
 
 12. **Completion metrics can conceal duplicate work.** The original native tasks_done count included feasible duplicate assignments in 33/320 earlier episodes. Mean feasible claims 3.812 differed from distinct feasible tasks 3.709. In one historical comparison, duplicate penalties accounted for 6.00 of an 11.37 welfare contrast, but variable planning prefixes prevent a causal mediation claim. Report distinct work and penalty decomposition, rather than assuming completion counters represent unique output.
 
-## Reusable contribution
+## Supporting reproducibility artifacts
 
 The project operationalizes an evidence ladder:
 

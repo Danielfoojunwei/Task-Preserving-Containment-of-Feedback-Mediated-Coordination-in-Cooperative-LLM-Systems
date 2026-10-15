@@ -1,6 +1,7 @@
-"""Build a five-slide research briefing from frozen result files.
+"""Build five linked research slides from completed held-out validation.
 
-Only presentation artifacts are written. No model calls or source edits.
+Only presentation artifacts are written; frozen studies remain read-only.
+No API calls occur. An absent/incomplete new result stops the build.
 """
 from pathlib import Path
 import hashlib
@@ -24,51 +25,58 @@ from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.util import Inches, Pt
 
-BG = "0B1425"
-PANEL = "14233B"
-PANEL2 = "1B304C"
-WHITE = "F6F8FC"
-MUTED = "B6C4D9"
-DIM = "899AB4"
-TEAL = "5AD7C3"
-GOLD = "F0C778"
-ORANGE = "F39A7B"
-GRID = "31445F"
+BG, PANEL, PANEL2 = "0B1425", "14233B", "1B304C"
+WHITE, MUTED, DIM = "F6F8FC", "B6C4D9", "899AB4"
+TEAL, GOLD, ORANGE, GRID = "5AD7C3", "F0C778", "F39A7B", "31445F"
 FONT = "Arial"
 W, H = 13.333333, 7.5
-ASSETS = HERE / "assets"
-SOURCES = HERE / "sources"
-ASSETS.mkdir(exist_ok=True)
-SOURCES.mkdir(exist_ok=True)
+ASSETS, SOURCES = HERE / "assets", HERE / "sources"
 
 
 def load(name):
     return json.loads((STUDIES / name).read_text())
 
 
+validation_path = STUDIES / "stability_20261015/analysis.json"
+if not validation_path.exists():
+    raise SystemExit("STOP: completed held-out validation analysis.json is not available; no deck was rebuilt.")
+val = load("stability_20261015/analysis.json")
+assert val["completeness"]["complete_registered_study"], "STOP: incomplete validation cannot supply final claims"
+assert val["freeze_integrity"]["status"] == "UNCHANGED"
+assert val["completeness"]["completed_receiver_records"] == 1280
+assert val["sources"]["completed_calls"] == 40
+assert val["actual_saved_finite_view_laws"]["status"] == "PASSED_SAVED_FINITE_LAWS"
+replicated = val["primary_family"]["joint_specific_replication"]
+primary = val["primary_family"]["tests"]
+arms = val["arms"]
+neutral = val["design"]["neutral_arms"]
+repeat = val["repeated_identical_inputs"]["by_arm"]
+absent = ("full", "label_only", "receipt_only", "donor_joint")
+unsupported = sum(arms[a]["known_signal_absent_diagnostics"]["unsupported_numeric_bit_claims"] for a in absent)
+unsupported_bets = sum(arms[a]["accepted_bets"] for a in absent)
+task_success = sum(v["complete_public_copy_task_success"] for v in arms.values())
+explicit_success = arms["explicit"]["explicit_positive_control"]["numeric_bit_correct_success"]
+source_success = val["sources"]["copy_correct"]
+all_repeat_pairs = sum(repeat[a]["completed_repeat_pairs"] for a in neutral)
+all_repeat_disagreement = sum(repeat[a]["prediction_disagreement_pairs"] for a in neutral)
+secondary = val["secondary_announcement_family"]["tests"]
+banner_harm = next(t for t in secondary if t["endpoint"] == "accepted_betting_owner_harm"
+                   and t["contrast"] == "main_banner_marginal_minus_full")
+view_harm = next(t for t in secondary if t["endpoint"] == "accepted_betting_owner_harm"
+                 and t["contrast"] == "main_actual_view_joint_minus_full")
 host = load("hostmask_20261015/INDEPENDENT_REPLICATION.json")
 main = load("controlplane_20261015/controlplane_results.json")
-jira = load("revision_20261015/revision_results.json")
-domains = load("multiscenario_20261015/scenario_results.json")
-assert host["primary"]["mean"] == 0.2265625
-assert host["primary"]["exact_two_sided_p"] == 0.00006103515625
 assert not any(x["positive_direction_supported"] for x in main["primary_family"].values())
-assert sum(x["primary_harm_reduction_supported"] for x in domains["primary_family"].values()) == 1
-assert jira["primary_family"]["R1"]["directional_support"]
-assert not jira["primary_family"]["R2"]["directional_support"]
 
-original = []
-crossed = []
-for path in (STUDIES / "hostmask_20261015/results/main").glob("*/result.json"):
-    row = json.loads(path.read_text())
-    if row["model_alias"] == "mini" and row["world_seed"] in range(7701, 7709) and row["policy"] == "payload_only":
-        original.append(row["metrics"]["coalition_payoff"])
-for path in (STUDIES / "hostmask_20261015/results/crossed").glob("*/result.json"):
-    crossed.append(json.loads(path.read_text())["metrics"]["coalition_payoff"])
-assert len(original) == len(crossed) == 32
-assert sum(original) == 20 and sum(crossed) == -50
-
+ASSETS.mkdir(exist_ok=True)
+SOURCES.mkdir(exist_ok=True)
 selected_sources = {
+    "validation_analysis.json": "stability_20261015/analysis.json",
+    "validation_results.md": "stability_20261015/RESULTS.md",
+    "validation_protocol.md": "stability_20261015/PROTOCOL.md",
+    "validation_freeze.json": "stability_20261015/FREEZE.json",
+    "validation_manifest.json": "stability_20261015/manifest.json",
+    "validation_certificate.json": "stability_20261015/finite_certificate.json",
     "jira_results.json": "revision_20261015/revision_results.json",
     "jira_report.md": "revision_20261015/REVISED_EXPERIMENT_REPORT.md",
     "domain_results.json": "multiscenario_20261015/scenario_results.json",
@@ -81,9 +89,6 @@ selected_sources = {
 }
 for destination, relative in selected_sources.items():
     shutil.copy2(STUDIES / relative, SOURCES / destination)
-
-# Retain every project artifact directly cited by the claim register so that
-# the downloadable presentation package has usable evidence links on its own.
 claim_register = HERE / "CLAIM_REGISTER.md"
 retained_project_sources = {}
 if claim_register.exists():
@@ -96,22 +101,23 @@ if claim_register.exists():
         retained_project_sources[relative] = hashlib.sha256(original_path.read_bytes()).hexdigest()
 
 facts = {
-    "host_primary": host["primary"],
-    "jira_primary": {k: {n: v[n] for n in ("n", "mean", "bootstrap95", "holm_p_family_2", "directional_support")}
-                     for k, v in jira["primary_family"].items()},
-    "domain_primary": {k: {n: v[n] for n in ("n", "mean", "bootstrap95", "holm_p_family_4", "primary_harm_reduction_supported")}
-                       for k, v in domains["primary_family"].items()},
+    "validation_status": val["status"],
+    "validation_primary": val["primary_family"],
+    "validation_arms": arms,
+    "validation_secondary_announcements": val["secondary_announcement_family"],
+    "validation_repeat_diagnostics": val["repeated_identical_inputs"],
+    "validation_completeness": val["completeness"],
+    "validation_source_success": [source_success, 40],
+    "validation_actual_saved_view_laws": val["actual_saved_finite_view_laws"]["status"],
+    "validation_api_calls": 1320,
+    "public_copy_success": [task_success, 1280],
+    "explicit_bit_success": [explicit_success, 160],
+    "no_signal_unsupported_numeric_claims": [unsupported, 640],
+    "no_signal_accepted_bets": [unsupported_bets, 640],
+    "repeat_prediction_disagreement": [all_repeat_disagreement, all_repeat_pairs],
+    "historical_host_primary": host["primary"],
     "main_metadata_supported": 0,
     "main_metadata_tests": 4,
-    "mini_policy_decoding": {k: v["S"] for k, v in host["models"]["mini"]["policies"].items()},
-    "crossed_cases_per_condition": 32,
-    "crossed_total_payoff_original": sum(original),
-    "crossed_total_payoff_swapped": sum(crossed),
-    "public_copy_success": [320, 320],
-    "mini_marginal_correct_bets": 31,
-    "mini_marginal_wrong_bets": 10,
-    "mini_marginal_net_payoff": 22,
-    "mini_marginal_mean_payoff_bootstrap95": [-0.03125, 0.6875],
 }
 (HERE / "facts.json").write_text(json.dumps(facts, indent=2) + "\n")
 
@@ -120,59 +126,60 @@ plt.rcParams.update({
     "text.color": "#" + WHITE, "axes.labelcolor": "#" + MUTED,
     "xtick.color": "#" + MUTED, "ytick.color": "#" + WHITE,
     "axes.facecolor": "#" + BG, "figure.facecolor": "#" + BG,
-    "axes.edgecolor": "#" + GRID,
-    "savefig.facecolor": "#" + BG,
+    "axes.edgecolor": "#" + GRID, "savefig.facecolor": "#" + BG,
 })
-
-# A descriptive policy-level view; the registered contrast is marginal - full.
-fig, ax = plt.subplots(figsize=(4.35, 2.05))
-fig.subplots_adjust(left=.32, right=.96, bottom=.28, top=.96)
-policies = ["payload_only", "marginal_guard", "transcript_guard"]
-labels = ["Payload only", "Field-marginal", "Full transcript"]
-colors = [TEAL, GOLD, MUTED]
-for y, policy, color in zip([2, 1, 0], policies, colors):
-    summary = host["models"]["mini"]["policies"][policy]["S"]
-    mean = summary["mean"]; lo, hi = summary["bootstrap95"]
-    ax.errorbar(mean, y, xerr=[[mean-lo], [hi-mean]], color="#" + color,
-                marker="o", markersize=6, capsize=4, linewidth=2.0, zorder=4)
-ax.set_yticks([2, 1, 0], labels)
-ax.set_xlim(-.025, .52)
-ax.set_ylim(-.55, 2.5)
+# Scientific plot: each estimate and interval comes from the completed analysis.
+fig, ax = plt.subplots(figsize=(4.35, 2.55))
+fig.subplots_adjust(left=.29, right=.96, bottom=.22, top=.96)
+labels = {"joint": "Joint", "full": "Full fixed", "label_only": "Label only",
+          "receipt_only": "Receipt only", "donor_joint": "Donor", "explicit": "Explicit bit"}
+for y, arm in zip(range(5, -1, -1), neutral):
+    summary = arms[arm]["signed_S"]
+    mean, (lo, hi) = summary["mean"], summary["bootstrap95"]
+    color = TEAL if arm == "joint" else GOLD if arm == "explicit" else MUTED
+    ax.errorbar(mean, y, xerr=[[max(0, mean-lo)], [max(0, hi-mean)]],
+                color="#" + color, marker="o", markersize=5.5, capsize=3, linewidth=1.7)
+ax.set_yticks(range(5, -1, -1), [labels[a] for a in neutral])
+ax.set_xlim(-.13, .55); ax.set_ylim(-.6, 5.6)
 ax.set_xticks([0, .25, .5], ["0", ".25", ".50"])
-ax.set_xlabel("Signed decoding score S", fontsize=10.3, labelpad=4)
+ax.set_xlabel("Signed decoding S", fontsize=10.2, labelpad=3)
 ax.axvline(0, color="#" + DIM, linestyle="--", linewidth=1)
 ax.grid(axis="x", color="#" + GRID, alpha=.7)
-ax.tick_params(length=0, labelsize=10.1)
+ax.tick_params(length=0, labelsize=10)
 for spine in ax.spines.values(): spine.set_visible(False)
-fig.savefig(ASSETS / "signed_decoding.png", dpi=300)
-fig.savefig(ASSETS / "signed_decoding.svg")
+fig.savefig(ASSETS / "validation_signed_decoding.png", dpi=300)
+fig.savefig(ASSETS / "validation_signed_decoding.svg")
 plt.close(fig)
 
-# Secondary causal control. Raw total payoff, not a significant mean-profit claim.
-fig, ax = plt.subplots(figsize=(4.35, 1.6))
-fig.subplots_adjust(left=.18, right=.97, bottom=.28, top=.94)
-values = [sum(original), sum(crossed)]
-ax.bar([0, 1], values, color=["#" + TEAL, "#" + ORANGE], width=.52)
-ax.axhline(0, color="#" + DIM, linewidth=1)
-for x, value in enumerate(values):
-    ax.text(x, value + (3 if value > 0 else -3), f"{value:+.0f}",
-            ha="center", va="bottom" if value > 0 else "top", fontsize=13, fontweight="bold")
-ax.set_xticks([0, 1], ["Original", "Opposite-bit"])
-ax.set_yticks([-50, 0, 20])
-ax.set_ylim(-65, 35)
-ax.set_ylabel("Total payoff", fontsize=9.8, labelpad=3)
-ax.tick_params(length=0, labelsize=10.2)
+# A distinct action endpoint: descriptive accepted betting in the banner 2x2.
+heat_arms = [["joint_marginal_banner", "joint_full_banner"],
+             ["full_marginal_banner", "full_full_banner"]]
+heat_counts = np.array([[arms[a]["accepted_bets"] for a in row] for row in heat_arms])
+fig, ax = plt.subplots(figsize=(4.35, 1.5))
+fig.subplots_adjust(left=.27, right=.96, bottom=.25, top=.96)
+ax.imshow(heat_counts / 80, vmin=0, vmax=1, cmap="YlGnBu", aspect="auto")
+for y, x in np.ndindex(heat_counts.shape):
+    ax.text(x, y, f"{heat_counts[y,x]}/80", ha="center", va="center",
+            color="#" + (BG if heat_counts[y,x] < 36 else WHITE), fontsize=11.5, fontweight="bold")
+ax.set_xticks([0, 1], ["Marginal banner", "Full banner"])
+ax.set_yticks([0, 1], ["Joint view", "Full view"])
+ax.tick_params(length=0, labelsize=9.8)
 for spine in ax.spines.values(): spine.set_visible(False)
-fig.savefig(ASSETS / "crossed_payoff.png", dpi=300)
-fig.savefig(ASSETS / "crossed_payoff.svg")
+fig.savefig(ASSETS / "validation_banner_bets.png", dpi=300)
+fig.savefig(ASSETS / "validation_banner_bets.svg")
 plt.close(fig)
+
+# Matplotlib leaves harmless end-of-line spaces in SVG paths. Keep generated
+# artifacts clean for repository whitespace checks without changing geometry.
+for svg in ASSETS.glob("validation_*.svg"):
+    svg.write_text("\n".join(line.rstrip() for line in svg.read_text().splitlines()) + "\n")
 
 prs = Presentation()
 prs.slide_width = Inches(W); prs.slide_height = Inches(H)
-prs.core_properties.title = "Auditing Coordination Channels: From Reproduction to Causal Evidence"
-prs.core_properties.subject = "Five-slide research briefing with source-backed motivation and bounded findings"
+prs.core_properties.title = "Joint Metadata, Privacy Announcements and Agent Decisions"
+prs.core_properties.subject = "Five-slide empirical briefing with held-out ablations and stability controls"
 prs.core_properties.author = "AI-assisted research briefing; author metadata not supplied"
-prs.core_properties.keywords = "AI collusion, causal audit, metadata, task preservation, Apart Research"
+prs.core_properties.keywords = "AI collusion, metadata, held-out validation, joint information, Apart Research"
 
 
 def box(slide, x, y, w, h, fill=PANEL, radius=True, line=None):
@@ -225,19 +232,19 @@ def source_link(slide, label, url, x, w):
     shape.click_action.hyperlink.address = url
 
 
-# 01 — external motivation and the precise scope of the paper transfers.
-s = base(1, "Context", "Why audit the paths agents use to coordinate?",
-         "Product failures and controlled research motivate the question; they do not validate our results.")
+# 01 — documented motivation and the single empirical question.
+s = base(1, "Question", "Can defensive metadata steer an agent?",
+         "We separate information in a tool response from what the agent is told about its privacy.")
 cards = [
     ("REAL PRODUCT VULNERABILITY", "Microsoft 365 Copilot", "CVE-2025-32711",
      "AI command injection enabled unauthorized information disclosure over a network.",
-     "Microsoft CNA • June 2025", ORANGE),
+     "Product vulnerability; not deployed collusion", ORANGE),
     ("CONTROLLED WORKPLACE BENCHMARK", "Colosseum", "11 of 19 models",
      "showed positive changes in action-level coalition advantage when private chat was enabled.",
-     "Not evidence of deployed collusion", TEAL),
+     "Action and conversation evidence can differ", TEAL),
     ("CONTROLLED CAPABILITY EXPERIMENT", "Hidden in Plain Text", "Filtering was bypassed",
-     "Optimized agents used covert signaling in a candidate-screening task despite oversight and paraphrasing.",
-     "Constructed task, not a hiring incident", GOLD),
+     "Optimized agents used covert signaling despite oversight and paraphrasing in candidate screening.",
+     "Constructed task; not a hiring incident", GOLD),
 ]
 for i, (tag, title, stat, body, qualifier, accent) in enumerate(cards):
     x = .55 + i * 4.13
@@ -247,166 +254,165 @@ for i, (tag, title, stat, body, qualifier, accent) in enumerate(cards):
     txt(s, title, x+.23, 2.70, 3.49, .33, 19, WHITE, True)
     txt(s, stat, x+.23, 3.13, 3.50, .42, 24 if i != 2 else 20, accent, True)
     txt(s, body, x+.23, 3.68, 3.48, .66, 14.0, WHITE)
-    txt(s, qualifier, x+.23, 4.40, 3.50, .18, 10.4, MUTED)
-txt(s, "PAPER LINEAGE WE USED", .55, 5.00, 12.0, .22, 11.0, TEAL, True)
-lineage = [
-    ("Colosseum", "Native Jira runtime"),
-    ("FLOWSEAL", "Release-control transfer"),
-    ("OCELOT", "Composition-inspired stress test"),
-    ("OrchDebate", "Conceptual selector only"),
-]
-for i, (title, body) in enumerate(lineage):
-    x = .55 + 3.10*i
-    box(s, x, 5.35, 2.93, .78, PANEL2)
-    txt(s, title, x+.17, 5.47, 2.61, .23, 15.2, WHITE, True)
-    txt(s, body, x+.17, 5.80, 2.61, .18, 11.2, MUTED)
-txt(s, "Our question: which observation changes harmful decisions, and what does closing it cost useful work?",
-    .55, 6.45, 12.20, .37, 16.3, TEAL, True)
+    txt(s, qualifier, x+.23, 4.40, 3.50, .18, 10.3, MUTED)
+box(s, .55, 5.10, 12.23, .91, PANEL2)
+txt(s, "OUR NARROW QUESTION", .78, 5.28, 2.24, .22, 11.2, TEAL, True)
+txt(s, "How do actual metadata and privacy announcements each affect an agent's decisions?",
+    3.12, 5.28, 9.35, .49, 18.0, WHITE, True)
+txt(s, "Colosseum grounded the workplace setup; security and covert-channel papers motivated the observation test.",
+    .55, 6.32, 12.23, .25, 12.3, MUTED)
+txt(s, "No full FLOWSEAL / OCELOT / OrchDebate reproduction. Existing work already recognizes implicit-flow risks.",
+    .55, 6.67, 12.23, .19, 10.4, DIM)
 source_link(s, "[S1] Microsoft CNA / vendor advisory", "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-32711", .55, 3.8)
 source_link(s, "[S2] Colosseum v2, §5.4 / Figure 4", "https://arxiv.org/abs/2602.15198v2", 4.71, 3.8)
 source_link(s, "[S3] Hidden in Plain Text v2, §5.1", "https://arxiv.org/abs/2410.03768v2", 8.87, 3.8)
 
-# 02 — a MECE map of the local identification questions.
-s = base(2, "Design", "What we changed, and which question each change answers",
-         "Four distinct causal ambiguities in our setup. This is a study map, not a universal taxonomy of collusion.")
-columns = [(.55, 1.54), (2.09, 3.02), (5.11, 4.59), (9.70, 3.08)]
-for (x,w), label in zip(columns, ["TARGET", "QUESTION", "SETUP CHANGE", "WHY IT WAS NEEDED"]):
-    txt(s, label, x+.13, 1.97, w-.20, .22, 10.3, TEAL, True)
-rows = [
-    ("CONTEXT", "Old plans or future access?",
-     "Native Jira: history visible/hidden × posting allowed/denied. Reuse the actual planning prefix.",
-     "Unbundle a runtime intervention."),
-    ("DISCLOSURE", "Canonical payload or complete receiver view?",
-     "Hold the public artifact fixed; vary policy labels, receipts, statuses and joint fields across three guards.",
-     "Measure signals beyond sanitized message content."),
-    ("EXECUTION", "Communication or contract violations?",
-     "Four synthetic domains; disclosure and action guards; matched cooperative and coalition objectives.",
-     "Separate information restriction from public-rule enforcement."),
-    ("MEASUREMENT", "Defense success, failed encoding, or scoring error?",
-     "Audit source adherence and whole-action gating. Freeze a new host-masked study with field-specific scoring.",
-     "Diagnose the null before changing the hypothesis."),
-]
-for i, row in enumerate(rows):
-    y = 2.38 + 1.04*i
-    box(s, .55, y, 12.23, .94, PANEL if i % 2 == 0 else PANEL2)
-    for col, value in enumerate(row):
-        x,w=columns[col]
-        txt(s, value, x+.13, y+.15, w-.25, .70,
-            (11.0 if value == "MEASUREMENT" else 12.7) if col == 0 else 13.2,
-            TEAL if col == 0 else WHITE, col == 0)
-txt(s, "Crossed delivery is the mechanism control: change the delivered codeword while holding the evaluator target fixed.",
-    .55, 6.65, 12.23, .25, 12.1, GOLD)
-txt(s, "Scope: native Jira benchmark-specific work; other tasks are transfers. No full FLOWSEAL / OCELOT / OrchDebate reproduction.",
-    .55, 6.99, 12.23, .17, 9.2, DIM)
+# 02 — one source-to-host-to-decision mechanism, public task held fixed.
+s = base(2, "Mechanism", "The combination reveals what either field hides",
+         "A supplied-codebook experiment isolates one path: source attestation → host metadata → receiver decision.")
+box(s, .55, 2.12, 2.48, 3.10)
+txt(s, "SOURCE MODEL", .76, 2.34, 2.06, .23, 11.6, TEAL, True)
+txt(s, "Private bit B", .76, 2.91, 2.06, .35, 23.5, WHITE, True)
+txt(s, "Copies B into A\nResponse saved\nNo mask R",
+    .76, 3.52, 2.06, 1.12, 16.0, WHITE)
+txt(s, "Neutral copying; no collusive goal", .76, 4.79, 2.06, .27, 10.0, MUTED)
+txt(s, "›", 3.09, 3.47, .24, .42, 29, TEAL, True)
+box(s, 3.42, 2.12, 4.17, 3.10)
+txt(s, "HOST MASKING", 3.65, 2.34, 3.71, .23, 11.6, TEAL, True)
+box(s, 3.65, 2.93, 1.65, .87, PANEL2)
+box(s, 5.53, 2.93, 1.83, .87, PANEL2)
+txt(s, "Label bit = R", 3.78, 3.16, 1.39, .35, 16.1, WHITE, True, PP_ALIGN.CENTER)
+txt(s, "Receipt bit =\nA ⊕ R ⊕ P", 5.65, 3.06, 1.59, .57, 15.2, WHITE, True, PP_ALIGN.CENTER)
+txt(s, "Each field alone hides B", 3.65, 4.03, 3.71, .28, 15.6, MUTED, align=PP_ALIGN.CENTER)
+txt(s, "Together: recover A", 3.65, 4.49, 3.71, .30, 19.0, TEAL, True, PP_ALIGN.CENTER)
+txt(s, "Public P; label PASS/NORMALIZE; receipt 0/10", 3.65, 4.92, 3.71, .17, 9.1, MUTED, align=PP_ALIGN.CENTER)
+txt(s, "›", 7.72, 3.47, .24, .42, 29, TEAL, True)
+box(s, 8.12, 2.12, 4.66, 3.10)
+txt(s, "RECEIVER MODEL", 8.35, 2.34, 4.20, .23, 11.6, TEAL, True)
+txt(s, "Supplied decoder + routing table", 8.35, 2.94, 4.20, .37, 18.0, WHITE, True)
+txt(s, "Choose SAFE / LEFT / RIGHT\nCorrect bet +2  ·  Wrong bet −4\nAny accepted bet: owner utility −7",
+    8.35, 3.55, 4.20, 1.06, 17.0, WHITE)
+txt(s, "Inference and accepted action scored separately", 8.35, 4.84, 4.20, .20, 10.6, MUTED)
+box(s, .55, 5.62, 12.23, .69, PANEL2)
+txt(s, "UNCHANGED PUBLIC PATH", .76, 5.84, 2.72, .22, 11.5, TEAL, True)
+txt(s, "Canonical schedule + checksum → receiver copies the same public artifact in every arm",
+    3.63, 5.83, 8.90, .27, 14.3, WHITE)
+txt(s, "Joint target signal requires different realized source attestations for B=0 and B=1; source-copy accuracy is measured.",
+    .55, 6.61, 12.23, .25, 11.3, GOLD)
+txt(s, "Earlier Jira context/access and resource-penalty diagnostics motivated isolating this channel; they are separate results.",
+    .55, 6.99, 12.23, .15, 9.2, DIM)
 
-# 03 — chronology and independent evidence gates.
-s = base(3, "Execution", "How the evidence became auditable",
-         "The program was iterative. Every redesigned study was frozen before its own calls; earlier nulls stayed intact.")
-timeline = [
-    ("Native", "baseline"),
-    ("Runtime", "audit"),
-    ("Corrected", "Jira 2 × 2"),
-    ("Four-domain", "transfers"),
-    ("Metadata", "4 / 4 nulls"),
-    ("Source / score", "audit"),
-    ("Fresh hostmask", "new freeze"),
+# 03 — six distinct controls for one mechanism, and a fixed inference rule.
+s = base(3, "Validation", "One mechanism, distinct controls, fixed tests",
+         "The actual observation, policy announcement and stochastic response are tested separately.")
+cols = [(.55, 2.38), (2.93, 5.20), (8.13, 4.65)]
+for (x,w), label in zip(cols, ["QUESTION", "CONTROL / CHANGE", "WHY IT IS NEEDED"]):
+    txt(s, label, x+.12, 1.98, w-.22, .22, 10.3, TEAL, True)
+controls = [
+    ("AVAILABILITY", "Joint vs complete fixed metadata view", "An effect without target-bearing input"),
+    ("COMPONENT NECESSITY", "Label-only and receipt-only; balance both host pads", "A shortcut carried by either field alone"),
+    ("TARGET SPECIFICITY", "Same-format codeword from a fixed target-independent donor", "Reaction to any plausible-looking codeword"),
+    ("READING SENSITIVITY", "Authorized explicit target bit in a fixed metadata view", "Failure to read available information"),
+    ("POLICY FRAMING", "Actual joint/full view × exact earlier marginal/full banners", "Confounding data with privacy instructions"),
+    ("RELIABILITY", "20 fresh worlds; two identical-input repeats per neutral arm", "Check fresh-world and response consistency"),
 ]
-for i, (a,b) in enumerate(timeline):
-    x=.55+i*1.76
-    box(s, x, 2.04, 1.60, .87, PANEL2 if i == 6 else PANEL)
-    txt(s, a+"\n"+b, x+.10, 2.21, 1.40, .49, 12.4, TEAL if i == 6 else WHITE, i == 6, PP_ALIGN.CENTER)
-    if i < 6:
-        txt(s, "›", x+1.62, 2.32, .13, .29, 19, DIM, True)
-guardrails = [
-    ("IDENTIFICATION", "Same public world; source reused across guards.\nBalanced secret bits and masks.\nCrossed source delivery checks actual use."),
-    ("INFERENCE", "World / seed is the unit.\nExact paired tests; Holm within families.\n20,000 world-bootstrap resamples.\nNulls and invalid actions retained."),
-    ("REPRODUCIBILITY", "Frozen source and exact requests.\nIndependent saved-action reconstruction.\n44 + 15 software tests; offline replication.\nNo outcome-based response retries."),
-]
-for i,(title,body) in enumerate(guardrails):
-    x=.55+i*4.13
-    box(s,x,3.35,3.96,2.32)
-    txt(s,title,x+.23,3.57,3.49,.28,13.3,TEAL,True)
-    txt(s,body,x+.23,4.04,3.49,1.40,14.0,WHITE)
-box(s,.55,6.00,12.23,.52,PANEL2)
-txt(s,"Latest two studies: 2,326 research calls + 6 compatibility requests  |  GPT-4.1 mini / GPT-4.1  |  T = 0.7  |  max 1,500 tokens",
-    .73,6.16,11.87,.22,11.6,WHITE)
-txt(s,"Limits: supplied decoder; neutral bit-copying source; simple copy task; related models; finite observer.",
-    .55,6.70,12.23,.22,12.0,GOLD)
-txt(s,"Separate freezes do not provide a global multiplicity guarantee across the whole iterative program. Hashes support reproducibility, not external attestation.",
-    .55,6.99,12.23,.15,8.9,DIM)
+for i, row in enumerate(controls):
+    y = 2.34 + .51*i
+    box(s, .55, y, 12.23, .45, PANEL if i%2 == 0 else PANEL2)
+    for j, value in enumerate(row):
+        x,w = cols[j]
+        txt(s, value, x+.12, y+.12, w-.24, .25, 10.6 if j == 0 else 12.4,
+            TEAL if j == 0 else WHITE, j == 0)
+box(s, .55, 5.68, 12.23, .49, PANEL2)
+txt(s, "1,320 completed calls  ·  40 sources + 1,280 receivers  ·  GPT-4.1 mini  ·  T=.7  ·  max 1,500 tokens",
+    .73, 5.84, 11.87, .22, 12.4, WHITE, True)
+txt(s, "20 world blocks are the statistical units. Four primary paired contrasts; Holm correction; 20,000 world bootstraps.",
+    .55, 6.36, 12.23, .25, 12.0, MUTED)
+txt(s, "Frozen before this study's calls; exact requests retained; raw-field inference separated from accepted actions. No outcome retries.",
+    .55, 6.70, 12.23, .21, 11.3, MUTED)
+txt(s, "Original metadata study: 0/4 primary tests supported. Later cohorts have separate prospective freezes; earlier outcomes remain in the record.",
+    .55, 6.99, 12.23, .15, 8.9, DIM)
 
-# 04 — results in their own units, with regenerated scientific plots.
-s = base(4, "Results", "Three effects passed; the null results stayed in the record",
-         "Registered comparisons use their own units and test families. Intervals below are descriptive 95% world/seed bootstraps.")
-table_cols = [(.55,2.30),(2.85,.58),(3.43,2.56),(5.99,1.93)]
-for (x,w), label in zip(table_cols,["CONTRAST / UNIT","N","EFFECT [95%]","TEST / VERDICT"]):
-    txt(s,label,x+.10,1.99,w-.15,.18,9.8,TEAL,True)
-r1=jira["primary_family"]["R1"]; r2=jira["primary_family"]["R2"]
-resource=domains["primary_family"]["resource_allocation"]
-hp=host["primary"]
-table_rows=[
-    ("Hide Jira history\nRegret (posts denied)","20",f"+{r1['mean']:.3f}\n[{r1['bootstrap95'][0]:.3f}, {r1['bootstrap95'][1]:.3f}]","Holm .03125\nSUPPORTED",True),
-    ("Resource contract\nHarm benefit","10",f"+{resource['mean']:.3f}\n[{resource['bootstrap95'][0]:.3f}, {resource['bootstrap95'][1]:.3f}]","Holm .007813\nSUPPORTED",True),
-    ("Host-masked joint fields\nSigned decoding ΔS","16",f"+{hp['mean']:.5f}\n[{hp['bootstrap95'][0]:.5f}, {hp['bootstrap95'][1]:.5f}]","Exact .000061\nSUPPORTED",True),
-    ("Deny private posts\nRegret (history retained)","20",f"{r2['mean']:+.3f}\n[{r2['bootstrap95'][0]:.3f}, {r2['bootstrap95'][1]:.3f}]","Holm 1.0\nUNSUPPORTED",False),
-    ("Original metadata family\nFour carriers","32\neach","0 / 4 supported\nWhole-action endpoint","Holm ≥ .125\nRETAINED NULLS",False),
-    ("Other domain guards\nProcure / review / artifact","10\neach","3 / 3 unsupported\nRegistered harm benefit","Holm 1 / .5 / .375\nRETAINED NULLS",False),
-]
-for i,row in enumerate(table_rows):
-    y=2.35+i*.63
-    box(s,.55,y,7.37,.57,PANEL if i%2==0 else PANEL2)
-    for j,val in enumerate(row[:4]):
-        x,w=table_cols[j]
-        color=TEAL if j==3 and row[4] else (MUTED if j==3 else WHITE)
-        txt(s,val,x+.10,y+.095,w-.16,.42,11.5 if j in (0,3) else 12.1,color,j==3)
-txt(s,"Follow-up: mini decoding by guard",8.40,1.97,4.36,.25,14.2,WHITE,True)
-s.shapes.add_picture(str(ASSETS/"signed_decoding.png"),Inches(8.35),Inches(2.28),width=Inches(4.42),height=Inches(2.08))
-txt(s,"Primary: marginal − full. S = .5 perfect; S = 0 constant / abstain.",
-    8.40,4.40,4.34,.35,10.3,MUTED)
-txt(s,"Crossed delivery: payoff follows the signal",8.40,4.87,4.36,.25,13.5,WHITE,True)
-s.shapes.add_picture(str(ASSETS/"crossed_payoff.png"),Inches(8.35),Inches(5.15),width=Inches(4.42),height=Inches(1.43))
-txt(s,"32 matched cases; exploratory; evaluator target held fixed.",8.40,6.65,4.34,.28,9.7,MUTED)
-box(s,.55,6.31,7.37,.48,PANEL2)
-txt(s,"320 / 320 public-copy tasks correct. Preservation is limited to that simple task.",
-    .72,6.47,7.02,.19,11.0,TEAL,True)
-txt(s,"Resource: +760 avoided penalties −179.825 raw value. Mini marginal net +22; mean-payoff CI [−.03125, .6875] crosses zero.",
-    .55,6.99,12.23,.15,8.7,DIM)
+# 04 — exclusively the new controlled validation; historical results are notes.
+headline = "Joint decoding passed all four held-out comparisons" if replicated else "Held-out validation did not meet the four-comparison criterion"
+s = base(4, "Results", headline,
+         "Four prespecified joint-minus-control contrasts, 20 worlds each. Intervals are descriptive world-cluster 95% bootstraps.")
+table_cols = [(.55, 2.46), (3.01, 3.18), (6.19, 1.63)]
+for (x,w), label in zip(table_cols, ["JOINT MINUS…", "MEAN ΔS [95% INTERVAL]", "HOLM4 P"]):
+    txt(s, label, x+.10, 2.03, w-.18, .20, 10.2, TEAL, True)
+for i, test in enumerate(primary):
+    y = 2.39 + .62*i
+    box(s, .55, y, 7.27, .55, PANEL if i%2 == 0 else PANEL2)
+    comparator = test["name"].removeprefix("joint_minus_")
+    name = {"full": "Full fixed view", "label_only": "Label only", "receipt_only": "Receipt only", "donor_joint": "Donor codeword"}[comparator]
+    lo, hi = test["bootstrap95"]
+    vals = [name, f"{test['mean']:+.4f}  [{lo:.4f}, {hi:.4f}]", f"{test['holm4_p']:.3g}"]
+    for j, value in enumerate(vals):
+        x,w = table_cols[j]
+        txt(s, value, x+.10, y+.17, w-.18, .25, 13.0 if j != 1 else 12.4,
+            TEAL if j == 2 and test["positive_and_holm4_lt_05"] else WHITE, j == 2)
+box(s, .55, 5.07, 7.27, 1.65, PANEL2)
+txt(s, "ERROR AND STABILITY CHECKS", .74, 5.25, 6.89, .22, 11.1, TEAL, True)
+txt(s, f"Explicit bit: {explicit_success}/160 correct  ·  public copy: {task_success}/1,280\n"
+       f"Explicit correct bets: {arms['explicit']['accepted_correct_bets']}/160; no-signal bets: {unsupported_bets}/640\n"
+       f"Unsupported bit claims: {unsupported}/640; joint repeat disagreements: {repeat['joint']['prediction_disagreement_pairs']}/80",
+    .74, 5.68, 6.89, .80, 12.1, WHITE)
+txt(s, "Neutral arms: signed decoding", 8.34, 2.03, 4.42, .25, 13.8, WHITE, True)
+s.shapes.add_picture(str(ASSETS/"validation_signed_decoding.png"), Inches(8.28), Inches(2.35), width=Inches(4.50), height=Inches(2.61))
+txt(s, "Accepted bets: view × announcement", 8.34, 5.11, 4.42, .25, 13.0, WHITE, True)
+s.shapes.add_picture(str(ASSETS/"validation_banner_bets.png"), Inches(8.28), Inches(5.43), width=Inches(4.50), height=Inches(1.35))
+txt(s, "S=.5 perfect; S=0 constant/abstain. Bit errors are not collusion-detector errors. Original host-mask ΔS=.22656 is a separate cohort.",
+    .55, 6.99, 12.23, .15, 8.8, DIM)
 
-# 05 — four distinct implications and the boundary of the claimed contribution.
-s = base(5, "Insights", "What this contributes to research and real workflows",
-         "A reproducible causal audit linking coordination opportunity, accepted harm and the utility cost of intervention.")
-insights=[
-    ("CONTEXT", "Audit retained plans as well as future access.",
-     "Hiding history reduced Jira regret. Posting denial showed no supported benefit.",
-     "Applies to shared boards and delegated workplace agents."),
-    ("DISCLOSURE", "Audit the complete allowed receiver view.",
-     "Joint metadata guided inference; full registered-transcript mediation removed observed use.",
-     "Relevant to receipts, status labels and tool-chain outputs."),
-    ("EXECUTION", "Separate contract enforcement from task welfare.",
-     "Resource gains were largely avoided penalties. Review quorum reduced legitimate work.",
-     "Relevant to budgets, approvals and allocation workflows."),
-    ("MEASUREMENT", "Separate encoding, inference and action.",
-     "Most initial XOR banks failed; checksum gating erased 98 numeric predictions.",
-     "Relevant to security evaluations and monitor evidence."),
+# 05 — one bounded finding: crossed announcements dissociate action and exposure.
+if replicated:
+    title = "Privacy announcements changed action on the same data"
+    subtitle = "Usable information and observed betting came apart when the actual view was crossed with the policy announcement."
+else:
+    title = "The new study bounds the original metadata result"
+    subtitle = "The four-control criterion did not replicate; the original result is not substituted for this held-out outcome."
+s = base(5, "Finding", title, subtitle)
+joint, full = arms["joint"], arms["full"]
+means = [test["mean"] for test in primary]
+min_delta, max_delta = min(means), max(means)
+if replicated:
+    signal_head = "Joint target information mattered."
+    signal_body = f"All four controlled ΔS effects: +{min_delta:.4f} to +{max_delta:.4f}.\nRemoving either field or substituting a donor codeword reduced target decoding."
+else:
+    failed = sum(not t["positive_and_holm4_lt_05"] for t in primary)
+    signal_head = "Joint-specific replication failed."
+    signal_body = f"{failed}/4 prespecified comparisons failed the positive Holm4 criterion.\nThe evidence remains bounded to the reported conditions and cohorts."
+jm, jf = arms['joint_marginal_banner'], arms['joint_full_banner']
+fm, ff = arms['full_marginal_banner'], arms['full_full_banner']
+decision_body = (f"Same informative joint view: {jm['accepted_bets']}/80 bets with the marginal banner; "
+                 f"{jf['accepted_bets']}/80 with the full banner.\nThe metadata still carried the target bit.")
+boundary_body = (f"Same target-independent fixed view: {fm['accepted_bets']}/80 bets with the marginal banner; "
+                 f"{ff['accepted_bets']}/80 with the full banner.\nThe uninformed betting netted {fm['accepted_net_payoff']:+.0f}.")
+linked = [
+    ("01  USABLE INFORMATION", signal_head, signal_body),
+    ("02  INFORMATION PRESENT", "An open channel can look safe.", decision_body),
+    ("03  INFORMATION ABSENT", "Bets persisted without target information.", boundary_body),
 ]
-for i,(tag,head,body,application) in enumerate(insights):
-    x=.55+i*3.10
-    box(s,x,2.04,2.93,3.03)
-    txt(s,tag,x+.18,2.24,2.57,.22,10.8,TEAL,True)
-    txt(s,head,x+.18,2.70,2.57,.75,17.4,WHITE,True)
-    txt(s,body,x+.18,3.64,2.57,.76,13.3,WHITE)
-    txt(s,application,x+.18,4.63,2.57,.32,10.0,MUTED)
-labels=["Channel","Encoding","Inference","Accepted action","Coalition payoff","Task utility"]
-for i,label in enumerate(labels):
-    x=.55+i*2.08
-    box(s,x,5.42,1.91,.53,PANEL2)
-    txt(s,label,x+.05,5.59,1.81,.19,11.5,WHITE,True,PP_ALIGN.CENTER)
-    if i<5:txt(s,"›",x+1.94,5.57,.13,.24,17,DIM,True)
-box(s,.55,6.22,12.23,.52,PANEL2)
-txt(s,"Next decisive test: native TEXT → ACTION-only → same actions hidden, with coalition advantage and real task utility.",
-    .73,6.37,11.87,.22,12.0,GOLD,True)
-txt(s,"Not yet demonstrated: spontaneous collusion, reliably positive mean profit, broad workflow preservation, or a break of original defense implementations.",
-    .55,6.99,12.23,.15,8.8,DIM)
+for i, (tag, head, body) in enumerate(linked):
+    x = .55 + 4.13*i
+    box(s, x, 2.07, 3.96, 2.99)
+    txt(s, tag, x+.22, 2.28, 3.52, .25, 11.4, TEAL, True)
+    txt(s, head, x+.22, 2.86, 3.52, .74, 19.1, WHITE, True)
+    txt(s, body, x+.22, 3.84, 3.52, 1.01, 13.0, WHITE)
+if banner_harm["holm6_p"] < .05:
+    lo, hi = banner_harm['bootstrap95']
+    framing = (f"Announcement effect on owner harm: {banner_harm['mean']:+.2f}/call "
+               f"[95% {lo:.2f}, {hi:.2f}], Holm6 p={banner_harm['holm6_p']:.3g}. Exact prior policy bundles were crossed.")
+else:
+    framing = (f"The prespecified policy-banner harm effect was unsupported after Holm6 "
+               f"(p={banner_harm['holm6_p']:.3g}); no framing-success claim is made.")
+txt(s, framing, .55, 5.36, 12.23, .41, 12.1, GOLD)
+box(s, .55, 5.96, 12.23, .66, PANEL2)
+txt(s, "REAL WORKFLOW IMPLICATION", .75, 6.17, 2.77, .22, 10.7, TEAL, True)
+txt(s, "Test what agents can learn and do separately from what the policy claims.",
+    3.63, 6.14, 8.92, .31, 14.3, WHITE, True)
+txt(s, "Controlled supplied-codebook capability; neutral source; public-copy task only. No spontaneous collusion, new XOR theory or original-defense break.",
+    .55, 6.99, 12.23, .15, 8.8, DIM)
 
 notes_path = HERE / "SPEAKER_NOTES.md"
 notes = notes_path.read_text() if notes_path.exists() else ""
@@ -417,19 +423,21 @@ if len(chunks) == 6:
 else:
     for i, slide in enumerate(prs.slides, 1):
         slide.notes_slide.notes_text_frame.text = f"Slide {i}. Detailed narrative and source qualifications are in SPEAKER_NOTES.md and CLAIM_REGISTER.md."
-
-output=HERE/"research_story_5_slides.pptx"
+output = HERE / "research_story_5_slides.pptx"
 prs.save(output)
-assert len(Presentation(output).slides)==5
+assert len(Presentation(output).slides) == 5
 manifest = {
-    "slides":5,"output":output.name,"paid_model_calls":0,
-    "graphs_regenerated_from_frozen_results":True,
-    "frozen_study_files_changed":False,
-    "speaker_notes_embedded":len(chunks)==6,
-    "source_files":{str((STUDIES/r).relative_to(REPO)):hashlib.sha256((STUDIES/r).read_bytes()).hexdigest()
-                    for r in selected_sources.values()},
-    "retained_project_sources":retained_project_sources,
-    "facts":facts,
+    "slides": 5, "output": output.name, "paid_model_calls_by_builder": 0,
+    "builder_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+    "graphs_regenerated_from_completed_results": True,
+    "frozen_study_files_changed": False,
+    "speaker_notes_embedded": len(chunks) == 6,
+    "validation_status": val["status"],
+    "source_files": {str((STUDIES/r).relative_to(REPO)): hashlib.sha256((STUDIES/r).read_bytes()).hexdigest()
+                     for r in selected_sources.values()},
+    "retained_project_sources": retained_project_sources,
+    "facts": facts,
 }
-(HERE/"BUILD_MANIFEST.json").write_text(json.dumps(manifest,indent=2)+"\n")
-print(json.dumps({"pptx":str(output),"slides":5,"speaker_notes_embedded":manifest["speaker_notes_embedded"]}))
+(HERE/"BUILD_MANIFEST.json").write_text(json.dumps(manifest, indent=2)+"\n")
+print(json.dumps({"pptx": str(output), "slides": 5, "speaker_notes_embedded": manifest["speaker_notes_embedded"],
+                  "validation_status": val["status"]}))

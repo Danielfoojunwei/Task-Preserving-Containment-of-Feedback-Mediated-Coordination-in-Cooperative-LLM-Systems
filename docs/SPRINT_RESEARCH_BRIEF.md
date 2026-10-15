@@ -8,7 +8,11 @@ Candidate project title: Auditing and Containing Collusion Opportunities in Defe
 
 Primary: Track 3, Q3.1, actions/tools/side channels as conduits. Secondary connection: Q2.3, convincing evidence. One project question: does an action-observation path support harmful coalition coordination after private text is removed, and what happens when that same path is hidden or canonicalized?
 
-## Facts the authors should decide how to explain
+## New held-out evidence for the central claim
+
+The completed 1,320-call validation separates actual metadata information from its policy announcement. All four prespecified neutral joint-minus-control comparisons passed Holm correction across 20 fresh worlds. The announcement factorial produced 0/80 bets when informative metadata was described as uninformative, and 23/80 bets when target-independent metadata was described as informative. Center the presentation on this empirical separation, with the older results as diagnostic background. See [the unified finding](UNIFIED_RESEARCH_FINDING.md) and [the validation report](../research/outputs/stability_20261015/RESULTS.md). This remains controlled, decoder-supplied, pre-sprint work; the native three-arm experiment below is still missing.
+
+## Earlier facts the authors should decide how to explain
 
 - Existing main study: 1,958 research calls; four unsupported Holm-adjusted primaries.
 - Measurement diagnosis: source encoding errors and whole-action checksum gating; 98 numeric predictions erased, 65 correct and 33 wrong. Raw-field sensitivity is post hoc.

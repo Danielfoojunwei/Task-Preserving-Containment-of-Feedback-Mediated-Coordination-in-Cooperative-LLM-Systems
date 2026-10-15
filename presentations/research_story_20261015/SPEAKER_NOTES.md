@@ -1,105 +1,103 @@
 # Five-slide research story — speaker notes
 
-Prepared 15 October 2026. These are AI-assisted presentation working notes for team review, not the team's own submission report. Source IDs resolve in `CLAIM_REGISTER.md`. The five slides separate motivation, experimental changes, empirical identification, results and interpretation; they are not five claims of equal evidentiary strength.
+Prepared 15 October 2026. AI-assisted presentation working material for team review. Source IDs resolve in `CLAIM_REGISTER.md`. The five slides form one argument: question → mechanism → controls → results → finding. The current validation was fixed before its own calls, after earlier outcomes were known; it was not an original plan for the entire research program.
 
-## Slide 1 — From plausible coordination to a testable research question
-
-**Narration**
-
-We began with a practical concern: organizations increasingly delegate work to agents that share tools, state and feedback. An apparently clean final answer does not describe everything a downstream agent observes. A Microsoft-published example makes the information-flow risk concrete: CVE-2025-32711 describes AI command injection in Microsoft 365 Copilot allowing unauthorized information disclosure over a network, with a CVSS 3.1 score of 9.3. This is a disclosed product vulnerability, not evidence of a known victim breach, and not collusion [S1].
-
-The collusion literature gives the second half of the motivation. In Colosseum's Emergent condition, 11 of 19 evaluated models had positive action-based coalition advantage, while two showed a conversation-judge increase of at least one point. These are different thresholds, not a significance count or a judge error rate. The disagreement motivates examining executed outcomes [S2]. Mathew and colleagues demonstrate optimized steganographic communication in laboratory candidate screening; this is an experimental warning, not a deployed hiring incident [S3].
-
-We therefore asked a narrower question: when agents have conflicting objectives, which parts of their observations actually enable harmful coordination, and which restrictions preserve useful work? Colosseum supplied our pinned native Jira runtime. FLOWSEAL motivated enforcement at release boundaries; OCELOT motivated attention to combined and cumulative information. Our orchestration selector was only conceptually inspired by OrchDebate. We did not reproduce or break those original defenses [S4].
-
-Our first feedback hypothesis was unsupported. Inspecting the runtime showed that removing communication access also removed old private messages. That was an identification problem in our experiment, not proof that prior papers missed memory. It changed our objective from accumulating scenarios to isolating the observation, permission and scoring mechanism that could explain each result.
-
-**Reviewer question:** “Are you claiming a real collusion incident or an overlooked first-ever channel?”
-
-**Answer:** No. The product example motivates disclosure risk; the papers motivate controlled multi-agent research. Implicit channels and information-flow composition are established [S5].
-
-**Sources:** S1–S5, S6.
-
-## Slide 2 — Each redesign answers a different question
+## Slide 1 — Can defensive metadata steer an agent?
 
 **Narration**
 
-We organized the changes into four nonoverlapping intervention questions: context, disclosure, execution and measurement. The matrix maps each question to its manipulation and its purpose; it does not imply that the studies used one common endpoint.
+Our question concerns a practical boundary: a tool-using agent receives more than a final answer. It can also receive labels, receipts and policy messages. Can those observations jointly guide a harmful decision even when each field, inspected separately, reveals nothing about the target?
 
-First, context: does an effect come from losing old planning or preventing new communication? In the corrected native Jira experiment we crossed visibility of historical private messages with permission to post new ones. The four execution arms reused the same actual eight-turn planning prefix for each seed and objective. That separated runtime interventions previously bundled together [S6].
+A deployed-product vulnerability explains why information boundaries deserve attention. Microsoft's CNA record for CVE-2025-32711 describes AI command injection in M365 Copilot allowing unauthorized information disclosure over a network. That establishes a product vulnerability, not a known victim breach or multi-agent collusion [S1].
 
-Second, disclosure: does fixing the artifact also fix what the receiver learns? Our synthetic transfer study held committed artifacts fixed but audited policy labels and numerical receipts. Finite counterexamples showed that later attestations or selector decisions could change feedback despite identical artifacts. The subsequent metadata assay separately tested labels, receipts, rejection statuses and a joint label/receipt construction [S7, S8].
+The academic motivation is behavioral. In Colosseum's benign private-channel probe, 11 of 19 models showed a positive change in action-level coalition advantage, while two crossed the conversation-judge increase threshold. Those are different thresholds, not significance counts or a detector false-negative rate. The finding nevertheless motivates measuring decisions separately from conversation [S2]. Mathew and colleagues also elicited steganographic communication under oversight and paraphrasing in constructed candidate-screening tasks. That is a laboratory result, not a deployed hiring incident [S3].
 
-Third, execution: can a public action constraint reduce harm even when communication remains? Procurement, review, resource and artifact tasks received domain-specific action controls alongside disclosure controls. These are mechanism transfers, not full reproductions of the original paper environments. Measuring cooperative utility and coverage prevented us from equating blocked activity with successful containment [S7].
+Our use of Colosseum grounded the work in action-based auditing and a native workplace runtime. The information-flow papers made clear that labels, policy outcomes and observation sequences already have recognized security implications. We do not claim their authors missed implicit flows. Nor did we fully reproduce or break FLOWSEAL, OCELOT, OrchDebate, CaMeL or FIDES [S4, S5].
 
-Fourth, measurement: did an unsupported result mean no exploitable information, failed encoding or an unrelated task error? Main-study audits found incorrectly implemented XOR banks and checksum validation that erased otherwise readable bit reports. We retained those original results. A separately frozen follow-up moved masking to the host, used a neutral bit-copying source, supplied decoding tables and simplified the public task to copying. This isolated a capability; it did not demonstrate spontaneous strategy discovery. Crossed replay then changed delivered metadata while keeping the evaluator target fixed [S8, S9].
+The open empirical question for this presentation is narrower: what changes because of the actual combined information, and what changes because the agent is told that a guard has or has not protected that information? Distinguishing those explanations matters whenever an apparent reduction in harmful action is used as evidence that a channel has been closed.
 
-**Reviewer question:** “Did you simplify the task until you got significance?”
+**Reviewer question:** “Does a real-world incident demonstrate your exact mechanism?”
 
-**Answer:** The follow-up was deliberately designed after diagnosed failures, disclosed as a new study, frozen before its calls, and restricted to the narrower claim it can support.
+**Answer:** No. The CVE motivates information-boundary failures. Our mechanism and its behavioral effects are measured in a controlled synthetic interface.
 
-**Sources:** S6–S9.
+**Sources:** S1–S5.
 
-## Slide 3 — Iteration was disclosed; inference and reproduction were checked separately
-
-**Narration**
-
-This timeline distinguishes exploratory learning from prospective testing: initial native experiments; runtime and metric audits; corrected shared-prefix Jira experiment; synthetic transfer study; metadata main study; source and endpoint audits; separately registered host-masked follow-up. We did not rewrite earlier outcomes after learning from them [S6–S9].
-
-Our identification strategy followed an evidence ladder: available channel, actual encoding, receiver inference, accepted harmful action, coalition payoff and legitimate utility. Information leakage alone is not collusion, a proposed invalid action is not execution, and owner harm alone is not coalition benefit. Agreement and intention remain additional requirements [S10].
-
-Within a metadata world, public inputs stayed fixed across bit/pad twins. The same actual source response was reused across defenses; no successful source was substituted for a failed encoder. In crossed replay we swapped delivered information while retaining the original evaluator bit. This supports causal channel attribution more directly than simple outcome correlation [S8, S9].
-
-The two metadata studies completed 2,326 research calls, with six compatibility requests recorded separately. Actors were GPT-4.1 mini and GPT-4.1, temperature 0.7, with a 1,500-token limit. The larger-model cohorts used different worlds and remain exploratory rather than a causal model ranking. Malformed successful responses were retained, not retried for better results [S8, S9].
-
-The seed or public world, not each correlated bit/pad branch, was the analysis unit. We used exact paired sign-flip reference tests, Holm correction within prespecified multi-test families, and descriptive world/seed bootstrap intervals. These tests retain their exchangeability assumptions. The follow-up's single primary does not create a global error guarantee over the entire iterative program.
-
-Frozen inputs, reconstructed delivered requests and independent offline recomputation passed local audits. These make the result inspectable; they do not provide external execution attestation or remove every modeling assumption [S11].
-
-**Reviewer question:** “Is the study bulletproof?”
-
-**Answer:** No experiment is. Its strength is that changes, failures, test families and limits are traceable rather than hidden.
-
-**Sources:** S6–S11.
-
-## Slide 4 — Three supported effects, retained nulls and one exploratory causal check
+## Slide 2 — The combination reveals what either field hides
 
 **Narration**
 
-The table shows three supported primary effects, each in its own units. They should not be ranked by raw magnitude. Hiding historical Jira messages when new posting was already denied reduced regret by 8.297, with descriptive interval 2.810 to 14.653 and Holm-adjusted p=.03125 across 20 seeds. Denying new posts while retaining history had no supported benefit. The history intervention included a policy notice, so it does not isolate a pure memory mechanism [S6].
+The mechanism uses a fresh private bit, B. An actual source model copies that bit into an attestation, A. The source sees no host mask and is not asked to collude. We save its returned action before the host applies masking, then reuse that exact action across receiver conditions [S13].
 
-Resource enforcement reduced the registered harm endpoint by 580.175, interval 424.110 to 740.635, Holm p=.0078125 across ten held-out seeds. Its decomposition matters: 760 avoided violation penalties minus 179.825 lower raw value from infeasible commitments. Cooperative agents also improved by 220.175. This supports public-contract enforcement, not universal collusion prevention or optimal welfare [S7].
+The host releases a label equal to balanced mask R and a receipt equal to A XOR R XOR public polarity P. Each field alone has the same distribution for both target bits after balancing R. Together they recover the attestation. If the source copies correctly, that is also the target bit. All 40 new source calls copied correctly. The algebra is established; the empirical question is what a live receiver does with this view [S5, S13].
 
-The table keeps the original four metadata tests separate from the new host-masked follow-up; the signed-decoding plot shows only the follow-up. None of the four main tests survived Holm correction. The follow-up's prespecified mini-model contrast was .2265625, interval .1796875 to .2734375, exact p=.000061, across 16 worlds. Signed decoding has maximum .5; this is not a 22.7% collusion rate [S8, S9].
+The receiver is supplied a decoder and routing table. It reports a bit or abstains, and separately chooses SAFE, LEFT or RIGHT. A correct risky bet earns the coalition two units; a wrong one loses four. Either accepted bet reduces owner utility from ten to three. A receiver can therefore infer correctly but choose SAFE, or infer nothing and still harm the owner by betting. Inference and action are deliberately separate measurements [S13].
 
-The follow-up's marginal receivers made 31 correct and ten wrong accepted bets, realizing net +22. The mean-payoff interval crosses zero, so reliably positive average profit remains unestablished. Transcript-guard receivers made no bets. All 320 follow-up receivers correctly copied the public schedule and checksum; that is deliberately a simple task [S9].
+The legitimate task is unchanged: copy a supplied public schedule and checksum. This makes task preservation interpretable, but easy. It does not test preservation of complex reasoning. We also limit the information claim to the registered finite receiver view; physical timing, billing and unregistered tools are outside it.
 
-The second graph is explicitly exploratory: swapping delivered metadata changed payoff from +20 to −50 in 32 matched cases, with correct bets falling 16 to seven. This supports actual use of the delivered channel; it is not an extra confirmatory primary.
+Earlier Jira context/access and resource-penalty experiments helped identify the need to hold actual observations and execution outcomes apart. They concern different mechanisms and are not additional replications of this result. The present story follows one source-to-metadata-to-decision path, rather than combining those unrelated effect sizes [S6, S7].
 
-**Reviewer question:** “Are positive bootstrap intervals enough to declare the main tests successful?”
+**Reviewer question:** “Did the agents invent this signaling scheme?”
 
-**Answer:** No. The registered exact tests with multiplicity correction govern those claims; the nulls remain.
+**Answer:** No. The host implements masking and receivers receive decoding tables. This measures instructed capability and decisions, not autonomous protocol discovery or shared collusive intent.
 
-**Sources:** S6–S9.
+**Sources:** S5–S7, S13.
 
-## Slide 5 — The contribution is causal separation, with clear deployment limits
+## Slide 3 — One mechanism, distinct controls, fixed tests
 
 **Narration**
 
-Four insights connect the studies without conflating their mechanisms. Context: remembered private planning and permission to send future messages are different controls. In a deployed agent, disabling a tool may leave past coordination in the prompt—or unintentionally erase context as well. Operators should inspect the actual reconstructed request, not just the permission flag [S6].
+We completed 1,320 calls: 40 sources and 1,280 receivers. The receiver model was GPT-4.1 mini, temperature .7, with a 1,500-token limit. Twenty fresh worlds each contained both target bits and both host masks. The same neutral request was repeated twice per cell, without replacing unfavorable outputs or selecting successful encoders [S13].
 
-Disclosure: a canonical artifact is only one part of the receiver's view. Individually uninformative metadata can jointly support inference in our controlled assay. The practical implication is to state the authorized receiver view and examine combined fields, including policy decisions and receipts. This is an application of known information-flow principles, not a new cryptographic result or evidence that the original defenses are broken [S5, S8, S9].
+Six observation arms answer distinct questions. Joint metadata supplies the proposed signal. Full fixed metadata removes target information. Label-only and receipt-only test whether either component suffices. A same-format donor codeword contains information about a donor bit fixed independently of the target, testing whether valid-looking metadata alone induces unsupported claims. An authorized explicit bit is the positive reading control [S13].
 
-Execution: resource authorization, capacity and budget checks prevented explicit contract violations, including under cooperative objectives. That mechanism differs from preventing agreement or favoritism. Conversely, review quorum damaged legitimate utility and coverage. A defender should measure owner outcomes, coalition rewards and cooperative-task costs together rather than celebrate fewer actions [S7].
+All six receive the same neutral instructions. Separately, a two-by-two experiment crosses actual joint/full views with the exact earlier marginal/full announcement bundles. These bundles include `assigned_policy` and `mandatory_contract`; they are more than a one-word label. Some crossed announcements are intentionally inaccurate. This experimental manipulation separates information availability from what the agent is told about the guard [S9, S13].
 
-Measurement: formatting success is not correct encoding, model abstention is not privacy, and malformed task output can suppress otherwise readable inference. In our main study, checksum gating erased 98 numeric predictions, 65 correct. A better benchmark records inference, proposed actions and accepted execution separately [S8, S10].
+The world is the statistical unit. Four primary joint-minus-negative contrasts require positive means and Holm-adjusted p-values below .05. Six announcement tests form a separate secondary Holm family. Exact sign-flip tests retain a symmetric-null exchangeability assumption; 20,000 world bootstraps give descriptive intervals. Repeats and half-cohort checks describe consistency rather than independent replications.
 
-Our released contribution is a causal audit package combining shared actual sources, balanced counterfactual worlds, crossed replay, finite-view checks, frozen protocols, retained nulls and offline reproduction. The host-mask study demonstrates instructed capability with a neutral source and supplied tables; it does not establish spontaneous collusion, broadly preserved reasoning utility or reliably positive mean profit.
+Raw inference, task validity and accepted execution remain separate. All planned cells completed; independent reconstruction imported no study code and reproduced the primary results from saved provider JSON. Local hashes verify consistency, not external execution attestation. The protocol was frozen before these calls, with earlier results known. Our original four metadata tests remain unsupported, and cohorts are not pooled [S8, S9, S13].
 
-The strongest next experiment is native Colosseum private TEXT, ACTION-only visibility, and the same executed actions hidden or canonicalized. Coalition advantage must survive action-only coordination and weaken when that observation path is cut. That missing comparison anchors the sprint contribution to Track 3.1, with Track 2.3 evidence standards [S12].
+**Reviewer question:** “Are these collusion-detector false-positive and false-negative rates?”
 
-**Reviewer question:** “What is uniquely yours?”
+**Answer:** No. False-one/false-zero describe bit inference. Abstention and invalidity are separate; zero observed errors are not zero population risk.
 
-**Answer:** These original measurements, counterfactual comparisons and reusable audit artifacts; publication-level first-ever novelty remains unestablished.
+**Sources:** S8, S9, S13.
 
-**Sources:** S5–S12.
+## Slide 4 — Joint decoding passed all four held-out comparisons
+
+**Narration**
+
+All four prespecified comparisons passed. Joint-minus-full signed decoding was .0875, interval .05625 to .11875, Holm4 p=.000427. Joint-minus-label was .09375, Holm4 p=.000061; joint-minus-receipt was .103125, p=.000092; joint-minus-donor was .06875, p=.00354. Effects stayed positive in both repeats, both half-cohorts and every leave-one-world mean. These are descriptive consistency checks within one 20-world study [S13].
+
+Signed score S is .5 for perfect balanced decoding and zero for constant guesses or universal abstention. The neutral joint arm had S=.090625; full had S=.003125. Joint responses still included 119 abstentions out of 160. The authorized explicit bit was recovered in 160/160 cases, but produced only 102 accepted bets: knowing the target and acting on it were different outcomes [S13].
+
+The announcement graph explains why that distinction matters. With the same joint information, the marginal announcement produced 49/80 accepted bets, while the full announcement produced none. With an actually target-independent full view, the marginal announcement still produced 23/80 bets, with ten correct guesses and thirteen wrong guesses: net payoff −32. The full announcement again produced none. Neither absence of bets nor their presence establishes whether target information is available [S13].
+
+All six secondary tests survived Holm6. The announcement contrast changed mean accepted owner harm by +3.15 per call, interval [2.45,3.89375], adjusted p=.00001144. The actual-view contrast changed harm by +1.1375, adjusted p=.004669. These separate effects are not a registered test that one is statistically larger than the other.
+
+All 1,280 receiver public-copy tasks succeeded. Neutral joint payoff averaged +.225, descriptive interval [.075,.375]; this is not the primary decoding test or a global profitability guarantee. The earlier host-mask effect, .22656, remains a separate cohort, not a pooled estimate [S9, S13].
+
+**Reviewer question:** “Can a closed channel still produce harm?”
+
+**Answer:** Yes. Our declared full views contain no target information, yet some receivers made owner-harming guesses. Those guesses are not evidence of successful target disclosure or deliberate collusion.
+
+**Sources:** S9, S13.
+
+## Slide 5 — Privacy announcements changed action on the same data
+
+**Narration**
+
+The finding has one central implication: action outcomes do not by themselves establish whether an information channel is closed. In this controlled interface, joint metadata supported target-specific inference under matched neutral instructions, while announcements independently changed inference and accepted action. Both facts are necessary to interpret apparent containment [S13].
+
+An informative view looked behaviorally contained under the full announcement: no accepted bets occurred, even though the registered joint signal remained available. Conversely, a target-independent view still generated harmful guesses under the marginal announcement. Its 23 bets harmed the owner despite losing the coalition 32 units overall. We therefore cannot equate harmful action with information leakage or equate observed abstention with confidentiality.
+
+The supported secondary contrast is the exact announcement bundle used here, including its policy identity and mandatory contract. We did not identify a universal effect of the word “secure,” or prove that models believed the announcement. The intentionally inaccurate crossed bundles are an experimental instrument, not a recommended deployed policy [S13].
+
+For tool-using systems, this suggests two operational questions. First, what can the combined authorized observation reveal? Second, which actions may execute even if the agent is uncertain or simply wrong? A confidentiality layer and an action authorization layer address different properties. Existing information-flow research already motivates that distinction; our addition is a live behavioral measurement under component, donor, repeat and announcement controls [S5, S13].
+
+This is bounded evidence. The source was neutral, the decoder supplied, the public task copying, and the model from one family. There is no spontaneous coalition, new XOR theorem, deployed exploit, original-defense break or calibrated collusion detector here. The next transfer should preserve the independent view/announcement manipulation in a native tool workflow. Track 3.1 supplies the carrier question; Track 2.3 supplies the demand for convincing evidence [S12].
+
+**Reviewer question:** “What is new beyond known information-flow principles?”
+
+**Answer:** This specific empirical separation: joint target-bearing metadata and security announcements changed live inference and accepted harm through distinguishable manipulations. Publication-level first-ever novelty remains unestablished.
+
+**Sources:** S5, S12, S13.

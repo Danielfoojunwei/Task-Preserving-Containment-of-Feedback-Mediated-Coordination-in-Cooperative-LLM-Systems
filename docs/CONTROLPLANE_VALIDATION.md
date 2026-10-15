@@ -24,3 +24,10 @@ Combined stored usage: 2,170,126 tokens and $1.8537608; 2,326 research calls plu
 Evidence: [manuscript](../research/outputs/controlplane_20261015/PAPER_CONTROLPLANE.md), [main audit](../research/outputs/controlplane_20261015/FINAL_AUDIT.json), [follow-up audit](../research/outputs/hostmask_20261015/FINAL_AUDIT.json), [follow-up independent replication](../research/outputs/hostmask_20261015/INDEPENDENT_REPLICATION.md), [offline reproduction](../research/outputs/controlplane_release_20261015/OFFLINE_REPRODUCTION.json), [figure](../research/outputs/hostmask_20261015/host_masked_composition.png), [new bundle](../outputs/bundles/task-preserving-research-20261015-controlplane.zip).
 
 The contribution is a controlled causal benchmark, not a new XOR/noninterference theorem, demonstrated spontaneous collusion, or a full reproduction/break of the referenced defense implementations. The earlier expanded bundle and validation report remain available separately.
+
+
+## Held-out metadata validation, 15 October 2026
+
+A separate frozen study completed 1,320/1,320 calls (40 sources, 1,280 receivers) on 20 fresh GPT-4.1 mini worlds, with six neutral observation arms, identical-input repeats, and a crossed observation × policy-announcement experiment. All 13 new offline runner/analysis tests passed before launch. All four primary comparisons passed Holm4; all six secondary comparisons passed their separate Holm6 family. Independent strict raw-record reconstruction, exhaustive sign enumeration, finite request-law checks and frozen-input checks passed with no mismatches. There were no transport retries; provider-reported cost was $0.371024. These checks do not establish a collusion detector's false-positive/false-negative rates or zero population error.
+
+See [the central finding](UNIFIED_RESEARCH_FINDING.md), [complete results](../research/outputs/stability_20261015/RESULTS.md), [protocol](../research/outputs/stability_20261015/PROTOCOL.md) and [independent verification](../research/outputs/stability_20261015/INDEPENDENT_VERIFICATION.md). Earlier four main-study null results and all frozen prior studies remain unchanged.
