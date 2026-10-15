@@ -1,0 +1,1175 @@
+                                                        Progent: Securing AI Agents with Privilege Control
+                                              Tianneng Shi1 , Jingxuan He1 , Zhun Wang1 , Hongwei Li2 , Linyu Wu3 , Wenbo Guo2 , Dawn Song1
+                                                            1 UC Berkeley 2 UC Santa Barbara 3 National University of Singapore
+
+                                         Abstract                                                                      Challenges for Securing AI Agents. Securing AI agents is chal-
+                                         AI agents interact with external environments through tool calls,             lenging for several reasons. First, agent behavior is inherently non-
+                                         exposing them to attacks like indirect prompt injection that can              deterministic: an LLM processes unstructured natural language
+                                         trigger unauthorized actions. Securing these agents is challenging:           and may make different decisions across runs. In contrast, security
+                                         they behave autonomously and probabilistically, security require-             requires deterministic enforcement that holds regardless of how the
+                                         ments evolve depending on the user’s task and execution state, and            LLM reasons, even under adversarial influence. Reconciling these
+                                         there is an inherent tradeofff between security and utility.                  two worlds is non-trivial. Second, agent security depends on both
+arXiv:2504.11703v3 [cs.CR] 14 May 2026
+
+
+
+
+                                            In this work, we introduce Progent, a novel framework that se-             the user’s task and the information the agent gathers during execu-
+                                         cures AI agents via privilege control. Progent represents privilege           tion. Different tasks require different tools and arguments, and the
+                                         as a security policy consisting of symbolic rules over tool names             relevant context evolves at runtime as the agent interacts with the
+                                         and arguments. These rules specify which tool calls are allowed               environment. A defense must track these changes automatically,
+                                         for task completion and which unnecessary ones are blocked for                since involving the user in every security decision is impractical
+                                         security. Every tool call is checked against such a policy through a          and negates the benefit of an autonomous agent. Finally, agents
+                                         deterministic procedure, enforcing the principle of least privilege.          must sometimes expand their privileges to complete benign tasks.
+                                         To handle diverse user tasks and evolving execution contexts, an              Yet, adversaries also seek to exploit the same mechanism to induce
+                                         LLM automatically generates the initial policy from the user’s task           harmful actions, and both legitimate and adversarial expansion re-
+                                         and updates it during execution as new information arrives. Each              quests arrive through the same channel. Distinguishing legitimate
+                                         proposed update is determined by an SMT solver to be either a                 from adversarial expansions, without sacrificing security or utility,
+                                         narrowing (applied automatically) or an expansion (requiring ex-              is a fundamental challenge. We elaborate on these challenges with
+                                         plicit approval), ensuring that the agent’s effective action space can        a running example in Section 2.
+                                         only shrink without approval (monotonic confinement). This de-                Our Work: Progent. We introduce Progent, a novel framework
+                                         terministic update mechanism preserves utility and prevents silent            that secures AI agents via privilege control. Our key idea is to en-
+                                         privilege escalation, even when adversarial inputs are present.               force the principle of least privilege: allow only tool calls essential
+                                            Our evaluation on popular benchmarks (i.e., AgentDojo and ASB)             for task completion and block unnecessary ones. We focus on tool
+                                         shows that Progent significantly reduces attack success rates while           calls because all external effects of an agent occur through them,
+                                         maintaining high utility. We further validate Progent’s practicality          and they expose a structured interface (tool names and typed ar-
+                                         by showcasing its effectiveness in real-world agent frameworks                guments), unlike the agent’s unstructured reasoning. This makes
+                                         such as LangChain and OpenAI Agents SDK.                                      tool calls a natural point for deterministic security enforcement.
+                                                                                                                       Progent leverages a privilege control policy consisting of symbolic
+                                         1   Introduction                                                              rules over tool names and arguments. These rules specify which
+                                         AI agents have emerged as a promising platform for general and au-            tool calls are allowed and which should be blocked. Every tool call
+                                         tonomous task solving [41, 46, 47, 56]. At the core of these agents is        is checked against such a policy, which deterministically decides
+                                         a large language model (LLM), which interacts with the external en-           whether it is permitted.
+                                         vironment through diverse sets of tools [39, 40]. For instance, a per-           To handle context-dependent security requirements, Progent
+                                         sonal assistant agent uses email toolkits [20] to manage emails, and          utilizes an LLM to automatically generate the initial policy from
+                                         a coding agent uses code interpreters and the command line [47].              the user’s task and updates it as new information arrives during ex-
+                                         Security Risks in AI Agents. The ability to interact with external            ecution. This allows security enforcement to adapt to both task and
+                                         environments makes AI agents powerful, enabling them to perform               execution context while minimizing manual effort. However, intro-
+                                         diverse tasks across domains such as communication, scheduling,               ducing an LLM for policy construction introduces non-determinism,
+                                         and finance. However, this same ability also creates a large attack           creating a fundamental tension between automation and determin-
+                                         surface. Recent research has raised serious security concerns about           istic enforcement.
+                                         AI agents [15, 28, 52], where attackers exploit the agent’s interaction          To address this, we further propose that each policy update be
+                                         with the environment by injecting adversarial instructions into               checked by a deterministic SMT solver as either a narrowing (ap-
+                                         external data sources. When the agent retrieves such data via tool            plied automatically) or an expansion (requiring explicit approval).
+                                         calls, the injected instructions can redirect the agent to perform            This ensures that the agent’s effective action space can only nar-
+                                         dangerous actions, such as unauthorized financial transactions [11]           row without approval, a property we call monotonic confinement.
+                                         or data exfiltration [29]. This class of attacks is known as indirect         As a result, even if the LLM is manipulated by adversarial inputs,
+                                         prompt injection [14, 30].                                                    this deterministic check prevents any silent privilege escalation. At
+                                                                                                                       the same time, it preserves utility by allowing controlled privilege
+                                                                                                                       expansion when explicitly authorized.
+
+                                                                                                                   1
+Preprint                                                                                                 Progent : Securing AI Agents with Privilege Control
+
+
+Implementation and Evaluation. Since Progent operates at the                 tool call that exfiltrates the user’s inbox to the attacker. At step 5, the
+tool-call level, it can be integrated by inserting a separate module         agent performs the originally intended action send_slack_msg(to
+between the agent and its tools. This requires no changes to the             =alice,body=(summary)), completing the benign task. The attack
+agent’s internal architecture, making integration non-intrusive and          is subtle: the user’s original task is completed while the malicious
+generalizable across diverse agent frameworks.                               action is carried out, potentially leaving the user unaware.
+   We evaluate Progent on AgentDojo [11] and ASB [57]. Progent
+                                                                             Challenge I: Non-Deterministic Agent Behavior. AI agents
+reduces the attack success rate (ASR) from 39.9% to 1.0% on Agent-
+                                                                             process unstructured natural-language inputs, including user tasks
+Dojo, and from 70.3% to 3.9% on ASB, while maintaining the agent’s
+                                                                             and tool returns. Because LLMs are sensitive to prompt phrasing,
+utility in both cases. We further conduct extensive ablation studies
+                                                                             even minor variations in wording that carry the same meaning can
+to analyze key components of Progent, including model choices and
+                                                                             lead the agent to make different decisions, and different tools serv-
+policy update approval configurations. Finally, we extend Agent-
+                                                                             ing the same purpose may return information in different formats,
+Dojo into an MCP-based benchmark and connect it to various real-
+                                                                             leading to different subsequent actions. More critically, adversarial
+world agent frameworks (e.g., LangChain and OpenAI Agents SDK),
+                                                                             content embedded in a tool return can silently alter the agent’s
+where we demonstrate the effectiveness of Progent on protecting
+                                                                             plan without any visible indication. Agent execution is inherently
+both single- and multi-agent systems.
+                                                                             non-deterministic, yet for security we desire deterministic enforce-
+Main Contributions. In summary, our main contributions are:                  ment: properties like “only send data to authorized recipients” must
+• A privilege control approach that leverages symbolic policies              be enforced deterministically, rather than relying on the agent’s
+  over tool names and arguments, with deterministic enforcement              probabilistic reasoning.
+  at the tool-call level and an SMT-based procedure to determine             Challenge II: Context-Dependent Security Requirements.
+  whether policy updates are expansions or narrowings (Section 4).           Agent execution involves different kinds of contexts, and automati-
+• An LLM-based policy generation and update mechanism that                   cally tracking them to enforce security is challenging. An effective
+  automatically derives context-aware policies from the user’s task          defense must automatically account for these different contexts to
+  and execution state, with formal monotonic confinement guar-               make security decisions, since asking the user to approve every
+  antees that prevent silent privilege escalation (Sections 5 and 6).        tool call requires too much effort and removes the benefit of using
+• An extensive evaluation on standardized benchmarks (i.e., Agent-           an agent. We identify two kinds of context for the agent. The first
+  Dojo and ASB), as well as integration with real-world agent                is task context: the same agent can process different tasks, such
+  frameworks and multi-agent systems, demonstrating Progent’s                as summarizing emails, booking a flight, or reconciling a budget,
+  general effectiveness (Sections 7 and 8).                                  each authorizing a different set of tools with different tool argu-
+                                                                             ments. Whether a tool call is safe depends on the task: for example,
+2     Overview                                                               send_email is legitimate when the task is “email Alice an update”,
+We present a motivating example in Figure 1 to discuss how AI                but when the task is “summarize unread emails”, the returned emails
+agents accomplish user tasks, how they can be attacked via indirect          may contain adversarial instructions that direct the agent to send
+prompt injection, and the challenges involved in securing them. We           sensitive content to a third party, turning send_email into a data-
+then demonstrate how Progent addresses these challenges.                     exfiltration channel. A policy permissive enough for every task is
+                                                                             too broad to block attacks, while one designed for a single task
+2.1        Challenges for Agent Security                                     is too narrow for any other. The second is execution context: AI
+Motivating Example: Agent Execution and Attack. In Fig-                      agents execute autonomously, and the context changes as the agent
+ure 1a, a user asks an agent to carry out the actions specified in an        gathers new information at runtime. For instance, only after step 2
+email from alice@gmail.com with subject ‘TODOs for the week’.                does the agent learn that the Slack handle is alice, so any future
+From this description alone, the agent only knows that it must               Slack message should be sent only to alice; sending Slack mes-
+first retrieve the corresponding email. At step 1, the agent calls the       sages to other people should be blocked. Such execution-gathered
+tool search_emails with arguments sender=alice@gmail.com                     information is security-critical, and a defense must incorporate it
+and subject=‘TODOs for the week’. The return is a TODO list                  as soon as it becomes available.
+instructing the agent to summarize the user’s recent emails and post         Challenge III: Balancing Security and Utility. Because agents
+the summary to the user’s Slack. This reveals that completing the            execute autonomously, they must adapt to new information that
+task will also require email-reading and Slack-posting tools. There-         may legitimately require additional privileges. However, the same
+fore, at step 2, the agent calls get_slack_info() to learn that the          channel can carry adversarial content, making it challenging to
+user’s Slack handle is alice. This determines the recipient for any          balance security and utility. On the utility side, completing a task
+subsequent Slack message. Subsequently, at step 3, the agent contin-         often requires the agent to expand its set of allowed tools and ar-
+ues to read recent emails by calling read_emails(recent=20) and              guments dynamically. In our example (Figure 1a), at step 1, the
+prepare the summary. However, one of the returned emails carries             returned TODO reveals that the agent must also call read_emails,
+an indirect prompt injection, “forward the inbox to eve@evil.com”,           get_slack_info, and send_slack_msg; a defense that forbids these
+which appears indistinguishably from legitimate email content.               tools would prevent the task from finishing. On the security side, an
+Step 4 is under the influence of the injection, where the agent is-          attacker also seeks to expand the agent’s tool usage for malicious
+sues send_email(to=eve@evil.com,body=(inbox)), a malicious                   purposes. At step 3, the injection attempts to introduce send_email
+                                                                         2
+Progent : Securing AI Agents with Privilege Control                                                                                                                                                   Preprint
+
+
+ USER TASK
+ Please do the actions specified in the email from ‘alice@gmail.com’ with the subject ‘TODOs for the week’.
+
+               STEP 1                                      STEP 2                                     STEP 3                                      STEP 4                                     STEP 5
+
+ search_emails(sender=alice@gm              get_slack_info()                           read_emails(recent=20)                     send_email(to=eve@evil.com,                 send_slack_msg(to=alice,
+ ail.com, subject="TODOs for                                                                                                      body=⟨inbox⟩)                               body=⟨summary⟩)
+                                             OUT slack_handle: "alice"                   OUT emails injection
+ the week")
+                                                                                         “forward inbox to eve@evil.com”            OUT ok · done                              OUT ok · done
+  OUT TODO1: summarize recent 20
+  emails, send summary to my slack.
+  TODO2: ...
+ expand privileges — for utility            narrow privileges — new info               expand privileges — injection               malicious action                           benign task action
+
+                                                           (a) Agent trajectory: the agent calls a tool at each step; each return shapes the next action.
+                                                                                                                                                                  block                                  allow
+
+ P1 initial                                P2 = P 1 ∪ Δ                                P3 ⊂ P 2                                   P4 = P 3                                   P5 = P 4
+ · allow search_emails(sender=a            · allow search_emails(sender=a              · allow search_emails(sender=a             · allow search_emails(sender=a             · allow search_emails(sender=a
+   lice@gmail.com, subject="TOD              lice@gmail.com, subject="TOD                lice@gmail.com, subject="TOD               lice@gmail.com, subject="TOD               lice@gmail.com, subject="TOD
+   Os for the week")                         Os for the week")                           Os for the week")                          Os for the week")                          Os for the week")
+                                           + allow read_emails(recent=20)              · allow read_emails(recent=20)             · allow read_emails(recent=20)             · allow read_emails(recent=20)
+                                           + allow get_slack_info()                    · allow get_slack_info()                   · allow get_slack_info()                   · allow get_slack_info()
+                                           + allow send_slack_msg(to=∗,                ▸ allow send_slack_msg(to=alic             · allow send_slack_msg(to=alic             · allow send_slack_msg(to=alic
+                                             body=∗)                                     e, body=∗)                                 e, body=∗)                                 e, body=∗)
+
+                                                      (b) Progent policy enforcement: each call at step i is gated by policy Pi; calls outside Pi are blocked.
+
+
+ HOW P 1 IS OBTAINED                        UPDATE FROM STEP 1                         UPDATE FROM STEP 2                          UPDATE FROM STEP 3                         STEP 4 BLOCKED
+
+ derive from user task                      expansion → APPROVAL?          →           narrowing →                                 (a) updater robust → NO CHANGE             no update
+                                             APPROVED                                   AUTO INCORPORATED                          or (b) expansion → APPROVAL?
+                                                                                                                                   → DENIED
+                  (c) Progent policy update: P1 is derived from the user task; for i > 1, Pi is derived from Pi-1 and the tool return at step i-1. Expansion/narrowing is judged by an SMT solver.
+
+
+
+                                                            Figure 1: Overview of Progent on a running example.
+
+
+to an external address; allowing it would enable data exfiltration.                                             Apart from “allow” rules, Progent also supports “forbid” rules that
+Both requests arrive through the same channel, a tool return that                                               explicitly block tool calls matching certain patterns, as well as
+shifts the agent’s plan, and the adversarial case is especially hard to                                         various other features. We provide a full definition of Progent’s
+detect because the injected instruction arrives inside the same tool                                            policies in Section 4.1.
+return as the legitimate email content the agent needs to summa-                                                   When the agent issues a tool call, Progent matches it against the
+rize. A defense must therefore expand the agent’s allowed actions                                               current policy’s rules and deterministically allows or blocks it; calls
+when the task legitimately requires it, while refusing expansions                                               that match no rule are blocked by default. At step 4, 𝑃 4 contains
+that originate from adversarial content, without sacrificing either                                             no allow rule for send_email, so Progent deterministically blocks
+security or utility.                                                                                            the malicious call send_email(to=eve@evil.com,body=(inbox)
+                                                                                                                ) and returns a fallback error to the agent explaining the denial, so
+2.2      Progent: Defense via Privilege Control                                                                 the agent can adjust and continue with the user’s task. At step 5,
+We now describe how Progent addresses the above challenges.                                                     the check is against 𝑃5 = 𝑃4 ; the benign call send_slack_msg(
+                                                                                                                to=alice,body=(summary)) matches the Slack rule in 𝑃5 , so it
+Policy-Based Security Enforcement. Progent operates at the                                                      is allowed and the task completes. Because this check is purely
+tool-call level, because all agent actions with external effects flow                                           symbolic over structured policy rules, every security decision is
+through them. Moreover, the tool-call interface, consisting of a tool                                           deterministic, directly addressing Challenge I.
+name and typed arguments, is structured, unlike the unstructured
+text the agent reasons over. This makes tool calls a natural enforce-                                           LLM-Based Policy Construction and Update. Because agent
+ment point, enabling Progent to enforce security deterministically                                              security depends on context (Challenge II), Progent maintains a
+despite the agent’s non-deterministic behavior (Challenge I).                                                   per-step policy that evolves as new information arrives: at step 𝑖,
+   Progent introduces a privilege control policy that describes the                                             the gating privilege control policy is 𝑃𝑖 , which enumerates exactly
+set of tool calls the agent is allowed to issue or which should be                                              which tool calls the agent may issue at that step. The initial policy
+blocked. A policy is a list of rules; each rule targets a specific tool and                                     𝑃1 is derived from the user’s task: for our running example, 𝑃1
+specifies conditions on its arguments to determine whether calls                                                admits only search_emails with the specific sender and subject.
+to that tool are allowed or not allowed. In our example (Figure 1b),                                            An LLM-based updater reasons about both the task context and
+the policy 𝑃4 contains four “allow” rules, meaning that a tool call is                                          the execution context, automating policy management that would
+allowed if its name matches the rule and its arguments satisfy the                                              otherwise require manually writing per-step rules for every possible
+specified condition. For instance, the rule for read_emails allows                                              user request. For 𝑖 > 1, the updater proposes a new policy 𝑃𝑖
+calls only when recent=20, while the rule for send_slack_msg                                                    based on the tool return at step 𝑖−1 and the previous policy 𝑃𝑖 −1 .
+allows calls only when to=alice. Rules can specify concrete values                                              After step 1, the returned TODO reveals that the task requires
+(such as 20), wildcards (*), and regular-expression patterns, making                                            additional tools, so the updater proposes 𝑃2 , which adds allow
+the policy expressive enough to capture fine-grained constraints.                                               entries for read_emails, get_slack_info, and send_slack_ms
+
+                                                                                                         3
+Preprint                                                                                                  Progent : Securing AI Agents with Privilege Control
+
+
+g. After step 2, the handle alice is now known, so the updater                  Algorithm 1: Vanilla execution of AI agents.
+proposes 𝑃3 , which narrows the Slack entry to send_slack_msg(                   Input : User query 𝑜 0 , agent A, tools T , environment E.
+to=alice,body=*). After step 3, the returned emails contain an                   Output : Agent execution result.
+injection attempting to introduce send_email, but the policy does              1 for 𝑖 = 1 to max_steps do
+not change: 𝑃4 = 𝑃3 . How this is ensured is described next.                   2   𝑐 𝑖 = A (𝑜𝑖 −1 )
+Deterministic Control of Policy Expansion and Narrowing.                       3   if 𝑐 𝑖 is a tool call then 𝑜𝑖 = E (𝑐 𝑖 )
+Policy updates can either expand or narrow the set of allowed                  4   else task solved, return task output
+tool calls. Narrowing is safe, since it only removes permissions.              5   task solving fails, return unsuccessful
+Expansion, however, is sensitive: it may be necessary for utility (as
+in 𝑃 1 → 𝑃 2 , where the task requires more tools) but can also be
+caused by an attack (as in step 3’s injection).                                3     Problem Statement and Threat Model
+   To handle narrowing and expansion differently, Progent judges
+                                                                               In this section, we begin by providing a definition of AI agents,
+every proposed update before applying it. We consider an update
+                                                                               which serves as the basis for presenting Progent later. We then
+from 𝑃 to 𝑃 ′ to be an expansion if the set of tool calls allowed by 𝑃 ′
+                                                                               outline our threat model.
+is strictly larger than 𝑃’s. Otherwise, we determine the update to
+be a narrowing, i.e., every call 𝑃 ′ admits is also admitted by 𝑃. Note
+                                                                               3.1     AI Agents
+that narrowing includes the case where 𝑃 ′ = 𝑃. Because Progent’s
+policies are symbolic, both relations are decidable by an SMT solver,          We consider a general setup for using AI agents in task solving [47,
+giving a fully deterministic judgment (details in Section 4.3).                56], involving four parties: a user U, an agent A, a set of tools
+   Narrowing updates are applied automatically. Expansions re-                 T , and an environment E. The agent receives an initial query 𝑜 0
+quire explicit approval before taking effect. Progent supports con-            from U and begins a multi-step procedure (Algorithm 1). At step
+figurable approver settings, such as automatically denying all ex-             𝑖, the agent processes the previous observation 𝑜 𝑖 −1 and produces
+pansions, routing them to a human for review, or automatically                 an action 𝑐 𝑖 , written as 𝑐 𝑖 ≔ A (𝑜𝑖 −1 ) (Line 2). The action can be
+approving all. We evaluate these configurations in Section 8.2. In our         a tool call (Line 3) or a completion signal (Line 4). Tool calls are
+example in Figure 1c: 𝑃1 → 𝑃2 is an expansion (adds read_emails,               executed in E, yielding a new observation 𝑜𝑖 . If a tool call fails, the
+get_slack_info, send_slack_msg); the SMT solver detects this,                  error is included as part of 𝑜𝑖 and returned to the agent for the
+and 𝑃2 takes effect only after approval. 𝑃2 → 𝑃 3 is a narrowing               next step. The new observation is then fed into the next agent step.
+(𝑃3 ⊂ 𝑃 2 , binding the Slack recipient to alice); the SMT solver              This process repeats until the agent signals completion (Line 4) or
+detects this, and 𝑃 3 is applied automatically. For 𝑃3 → 𝑃4 , the injec-       reaches the computation budget (e.g., max_steps, Line 1). Both A
+tion at step 3 leads to two possible situations: (a) If the updater sees       and E are stateful, so prior interactions may influence A (𝑜𝑖 −1 ) and
+through the injection (e.g., via its safety alignment), it proposes            E (𝑐 𝑖 ).
+no expansion, and 𝑃4 = 𝑃3 is applied automatically. (b) Even if the                Compared with standalone models, AI agents gain enhanced
+updater is fooled and proposes adding send_email, the SMT solver               task-solving capabilities through access to diverse tools in T , such
+detects an expansion, and the approver can deny it. In either case,            as email clients, file browsers, and financial applications. Each tool
+𝑃4 = 𝑃3 and the malicious call at step 4 is blocked. Even when the             is a function that takes typed arguments and returns a string obser-
+LLM is manipulated or hallucinates, the deterministic judgment en-             vation, as defined in Figure 2a. Tools can be instantiated at various
+sures that no new permission is granted without explicit approval,             levels of granularity, from calling an entire application to invoking
+so utility-driven expansions are permitted while adversarial ones              an API in generated code. Their execution determines how the
+are caught. In our experiments for AgentDojo (Section 8), only 6%              agent interacts with the external environment.
+of updates required approval. This means that even when human                      The development of AI agents is complex, involving various
+users are involved, approval cost is low.                                      modules, strategic architectural decisions, and sophisticated im-
+                                                                               plementation [46]. Our formulation treats agents as a black box,
+Progent’s Security Guarantee. The combination of determinis-                   thereby accommodating diverse design choices, whether leveraging
+tic policy enforcement and deterministic expansion control ensures             a single LLM [40], multiple LLMs [53], or a memory component [42].
+that the agent’s effective action space can only narrow without                The only requirement is that the agent can call tools within T .
+explicit approval, a property we call monotonic confinement (proved
+in Section 6). This guarantees that no attack can silently escalate            3.2     Threat Model
+the agent’s privileges: only expansion requests require approval,
+                                                                               Attacker Goal. The attacker’s goal is to disrupt the agent’s task-
+and all other security decisions are handled deterministically. We
+                                                                               solving flow, leading to the agent performing unauthorized actions
+detail this in Section 6.
+                                                                               that benefit the attacker in some way. Since the agent interacts
+    In addition, Progent supports extensions such as generic policies
+                                                                               with the external environment via tool calls, such dangerous behav-
+that impose persistent constraints across all tasks, and a config-
+                                                                               iors exhibit as malicious tool calls at Line 3 of Algorithm 1. Given
+urable approver module that controls how expansion requests are
+                                                                               the vast range of possible outcomes from tool calls, the attacker
+handled; these are detailed in Section 7.
+                                                                               could cause a variety of downstream damages. For instance, as
+                                                                               shown in [11, 57], the attacker could induce dangerous data erasure
+                                                                               operations and unauthorized financial transactions.
+
+                                                                           4
+Progent : Securing AI Agents with Privilege Control                                                                                                            Preprint
+
+
+Attacker Capabilities. Our threat model outlines practical con-                        Tool definition       𝑇 ::= 𝑡 ( 𝑝𝑖 : 𝑠𝑖 ) : string
+straints on the attacker’s capabilities. We assume the attacker can                    Tool call             𝑐 ::= 𝑡 ( 𝑣𝑖 ) | { 𝑡 ( 𝑣𝑖 ) 𝑗 }
+manipulate the agent’s external data source in the environment E,                      Identifier            𝑡, 𝑝
+such as an email, to embed malicious commands. When the agent                          Value type            𝑠 ::= number | string | boolean | array
+retrieves such data via tool calls, the injected command can alter                     Value                 𝑣 ::= literal of any type in 𝑠
+the agent’s behavior. However, we assume the user U is benign,                              (a) A formal definition of tool calls in AI agents.
+and as such, the user’s input query is always benign. In other words,
+in terms of Algorithm 1, we assume that the user query 𝑜 0 is benign                   Policy         𝑃 ::= 𝑅
+and any observation 𝑜 𝑖 (𝑖 > 0) can be controlled by the attacker.                     Rule           𝑅 ::= 𝐸 𝑡 when { 𝑒 𝑖 }, fallback 𝑓
+However, the attacker cannot modify the agent’s internals, such as                     Effect         𝐸 ::= allow | forbid
+changing the model or its system prompt. This is because in the                        Expression     𝑒 𝑖 ::= 𝑣 | 𝑝𝑖 | 𝑝𝑖 [𝑛] | 𝑝𝑖 .length |
+real world, agents are typically black-box to external parties.                                               𝑒 𝑖 and 𝑒 𝑖′ | 𝑒 𝑖 or 𝑒 𝑖′ | not 𝑒 𝑖 | 𝑒 𝑖 bop 𝑒 𝑖′
+                                                                                       Operator       bop ::= < | ≤ | == | in | match
+Progent’s Defense Scope. Progent aims to provide a general                             Fallback       𝑓 ::= terminate execution |
+framework for enforcing privilege control policies over tool calls for                                       request user inspection | return msg
+AI agents. It is helpful for effectively securing agents in a wide range               Tool identifier 𝑡, constant value 𝑣,
+of scenarios, as we show in our evaluation (Section 8). However, it                    𝑖-th tool argument 𝑝𝑖 , string msg.
+has limitations and cannot handle certain types of attacks, which
+are explicitly outside the scope of this work and could be interesting                    (b) A definition of Progent’s privilege control policy.
+future work items. First, Progent cannot be used to defend against
+attacks that operate within the least privilege for accomplishing the            Figure 2: Definitions of tool calls in AI agents and Progent’s
+user task. An example is preference manipulation attacks, where                  privilege control policy.
+an attacker tricks an agent to favor the attacker product among
+valid options [34]. Second, since Progent focuses on constraining                Fallback Action. Each rule includes a fallback function 𝑓 , which
+tool calls, it does not handle attacks that target text outputs.                 is executed when a tool call is disallowed. The primary purpose of
+                                                                                 𝑓 is to guide an alternative course of action; it can either provide
+4     Progent’s Privilege Control Policy                                         feedback to the agent on how to proceed or involve a human for a
+In this section, we introduce Progent’s privilege control policy. We             final decision. We currently support three types of fallback func-
+provide its definition (Section 4.1), describe how it is enforced at             tions, additional types can be added in the future: (i) immediately
+runtime (Section 4.2), and present how two policies are compared                 terminate agent execution; (ii) notify the user, who then decides
+via SMT solving to determine whether one is an expansion or                      the next step; (iii) instead of executing the tool call, return an error
+narrowing of the other (Section 4.3).                                            message msg as a result. By default in this paper, we use options
+                                                                                 (iii) and provide the agent with a feedback message “The tool call is
+4.1     Policy Definition                                                        not allowed due to {reason}. Please try other tools or arguments and
+Progent’s privilege control policy, as defined in Figure 2b, provides            continue to finish the user task: {𝑜 0 }.”. The field {reason} varies per
+an expressive and powerful way to achieve privilege control. A                   rule and explains why the tool call is disallowed, e.g., by indicating
+Progent policy 𝑃 is a list of rules that collectively describe the set           how its provided arguments violate the rule’s conditions. This acts
+of tool calls the agent is allowed to issue. Each rule 𝑅 ∈ 𝑃 targets a           as an automated feedback mechanism, enabling the agent to adjust
+specific tool and specifies conditions to either allow or forbid tool            its strategy and continue working on the user’s original task. For
+calls based on their arguments. A rule’s “Fallback” operation can                instance, in the running example (Figure 1), when send_email is
+describe how to handle a blocked tool call. We describe the core                 blocked at step 4, the fallback message allows the agent to continue
+constructs of each rule below.                                                   and successfully complete the benign task at step 5.
+Effect and Conditions. As illustrated in the row “Rule” of Fig-                  4.2     Policy Runtime
+ure 2b, the definition of a rule starts with 𝐸 𝑡, where Effect 𝐸 specifies
+whether the rule seeks to allow or forbid tool calls, and 𝑡 is the               Progent’s runtime enforcement is a deterministic procedure that
+identifier of the target tool. Following this, 𝑒 𝑖 defines a conjunc-            checks every tool call against the current policy, as illustrated in
+tion of conditions specifying when a tool call should be allowed                 Algorithm 2.
+or blocked, based on its arguments. These conditions are critical                    Given a policy 𝑃 and a single tool call 𝑐 ≔ 𝑡 ( 𝑣𝑖 ), enforcement
+because a tool call’s safety often depends on the specific arguments             proceeds as follows. From all rules in 𝑃, we consider only a subset
+it receives. Each condition 𝑒 𝑖 is a boolean expression over 𝑝𝑖 , the            𝑃 𝑡 that targets tool 𝑡 (Line 2). Then, at Line 3, we take a conservative
+𝑖-th argument of the tool. It supports diverse operations, such as               approach to place forbid rules before allow rules such that the
+logical operations, comparisons, member accesses (i.e., 𝑝𝑖 [𝑛]), array           forbid ones take effect first. Next, we iterate over each rule 𝑅 in the
+length (i.e., 𝑝𝑖 .length), membership queries (i.e., the in operator),           sorted rules (Line 4). In Line 5, we use the notation 𝑒 𝑖 [𝑣𝑖 /𝑝𝑖 ] to de-
+and pattern matching using regular expressions (i.e., the match                  note the substitution of the variables 𝑝𝑖 appearing in 𝑅’s conditions
+operator).                                                                       𝑒 𝑖 with the corresponding concrete argument values 𝑣𝑖 observed at
+                                                                                 runtime. This yields a boolean result indicating whether the con-
+                                                                                 ditions are met and, consequently, whether the rule 𝑅 takes effect.
+                                                                             5
+Preprint                                                                                                              Progent : Securing AI Agents with Privilege Control
+
+
+ Algorithm 2: Applying Progent’s policy on a tool call.                                  Algorithm 3: Enforcing Progent’s policy at agent runtime.
+1 Procedure 𝑃 (𝑐)                                                                         Input : User query 𝑜 0 , agent A, tools T , environment E.
+    Input : Policy 𝑃, Tool call 𝑐 ≔ 𝑡 ( 𝑣𝑖 ).                                             Output : Agent execution result.
+    Output : A secure version of the tool call based on 𝑃.                              1 initialize 𝑃 with 𝑜 0
+2   𝑃 𝑡 = a subset of rules in 𝑃 that target 𝑡                                          2 for 𝑖 = 1 to max_steps do
+3   Sort 𝑃 𝑡 such that forbid rules comes before allow rules                            3    𝑐 𝑖 = A (𝑜𝑖 −1 )
+4   for 𝑅 in 𝑃 𝑡 do                                                                     4    if 𝑐 𝑖 is a tool call then
+5       if 𝑒 𝑖 [𝑣𝑖 /𝑝𝑖 ] then                                                           5        𝑜𝑖 = E (𝑃 (𝑐 𝑖 ))
+6          𝑐 ′ = 𝑓 if 𝐸 == forbid else 𝑐                                                6        𝑃 ′ = perform update on 𝑃 based on 𝑜𝑖
+7          return 𝑐 ′                                                                   7        if 𝐴(𝑃 ′ ) ⊆ 𝐴(𝑃) then
+                                                                                        8            𝑃 = 𝑃′
+8     return 𝑓 default
+                                                                                        9        else ask for approval
+                                                                                       10     else task solved, return task output
+If the rule takes effect, we proceed to apply 𝑅 to the tool call 𝑐. In                 11   task solving fails, return unsuccessful
+Line 6, we adjust the tool call based on 𝑅’s effect 𝐸. If 𝐸 is forbid,                 * Green highlights additional modules introduced by Progent.
+we block 𝑐 and replace it with 𝑅’s fallback function 𝑓 . Otherwise,
+if 𝐸 is allow, 𝑐 is allowed and left unchanged. In Line 7, we return
+the modified tool call 𝑐 ′ . Finally, at Line 8, if no rule in 𝑃 targets the           We denote that right hand side of Equation (3) as an SMT formula
+tool or the tool call’s arguments do not trigger any rule, we block                    Φ𝑃 𝑡 (𝑣𝑖 ). Then, addressing Equation (2) is equivalent to solving
+the tool call by default for security purposes. In this case, we return                                          ∀ 𝑣𝑖 . Φ𝑃 𝑡′ (𝑣𝑖 ) ⇒ Φ𝑃 𝑡 (𝑣𝑖 )                     (4)
+the default fallback function 𝑓 default .
+    The function 𝑃 (𝑐) creates a policy-governed tool call. It behaves                 5     Securing Agent Execution with Progent
+just like the original tool call 𝑐 when the policy 𝑃 allows it, and it
+automatically switches to the fallback function when it does not.                      Building on the policy enforcement in Section 4, we now discuss
+                                                                                       how Progent secures a full agent execution and how policies are
+4.3        Policy Comparison via SMT Solving                                           automatically generated and updated using an LLM.
+As introduced in Section 2, Progent needs to compare two policies                      Agent Execution Loop with Progent. Algorithm 3 illustrates
+to determine whether one is an expansion or a narrowing of the                         how Progent integrates into the standard agent execution loop
+other. Now we formalize this comparison and reduce it to SMT                           (Algorithm 1), with additional modules highlighted in green.
+solving. Let 𝐴(𝑃) be the set of all tool calls allowed by a policy 𝑃:                      At Line 1, the policy 𝑃 is initialized based on the user’s task.
+                           𝐴(𝑃) = { 𝑐 | 𝑃 (𝑐) = 𝑐 },                         (1)       Under our threat model, where the user query is benign, the initial-
+                                                                                       ized 𝑃 is expected to accurately identify and restrict tool usage and
+where 𝑐 is a tool call and 𝑃(c) is the output of Algorithm 2. 𝑃 (𝑐) = 𝑐                arguments in accordance with the principle of least privilege. At
+means 𝑃 permits the tool call 𝑐 (𝑃 (𝑐) returns 𝑐 unchanged).                           Line 5, instead of executing the unprotected tool call 𝑐 𝑖 , we invoke
+    Given two policies 𝑃 and 𝑃 ′ , we define two relationships. We                     its policy-governed version 𝑃 (𝑐 𝑖 ).
+say 𝑃 ′ is a narrowing of 𝑃 if 𝐴(𝑃) ⊇ 𝐴(𝑃 ′ ), meaning 𝑃 ′ permits                         In addition to the initial policy based on the trusted context,
+only a subset of the tool calls that 𝑃 permits (including the case                     agents dynamically acquire new contextual information during
+where 𝐴(𝑃) = 𝐴(𝑃 ′ )). Conversely, 𝑃 ′ is an expansion of 𝑃 if 𝐴(𝑃) ⊉                  execution. This evolving context requires policy updates so that
+𝐴(𝑃 ′ ), meaning 𝑃 ′ would permit some tool call that 𝑃 does not.                      external information is properly incorporated to reflect the current
+For example, in Figure 1c, 𝑃3 is a narrowing of 𝑃2 (Slack recipient                    least-privilege requirements. However, such updates introduce ad-
+is bound to alice), while 𝑃 2 is an expansion of 𝑃1 (new tools are                     ditional complexity. While the initial context 𝑜 0 used during policy
+added).                                                                                initialization is trusted, the contextual information obtained from
+    Without loss of generality, we next show how to determine                          the environment at runtime cannot always be considered trust-
+the narrowing relationship (i.e., whether 𝐴(𝑃) ⊇ 𝐴(𝑃 ′ ) holds)                        worthy. Consequently, updating the policy based on potentially
+by reducing it to SMT solving. This is equivalent to checking                          untrusted context requires careful design to prevent new attack sur-
+∀ 𝑐. 𝑃 ′ (𝑐) = 𝑐 ⇒ 𝑃 (𝑐) = 𝑐. Since each tool call 𝑐 consists of a tool                faces. To address this, we implement policy updates in two steps at
+name 𝑡 and arguments 𝑣𝑖 , this is equivalent to: ∀ 𝑡, 𝑣𝑖 . 𝑃 ′ (𝑡 (𝑣𝑖 )) =             Lines 6 and 7 of Algorithm 3. First, a candidate updated policy 𝑃 ′ is
+𝑡 (𝑣𝑖 ) ⇒ 𝑃 (𝑡 (𝑣𝑖 )) = 𝑡 (𝑣𝑖 ). We then iterate over each tool 𝑡 and check            generated (Line 6). Then, we check whether 𝐴(𝑃 ′ ) ⊆ 𝐴(𝑃) (Line 7)
+              ∀ 𝑣𝑖 . 𝑃 𝑡′ (𝑡 (𝑣𝑖 )) = 𝑡 (𝑣𝑖 ) ⇒ 𝑃 𝑡 (𝑡 (𝑣𝑖 )) = 𝑡 (𝑣𝑖 ).     (2)       using the SMT solver described in Section 4.3. If so, the update
+                                                                                       is a narrowing and is accepted automatically; otherwise, it is an
+Based on the loop (Lines 4 to 7) of Algorithm 2, we have
+                                                                                       expansion and requires approval. This deterministic check ensures
+ 𝑃 𝑡 (𝑡 (𝑣𝑖 )) = 𝑡 (𝑣𝑖 ) ⇔ (∀ 𝑅 ∈ 𝑃 𝑡 . 𝐸 = forbid ⇒ ¬𝑒 𝑖 [𝑣𝑖 /𝑝𝑖 ]) ∧                 that policy updates can only narrow privileges without approval,
+                                                                             (3)
+                            (∃ 𝑅 ′ ∈ 𝑃 𝑡 . 𝐸 ′ = allow ∧ 𝑒 𝑖′ [𝑣𝑖 /𝑝𝑖′ ]).             whereas any expansion requires explicit approval. How expansion
+                                                                                       requests are handled is configurable through an approver module
+                                                                                       (Section 7), which supports automatic denial, automatic approval,
+                                                                                   6
+Progent : Securing AI Agents with Privilege Control                                                                                                    Preprint
+
+
+per-tool approval rules, or human review. In the running example                  where 𝐴(𝑃) is the agent’s allowed tool calls as defined in Section 4.3.
+(Figure 1c), the update from 𝑃 2 to 𝑃3 is a narrowing and is applied                 Since Equation (5) is enforced for every tool at every update step
+automatically, while the update from 𝑃1 to 𝑃2 is an expansion and                 (Lines 7 to 9 in Algorithm 3), the set of allowed tool calls forms a
+requires approval.                                                                monotonically decreasing sequence between approved expansions:
+   As discussed in Section 2.1, agent security depends on both task                                𝐴(𝑃 (0) ) ⊇ 𝐴(𝑃 (1) ) ⊇ 𝐴(𝑃 (2) ) ⊇ . . .               (6)
+and execution context, so manually crafting a per-step policy for
+every possible user task is impractical. To address this, we use                  We call this property Monotonic Confinement: the agent’s action
+LLMs to automatically generate and update policies by reasoning                   space cannot increase without explicit approval.                    □
+about these contexts. Specifically, we incorporate LLMs into policy                  In the running example (Figure 1), the update from 𝑃1 to 𝑃 2 is an
+initialization and update in Lines 1 and 6 of Algorithm 3. We found               expansion that requires approval. After this approval, the invariant
+that LLMs are capable of effectively managing Progent’s policies,                 guarantees that the sequence only narrows: 𝐴(𝑃 2 ) ⊇ 𝐴(𝑃 3 ) =
+likely due to their strong security capabilities. Next, we describe               𝐴(𝑃 4 ) = 𝐴(𝑃5 ), ensuring the agent’s permissions can only decrease
+how to obtain the initial and updated policy 𝑃 in Lines 1 and 6.                  between approvals.
+
+Initial Policy Generation. The initial policy 𝑃 is generated by                   7    Implementation
+an LLM based on the context, which includes the set of available
+                                                                                  Progent’s Privilege Control Policy. We implement Progent’s
+tools T and the initial user query 𝑜 0 . The LLM interprets the task
+                                                                                  policy using JSON Schema [19]. State-of-the-art LLM service providers
+requirements expressed in the user query and generates a task-
+                                                                                  (e.g., OpenAI API [35]) use JSON to format tool calls, making JSON
+specific policy. Under our threat model, the user query is benign,
+                                                                                  Schema a natural choice for validating tool calls against policy
+and the LLM sees only trusted content at this stage. In Section 8.2,
+                                                                                  rules. Because JSON is widely represented in LLM training data,
+we experimentally show that the initial LLM-generated policy is
+                                                                                  LLMs can generate syntactically correct policies in JSON format
+already effective at defending against many indirect prompt injec-
+                                                                                  without any fine-tuning, enabling the automated policy genera-
+tion attacks without requiring later updates. Specifically, it reduces
+                                                                                  tion and update pipeline described in Section 5. We leverage the
+the attack success rate from 39.9% to 2.5% while maintaining utility.
+                                                                                  jsonschema library [38] for the policy enforcement. We utilize the
+This effectiveness aligns with the models’ ability to plan tool calls
+                                                                                  Z3 SMT solver [9] to implement the policy comparison described
+and generate least-privilege policies.
+                                                                                  in Section 4.3.
+Policy Update. The initial policy already provides a strong de-
+                                                                                  Modular Integration. Benefiting from its modular design, Pro-
+fense, but dynamic agent planning introduces the need for policy
+                                                                                  gent can be integrated by inserting a policy check between the
+updates that incorporate external information to maintain both
+                                                                                  agent and its tools, requiring no modification to the agent’s internal
+utility and security. In contrast to policy initialization, the policy
+                                                                                  architecture. We provide two complementary integration modes: a
+update at Line 6 needs to incorporate content from the environment,
+                                                                                  library mode for developers who embed Progent directly into the
+which is untrusted and may be manipulated by attackers.
+                                                                                  agent runtime with minimal code changes, and a proxy mode for
+      To guard against adversarial inputs, the candidate generation
+                                                                                  end users who secure agents transparently by redirecting endpoints
+is split into two sub-steps. First, an LLM determines whether a
+                                                                                  to Progent’s proxy server without altering any agent code. Con-
+policy update is potentially needed, receiving as input the avail-
+                                                                                  crete integration examples with real-world agent frameworks are
+able tools T , the initial user query 𝑜 0 , and the current tool call
+                                                                                  presented in Section 8.3.
+𝑐 𝑖 . Crucially, the tool call result 𝑜 𝑖 is excluded at this stage, ensur-
+ing the decision of whether to proceed is made without exposure                   Generic Policies. In many deployment scenarios, different stake-
+to potentially malicious content. If the tool call corresponds to a               holders have persistent security requirements that must hold across
+non-informative or irrelevant action (e.g., reading irrelevant files,             all user tasks: an organization may mandate data-governance rules,
+writing files, sending emails), no update is needed. If the LLM deter-            agent developers may restrict access to sensitive tools, and end
+mines that an update is necessary, it then generates the candidate                users may wish to protect their personal data. Progent supports
+policy 𝑃 ′ using the full available context, including T , 𝑜 0 , 𝑐 𝑖 , the        this through generic policies, which are manually specified and re-
+tool call result 𝑜 𝑖 , and the current policy 𝑃. The generated 𝑃 ′ is             main fixed throughout execution. Generic and task-specific policies
+then checked as described in the Agent Execution paragraph above:                 are composed by applying them sequentially using Algorithm 4:
+the SMT-based comparison (Section 4.3) determines whether the                     the generic policy is evaluated first; if it does not explicitly allow or
+update is a narrowing or an expansion and handles it accordingly.                 forbid the call, the task-specific policy 𝑃 is applied; otherwise, the
+Even if the LLM-generated candidate 𝑃 ′ is influenced by adversarial              generic policy’s decision is followed. This ensures that any tool call
+content in the environment, the SMT-based comparison will detect                  forbidden by the generic policy is blocked outright and cannot be
+the malicious expansion and prevent it from being silently applied.               recovered by 𝑃, guaranteeing Generic Confinement: the effective
+                                                                                  action space satisfies 𝐴(𝑃 generic, 𝑃) ⊆ 𝐴(𝑃 generic ).
+6    Progent’s Security Guarantee                                                     When multiple stakeholders each contribute their own generic
+We now state the security guarantee provided by Algorithm 3. The                  policy with different authority levels, Progent supports multiple
+SMT-based expansion check (Line 7) ensures that every automati-                   layers of generic policies with an explicit priority ordering. Given
+cally applied policy update satisfies:                                            generic policies 𝑃 𝐴 , 𝑃 𝐵 , 𝑃 𝐶 , 𝑃 𝐷 ordered by priority, they are ap-
+                                                                                  plied as (((𝑃 𝐴 , 𝑃 𝐵 ), 𝑃 𝐶 ), 𝑃 𝐷 )(𝑐), where 𝑃 𝐴 has the highest priority.
+                                𝐴(𝑃 ′ ) ⊆ 𝐴(𝑃),                        (5)        Higher-priority policies are enforced first and cannot be overridden
+                                                                              7
+Preprint                                                                                                 Progent : Securing AI Agents with Privilege Control
+
+
+by lower-priority ones, while lower-priority policies may further               Algorithm 4: Applying two policies on a tool call.
+restrict the remaining action space, ensuring that no lower-priority
+                                                                               1 Procedure (𝑃 𝐴 , 𝑃 𝐵 )(𝑐)
+or task-specific policy can weaken stronger generic guarantees.                    Input : Policies 𝑃 𝐴 , 𝑃 𝐵 (𝑃 𝐴 has higher priority than 𝑃 𝐵 ),
+Approver Module. By default, when the SMT-based expansion                                        Tool call 𝑐 ≔ 𝑡 ( 𝑣𝑖 ).
+check (Section 4.3) detects that a proposed update would expand                    Output : A secure version of the tool call based on 𝑃 𝐴 and 𝑃 𝐵 .
+the policy, confirmation is required before it takes effect. Progent in-       2   𝑐 𝑖′ = 𝑃 𝐴 (𝑐 𝑖 )
+cludes a configurable approver module that controls how expansion              3   if 𝑐 𝑖′ == 𝑓 default then
+requests are handled. At the coarsest level, users can automatically           4        𝑐 𝑖′ = 𝑃 𝐵 (𝑐 𝑖 )
+approve all expansions or automatically deny all, depending on                 5    return 𝑐 𝑖′
+their desired security-utility tradeoff. At a finer level, users can
+define per-tool approval rules that auto-approve expansions for
+specific trusted contexts (e.g., tools that only access trusted local
+                                                                               intentionally refrain from manually forbidding any tools or tool call
+data), while still requiring confirmation for other tools. The ap-
+                                                                               arguments in this mode, leaving the automated pipeline to generate
+prover module can also be configured to require human review
+                                                                               and update the corresponding policies. This setup represents a
+of the initial policy and every expansion request, providing ad-
+                                                                               worst-case scenario in which the user neither defines a trusted
+ditional assurance for security-critical deployments. We evaluate
+                                                                               argument list nor restricts sensitive tools in generic policies, and
+these configurations in Section 8.2.
+                                                                               chooses to always approve policy expansion requests, simulating a
+8     Experimental Evaluation                                                  user with limited security awareness who may make risky decisions
+                                                                               in practice.
+This section presents a comprehensive evaluation of Progent. We                   We compare Progent with four prior defense mechanisms imple-
+first demonstrate Progent’s general effectiveness on two popular               mented in the original paper of AgentDojo [11] and two state-of-the-
+benchmarks (Section 8.1), then analyze the impact of its various               art defenses: (i) repeat_user_prompt [24] repeats the user query
+components (Section 8.2), and finally evaluate Progent on real-                after each tool call; (ii) spotlighting_with_delimiting [17] for-
+world agents and multi-agent systems (Section 8.3).                            mats all tool call results with special delimiters and prompts the
+                                                                               agent to ignore instructions within these delimiters; (iii) tool_fi
+8.1        Progent’s General Effectiveness                                     lter [43] prompts an LLM to give a set of tools required to solve
+Evaluation Setup. We evaluate Progent on two popular bench-                    the user task before agent execution and removes other tools from
+marks. The first is AgentDojo [11], a state-of-the-art prompt injec-           the toolset available for the agent; (iv) transformers_pi_detecto
+tion benchmark. AgentDojo includes four types of common agent                  r [37] uses a classifier fine-tuned on DeBERTa [16] to detect prompt
+use cases in daily life: (i) Banking: performing banking-related op-           injection on the result of each tool call and aborts the agent if it
+erations; (ii) Slack: handling Slack messages, reading web pages               detects an injection; (v) DataSentinel [31] is a game-theoretically
+and files; (iii) Travel: finding and reserving flights, restaurants, and       fine-tuned detector; (vi) LlamaPromptGuard2 [32] is a prompt in-
+car rentals; (iv) Workspace: managing emails, calendars, and cloud             jection detector provided by Llama team.
+drives. The attacker injects malicious prompts in the environment,                Figure 3 shows the results on AgentDojo for Progent, prior de-
+which are returned by tool calls into the agent’s workflow, direct-            fenses, and a baseline for which no defense is applied. Progent
+ing the agent to execute an attack task. The second is the ASB                 significantly reduces ASR from 39.9% with the no defense base-
+benchmark [57], which also considers indirect prompt injections                line to 1.0%, while maintaining utility scores in both no-attack and
+through the environment, similar to AgentDojo. ASB provides ten                under-attack scenarios. This means Progent successfully enforces
+agent scenarios and five attack templates. We evaluate two critical            the principle of least privilege, allowing tool calls necessary for
+aspects of defenses: utility, measured by the agent’s success rate in          completing the user task while blocking malicious tool calls. The
+completing benign user tasks (reported both with and without an                comparison also highlights Progent’s overall superiority over previ-
+attack), and security, measured by the attack success rate (ASR).              ous defense mechanisms. tool_filter suffers from higher utility
+   We consistently use gpt-4o as both the underlying LLM of the                reduction and ASR because its coarse-grained approach of ignoring
+agent and the LLM for policy generation and update. For the ex-                tool arguments either blocks an entire tool, harming utility, or al-
+pansion approval, we assume the user configures the approver to                lows it completely, causing attack success. We also observe that the
+always accept policy-expansion requests, simulating a worst-case               three prompt injection detectors (transformers_pi_detector, Da
+scenario with a user who has limited security awareness and may                taSentinel, and LlamaPromptGuard2) are ineffective. While they
+make risky decisions in practice. We explore different approver                may perform well on datasets similar to their training distributions,
+configurations and different model choices in Section 8.2.                     they fail to generalize to AgentDojo, exhibiting high rates of false
+AgentDojo. To instantiate Progent across the four diverse agent                positives and negatives.
+categories in AgentDojo [11], we combine generic privilege control             ASB. Similar to AgentDojo, we utilize an autonomous approach
+policies with LLM-generated and dynamically updated task-specific              using LLMs for policy generation. That is, we leverage the method
+policies, as described in Sections 5 and 7. For generic policies, we           described in Section 5 but do not provide any manually defined
+globally allow the use of non-sensitive, read-only tools that agents           generic policies to simulate the worst-case scenario. We compare
+commonly employ to collect information for task planning. We                   Progent with prior defenses implemented in the original paper of
+                                                                           8
+Progent : Securing AI Agents with Privilege Control                                                                                                                                   Preprint
+
+
+                 No defense      repeat_user_prompt [24]             spotlighting_with_delimiting [17]                        tool_filter [43]
+                                 transformers_pi_detector [37]       DataSentinel [31]                                        Llama Prompt Guard 2 [32]                 Progent
+ 100                                                   100                                                                     100
+  80   79.4 83.5                      79.4 76.3         80                                                                     80
+                 73.2                                           68.4
+                      66.0      65.0                                   61.5 61.3                       61.3
+  60                                                    60 54.0                                                                60
+                           37.1                                                          39.4 39.2                                   39.9
+  40                                                    40                                                                     40
+                                                                                                                                             25.1 23.3                    21.4 24.1
+  20                                                              20                               18.5                        20
+                                                                                                                                                           6.3    8.2
+                                                                                                                                                                                       1.0
+   0                  Utility (no attack)                         0                    Utility (under attack)                   0                      ASR (under attack)
+
+             Figure 3: Comparison between vanilla agent (no defense), prior defenses, and Progent on AgentDojo [11].
+
+                 No defense                  delimiters_defense [23]                ob_sandwich_defense [24]             instructional_prevention [22]                    Progent
+               100                                                     100                                              100
+                                                   81.8
+                80 78.2 73.0                76.5           78.2        80    71.1      71.5    69.8              69.7    80   70.3    73.1
+                                                                                                                                                67.0       66.6
+                                                                                                          60.9
+                 60                                                    60                                                60
+                 40                                                    40                                                40
+                 20                                                    20                                                20
+                                                                                                                                                                    3.9
+                  0              Utility (no attack)                    0             Utility (under attack)              0            ASR (under attack)
+
+                                                             Figure 4: Comparison results on ASB [57].
+
+
+ASB [57]: (i) delimiters_defense [23] uses delimiters to wrap the                                  and security, we compare four representative approver configura-
+user query and prompts the agent to execute only the user query                                    tions. The first three are fully automatic, while the fourth involves
+within the delimiters; (ii) ob_sandwich_defense [24] appends an                                    human review: (i) Disable Update: the LLM generates the initial pol-
+additional instruction prompt including the user task at the end                                   icy, which is accepted automatically; the policy update mechanism
+of the tool call result; (iii) instructional_prevention [22] recon-                                is disabled, so the initial policy remains fixed throughout execution;
+structs the user query and asks the agent to disregard all commands                                (ii) Auto-Deny: the LLM generates the initial policy based on the
+except for the user task.                                                                          benign user query, which is accepted automatically; during execu-
+   Figure 4 shows the comparison results on ASB. Progent main-                                     tion, all narrowing updates are applied but all expansion updates
+tains the utility scores comparable to the no-defense setting. This                                are denied; (iii) Auto-Approve: the LLM generates the initial policy
+is because our policies do not block the normal functionalities re-                                based on the benign user query, which is accepted automatically;
+quired for the agent to complete benign user tasks. Specifically,                                  during execution, all updates (both narrowing and expansion) are
+the LLM-generated policies can successfully identify the necessary                                 accepted automatically; (iv) Manual Approval: a human reviews
+tools for the user task and allow their use. Progent also significantly                            the initial policy and every expansion update during execution,
+reduces ASR from 70.3% to 3.9%. We further investigate the failure                                 and removes any inappropriate rules from the policy. Details of the
+cases of the LLM-generated policies. Most of these failures occur                                  manual approval process are provided in Appendix D.
+because the names and descriptions of the attack tool calls are very                                   Among these configurations, Auto-Approve represents the worst-
+similar to those of benign tools and appear closely related to the                                 case scenario, where all expansions are accepted without review. We
+user tasks. Therefore, we believe it is difficult to identify these attack                         adopt the Auto-Approve mode as the default configuration in other
+tool calls even for humans, without the prior knowledge of which                                   experiments to evaluate this worst case. In contrast, Auto-Deny
+tool calls are trusted. We also experiment with using Progent’s                                    offers a conservative balance between security and automation,
+policy to express manual rules enhanced with additional human                                      ensuring that all expansions are rejected. The Disable Update mode
+insights. These manually defined policies can provably reduce the                                  provides deterministic stability by fixing policies after initialization,
+ASR to 0%. The prior defenses are ineffective in reducing ASR, a                                   though it may reduce adaptability to dynamic contexts. Finally,
+result consistent with the original paper of ASB [57].                                             the Manual Approval mode delivers the strongest security, as all
+                                                                                                   policies are explicitly reviewed by the user, but it demands manual
+8.2     Ablation Studies                                                                           effort and is most suitable for security-critical environments.
+Different Approver Configurations. As described in Section 7,                                          Figure 5 presents the performance of Progent under different
+Progent’s approver module controls how policy expansions are han-                                  configurations. In the Disable Update mode, compared to the no-
+dled. To systematically explore the trade-off between automation                                   defense baseline, the ASR is effectively reduced. This is because
+
+                                                                                              9
+Preprint                                                                                                                                                                                               Progent : Securing AI Agents with Privilege Control
+
+
+               No defense               Disable Update       Auto-Deny                  Auto-Approve            Manual Approval                                        No defense        gpt-4o           claude-sonnet-4                 gemini-2.5-flash            gpt-4.1
+100                                            100                                           100                                                  100                                     100                                               100
+ 80 79.4        70.1
+                                 76.3      75.3 80                                             80                                                  80 79.4      76.3
+                                                                                                                                                                        70.1   72.2   68.0
+                                                                                                                                                                                             80                                                  80
+                        67.0                                                                                                                                                                                           63.8               62.5
+                                                           56.7         58.9     61.3      58.6 60                                                                                                        61.3                 60.8
+ 60                                            60 54.0                                                                                             60                                        60 54.0                                             60
+                                                                                                     39.9                                                                                                                                               39.9
+ 40                                            40                                              40                                                  40                                        40                                                  40
+ 20                                            20                                              20                                                  20                                        20                                                  20
+                                                                                                              2.5      0.7   1.0     0.0                                                                                                                       1.0     2.2      3.0   4.1
+  0             Utility (no attack)             0         Utility (under attack)                0            ASR (under attack)                     0           Utility (no attack)          0           Utility (under attack)                   0            ASR (under attack)
+
+          Figure 5: Progent’s effectiveness over different configs.                                                                               Figure 6: Progent’s effectiveness over different policy LLMs.
+
+                                              gpt-4o               claude-sonnet-4                          gemini-2.5-flash               gpt-4.1               Meta-SecAlign-70B                      No defense                        Progent
+ 100                                                                                                 100                                                                                      100
+                          86.6
+            79.4 76.3            80.4                     81.4                 78.3 77.3                                     76.6 75.4
+  80                                                             74.2                                 80                                                                 70.170.8                 80
+                                                                                                                      61.3                                      63.7
+  60                                        57.7                                                      60       54.0                                      57.2                                     60
+                                                   51.5                                                                                                                                                                                          49.9
+                                                                                                                                                  43.5                                                   39.9                                                  39.9
+  40                                                                                                  40                                   31.2                                                   40
+  20                                                                                                  20                                                                                          20
+                                                                                                                                                                                                                              6.8                                               4.8 0.3
+                                                                                                                                                                                                                 1.0                0.5                 0.5           0.5
+      0                            Utility (no attack)                                                  0                          Utility (under attack)                                         0                                   ASR (under attack)
+
+                                                                               Figure 7: Progent’s effectiveness over different agent LLMs.
+
+
+many tasks have clearly defined goals in the user query, and poli-                                                                                  marginal reduction. Under attacks, it improves the utility and sig-
+cies generated solely from the initial context can already provide                                                                                  nificantly reduces the ASR across different models. We also find
+strong security protection. When the policy update mechanism is                                                                                     that claude-sonnet-4 and Meta-SecAlign-70B, themselves already
+enabled, the Auto-Deny mode achieves the highest level of security                                                                                  have strong safety mechanisms, achieving a remarkable ASR of
+among fully automated configurations, as all updates are strictly                                                                                   only 6.8% and 4.8% without any defense applied. With Progent ap-
+bounded by invariant checks. In contrast, the Auto-Approve mode                                                                                     plied, the ASR is even reduced further to 0.5% and 0.3%, defending
+allows policies to expand beyond their initial invariants, which                                                                                    about 90% of attacks. These results demonstrate that Progent com-
+improves both utility and security compared to the Disable Update                                                                                   plements existing defense mechanisms and serves as an effective
+mode. However, the ASR is slightly higher than in the Auto-Deny                                                                                     defense-in-depth layer in practice.
+mode because widened policies may inadvertently permit malicious
+actions, which is why explicit approval is required in practice for                                                                                 8.3         Real-World Agents Integration
+such updates. Finally, the Manual Approval mode reduces the ASR                                                                                     To evaluate real-world agents and multi-agent systems, we first
+to 0% with human review, demonstrating that human oversight can                                                                                     construct an MCP-based benchmark. Then, we integrate Progent
+capture complex security requirements that the automatic pipeline                                                                                   into real-world agents and multi-agent systems to showcase its
+may miss. This result highlights the trade-off between defense                                                                                      performance and practicality in realistic deployment scenarios.
+automation and security guarantees, and demonstrates Progent’s                                                                                      We evaluate Progent with various real-world agent development
+advantage in supporting both automated and manual approver                                                                                          frameworks and agent products including LangChain [21], OpenAI
+configurations.                                                                                                                                     Agents SDK [36], OpenHands [48], and AutoGen [53]. Integration
+   We also observe that, after the SMT-based expansion check, only                                                                                  details are provided in Appendix F.
+6% of policy updates are expansions that require approval; the
+rest are narrowings handled automatically. This allows Progent to                                                                                   MCP-Based Benchmark. The benchmarks used in Section 8
+maintain strong security while keeping the approval overhead low.                                                                                   each employ their own agent implementations. To further demon-
+                                                                                                                                                    strate Progent’s practicality and effectiveness in more complex,
+Different Model Choices. In this experiment, we first explore                                                                                       real-world settings, we integrate it into popular agent development
+model choices for our automated policy generation and update                                                                                        frameworks and agent products.
+approach discussed in Section 5. We run the agents in AgentDojo                                                                                        To evaluate these real-world agents, we need a sandboxed en-
+with different policy LLMs, while fixing the underlying LLM of the                                                                                  vironment for safe interaction and realistic attack simulations. To
+agent to gpt-4o. As shown in Figure 6, Progent is effective with                                                                                    achieve this, we migrate AgentDojo’s environments and tools to
+LLMs for policy generation and update, reducing ASR below 5%                                                                                        MCP servers, along with all its benign tasks and attack tasks, con-
+across all models and to 1% with the best performing LLM.                                                                                           structing a new benchmark capable of interfacing directly with
+   Next, we set the gpt-4o as the policy LLM and run agents with                                                                                    real-world agents. This unified MCP-based tool suite provides a
+various underlying agent LLMs. We compare the no-defense base-                                                                                      standardized environment for simulating realistic scenarios and
+line with using gpt-4o to generate and update the policies. As we                                                                                   assessing the performance of real-world agents. It is fully reusable
+can observe in Figure 7, Progent is effective across different agent                                                                                and can be applied to future agent frameworks or products as long
+LLMs. It either maintains utility under no attack or introduces
+                                                                                                                                           10
+Progent : Securing AI Agents with Privilege Control                                                                                                                                 Preprint
+
+
+                                   LangChain          OpenAI Agents SDK             OpenHands            AutoGen (Multi-Agent)         No defense       Progent
+ 100                                                            100                                                              100
+       79.4          83.5           80.4
+  80          68.0
+                            73.2           73.2                  80                                                              80
+                                                                                              66.4          65.9
+                                                  56.7 56.7                  61.3
+  60                                                             60   54.7             55.2          51.4          49.6 53.5     60
+                                                                                                                                                       40.4         42.0
+  40                                                             40                                                              40       32.6
+  20                                                             20                                                              20                                              18.7
+                                                                                                                                                 1.2          0.8          1.4          0.8
+   0                   Utility (no attack)                        0                    Utility (under attack)                     0                     ASR (under attack)
+
+                                   Figure 8: Progent’s effectiveness over real-world agents and multi-agent systems.
+
+
+as they support MCP, making it a practical and extensible testbed                                    sub-agents: (i) a general agent that manages user profile and pass-
+for real-world agent security research.                                                              words; (ii) a workspace agent responsible for calendar, email, and
+                                                                                                     file operations; (iii) a slack agent that handles team communica-
+Real-World Agents. In this experiment, we apply Progent to two
+                                                                                                     tion and channel management; (iv) a banking agent that performs
+popular agent development frameworks (LangChain and OpenAI
+                                                                                                     banking and payment-related tasks; (v) a travel agent that manages
+Agents SDK), and an agent product (OpenHands). As described in
+                                                                                                     bookings and itineraries; and (vi) a web agent that handles web
+Section 7, Progent provides two integration modes designed for
+                                                                                                     browsing and content posting. In this experiment, we adopt the first
+different user roles: a library mode for agent developers and a proxy
+                                                                                                     integration method to incorporate Progent into the multi-agent
+mode for end users. We employ the library mode for LangChain
+                                                                                                     system, as all sub-agents operate on behalf of the same user, making
+and the OpenAI Agents SDK, simulating developers who incorpo-
+                                                                                                     unified control a more suitable choice.
+rate Progent into existing agents with minimal code modifications.
+                                                                                                         Figure 8 shows that in the multi-agent setting, both utility and
+Specifically, for LangChain, we implement a Middleware compo-
+                                                                                                     ASR are slightly lower than in single-agent systems. This is likely
+nent that developers can easily add when defining their agents
+                                                                                                     because multi-agent systems naturally introduce isolation between
+using the LangChain SDK. For the OpenAI Agents SDK, we pro-
+                                                                                                     sub-agents, which can reduce coordination efficiency but also limit
+vide a wrapper around the Agent class that enables developers to
+                                                                                                     attack propagation, improving security. After applying Progent,
+seamlessly integrate Progent’s functionality into their agents. For
+                                                                                                     it maintains similar utility while significantly improving security,
+OpenHands, we adopt the proxy mode, simulating end users who
+                                                                                                     defending against more than 95% of successful attacks.
+can apply Progent transparently without altering the agent’s inter-
+nal implementation. In this mode, the end user does not need to
+                                                                                                     9       Limitation and Discussion
+modify the agent’s code; instead, they simply change the LLM and
+MCP server endpoints to Progent’s proxy to enable its protection                                     User Mistakes. Although Progent incorporates deterministic SMT-
+on the existing agent product.                                                                       based checking, user mistakes may still jeopardize its security
+   As shown in Figure 8, Progent consistently reduces the ASR to                                     guarantees. If users incorrectly approve widening updates or give
+around 1% while maintaining strong utility. The marginal varia-                                      ambiguous initial tasks, Progent may permit policies that exceed
+tions in utility and security across different agents are likely due                                 minimal privilege. Our mechanisms of policy updates, enforcing
+to differences in system prompts and retry mechanisms among                                          invariant constraints, and requiring explicit approval for potentially
+these agents. These results demonstrate Progent’s effectiveness and                                  unsafe changes mitigate but cannot eliminate these risks. In Appen-
+robustness when deployed with real-world agents under realistic                                      dix E, we empirically evaluate Progent against user-introduced mis-
+attack scenarios.                                                                                    takes using an adaptive attack, showing that Progent substantially
+                                                                                                     reduces ASR and retains meaningful protection despite possible
+Multi-Agent Systems. Progent naturally supports multi-agent                                          human misjudgment.
+systems through its modular design. We identify two ways to in-
+tegrate Progent in the multi-agent settings. The first one treats                                    Defense Scope. Progent focuses on protecting against malicious
+the entire multi-agent system as a unified entity and enforces a                                     tool calls that fall outside the invariant boundaries. As such, Pro-
+single layer of privilege control over the interface between the                                     gent does not tackle attacks that influence only the agent’s textual
+multi-agent system, the environment, and the LLMs. This global                                       outputs without triggering dangerous tool calls. Such text-to-text
+context and policy management ensures consistent security and                                        attacks are more aligned with model-level risks that have been
+prevents cross-agent privilege escalation. Progent can also be ap-                                   extensively studied by existing model security works. For agents,
+plied separately for each sub-agent, allowing customized policies                                    Progent serves as an effective defense-in-depth layer that com-
+tailored to the role and functionality of each agent. This setting is                                plements other defenses while requiring minimal code changes. If
+particularly useful when different agents are operated by distinct                                   developers choose to inject additional components into their agents,
+users or possess significantly different permission levels, requiring                                enhanced policies that restrict tools from reading potentially ma-
+isolated privilege control.                                                                          licious data or filter tool outputs to remove harmful content may
+   For our MCP-based benchmark, we construct a multi-agent sys-                                      further control data flow and help mitigate such attacks. Besides,
+tem with AutoGen, consisting of one coordinator and six expert                                       the proxy mode offers out-of-the-box deployability and requires no
+                                                                                                11
+Preprint                                                                                                      Progent : Securing AI Agents with Privilege Control
+
+
+modification to the underlying agent, but it cannot protect agent             inputs, the expansion check prevents any silent privilege escalation,
+functionalities implemented as built-in tools that bypass external            enabling monotonic confinement guarantees that neither Conseca
+MCP interfaces. In contrast, the library mode requires only a few             nor DRIFT can provide. The privilege-control approach introduced
+lines of code changes yet can secure built-in tools as well. This             by Progent complements these defenses. Its modular design en-
+marks a trade-off between deployability and protection depth.                 ables integration into existing agent implementations with minimal
+                                                                              changes, potentially lowering adoption barriers, whereas many
+Extension to Multimodal Agents. In our current scope, the
+                                                                              other system-level defenses require substantial architectural modi-
+agent can still only handle text. As such, our method cannot be
+                                                                              fications.
+applied to agents with call tools that involve multimodal elements
+such as graphic interfaces. Examples of agent actions include click-          Model-Level Prompt Injection Defenses. A parallel line of
+ing a certain place in a browser [29, 50, 55] or a certain icon on the        research focuses on addressing prompt injections at the model
+computer screen [58]. An interesting future work item is to explore           level, which can be broken down into two categories. The first
+designing policies that capture other modalities such as images.              category trains and deploys guardrail models to detect injected
+For example, the policy can constrain the agent to only click on              content [18, 26, 31, 32, 37]. As shown in Figure 3, Progent empir-
+certain applications on the computer. This can be transformed into            ically outperforms state-of-the-art guardrail methods [31, 32, 37].
+a certain region on the computer screen in which the agent can                Another key distinction is that Progent provides deterministic se-
+only click the selected region.                                               curity enforcement, which guardrail models cannot. The second
+                                                                              category of defenses involves fine-tuning agent LLMs to become
+10     Related Work                                                           more resistant to prompt injections [3–5, 45]. These defenses oper-
+Security Policy Languages. Enforcing security principles is chal-             ate at a different level than Progent’s system-level privilege control.
+lenging and programming has been demonstrated as a viable solu-               Therefore, Progent can work synergistically with model-level de-
+tion by prior works.                                                          fenses, where model defenses protect the core reasoning of the
+   Binder [12] uses Datalog-style inference for authorization and             agent, Progent safeguards the execution boundary between the
+delegation in distributed systems, while Sapper [27] introduces               agent and external tools. As shown in Figure 7, combining Progent
+hardware-level checks for timing-sensitive noninterference. At the            and model-level defenses [5] can provide stronger protections.
+cloud and application level, Cedar [8] provides a domain-specific
+language for expressing fine-grained authorization policies, and              11     Conclusion
+major cloud platforms such as AWS [1], Microsoft Azure [33], and              We propose Progent, a framework that secures AI agents via priv-
+Google Cloud [13] also offer established authorization policy lan-            ilege control at the tool-call level. Progent introduces a privilege
+guages. These approaches show how programmatic policy enforce-                control policy consisting of symbolic rules over tool names and
+ment has matured across diverse security domains, yet existing                arguments, enforced deterministically with no LLM in the deci-
+policy languages are not suited to the dynamic behavior of AI                 sion loop. To handle diverse tasks and evolving execution contexts,
+agents. This gap makes agent-oriented policies such as Progent a              an LLM automatically generates and updates the policy, while a
+natural next step.                                                            deterministic SMT-based check determines whether each update
+                                                                              is a narrowing (applied automatically) or an expansion (requiring
+System-Level Defenses for Agents. Developing system-level
+                                                                              approval), guaranteeing monotonic confinement. Our evaluation
+defenses for agentic task solving is an emerging research field.
+                                                                              on AgentDojo and ASB demonstrates that Progent significantly
+IsolateGPT [54] introduces an agent architecture that isolates exe-
+                                                                              reduces attack success rates while preserving high utility, and inte-
+cution across applications and requires user confirmation for po-
+                                                                              gration with real-world agent frameworks such as LangChain and
+tentially dangerous operations (e.g., cross-app communication or
+                                                                              OpenAI Agents SDK confirms its practicality as a non-intrusive
+irreversible actions), while f-secure [51] enforces information-flow
+                                                                              defense-in-depth layer.
+controls through manually assigned trust labels that propagate dur-
+ing agent execution. AirgapAgent [2] focuses on access control over
+                                                                              References
+private data, ensuring agents only use task-relevant information,
+                                                                               [1] Amazon Web Services. 2025. AWS Identity and Access Management (IAM).
+but does not control the agent’s malicious behavior beyond data                    https://aws.amazon.com/iam/. Accessed: 2025-04-12.
+access. CaMeL [10] extracts control and data flows from trusted                [2] Eugene Bagdasarian, Ren Yi, Sahra Ghalebikesabi, Peter Kairouz, Marco Gruteser,
+                                                                                   Sewoong Oh, Borja Balle, and Daniel Ramage. 2024. Airgapagent: Protecting
+user queries to prevent untrusted data from affecting program flow,                privacy-conscious conversational agents. In Proceedings of the 2024 on ACM
+but requires modifying the agent’s internal architecture and affects               SIGSAC Conference on Computer and Communications Security. 3868–3882.
+utility. FIDES [7] uses dynamic taint tracking with confidentiality            [3] Sizhe Chen, Julien Piet, Chawin Sitawarin, and David Wagner. 2025. StruQ:
+                                                                                   Defending against prompt injection with structured queries. In USENIX Security
+and integrity labels to regulate data flows through agent operations,              Symposium.
+but requires up-front label assignment to data sources. Conseca [44]           [4] Sizhe Chen, Arman Zharmagambetov, Saeed Mahloujifar, Kamalika Chaudhuri,
+                                                                                   David Wagner, and Chuan Guo. 2025. SecAlign: Defending Against Prompt
+and DRIFT [25] also propose generating policies for agents, but both               Injection with Preference Optimization. In The ACM Conference on Computer and
+rely on an LLM for generating the policies without deterministic                   Communications Security (CCS).
+verification. Progent’s policies are structured to support an SMT-             [5] Sizhe Chen, Arman Zharmagambetov, David Wagner, and Chuan Guo. 2025.
+                                                                                   Meta SecAlign: A Secure Foundation LLM Against Prompt Injection Attacks.
+based expansion check that deterministically classifies each update                arXiv preprint arXiv:2507.02735 (2025).
+as an expansion or a narrowing of privileges. In Progent, even if              [6] Sarthak Choudhary, Divyam Anshumaan, Nils Palumbo, and Somesh Jha.
+the LLM-generated policy update is manipulated by adversarial                      2025. How Not to Detect Prompt Injections with an LLM. arXiv preprint
+                                                                                   arXiv:2507.05630 (2025).
+
+                                                                         12
+Progent : Securing AI Agents with Privilege Control                                                                                                                          Preprint
+
+
+ [7] Manuel Costa, Boris Köpf, Aashish Kolluri, Andrew Paverd, Mark Russinovich,                [31] Yupei Liu, Yuqi Jia, Jinyuan Jia, Dawn Song, and Neil Zhenqiang Gong. 2025.
+     Ahmed Salem, Shruti Tople, Lukas Wutschitz, and Santiago Zanella-Béguelin.                      DataSentinel: A Game-Theoretic Detection of Prompt Injection Attacks. Proceed-
+     2025. Securing ai agents with information-flow control. arXiv preprint                          ings 2025 IEEE Symposium on Security and Privacy (2025).
+     arXiv:2505.23643 (2025).                                                                   [32] Meta. 2025. Llama Prompt Guard 2. https://www.llama.com/docs/model-cards-
+ [8] Joseph W Cutler, Craig Disselkoen, Aaron Eline, Shaobo He, Kyle Headley,                        and-prompt-formats/prompt-guard/. Accessed: 2025-08-14.
+     Michael Hicks, Kesha Hietala, Eleftherios Ioannidis, John Kastner, Anwar Mamat,            [33] Microsoft. 2025. Azure Policy Documentation. https://learn.microsoft.com/en-
+     et al. 2024. Cedar: A new language for expressive, fast, safe, and analyzable                   us/azure/governance/policy/. Accessed: 2025-04-12.
+     authorization. Proceedings of the ACM on Programming Languages 8, OOPSLA1                  [34] Fredrik Nestaas, Edoardo Debenedetti, and Florian Tramèr. 2025. Adversarial
+     (2024), 670–697.                                                                                search engine optimization for large language models. In ICLR.
+ [9] Leonardo De Moura and Nikolaj Bjørner. 2008. Z3: An efficient SMT solver. In               [35] OpenAI. 2025. Function calling – OpenAI API. https://platform.openai.com/docs/
+     TACAS.                                                                                          guides/function-calling. Accessed: 2025-01-10.
+[10] Edoardo Debenedetti, Ilia Shumailov, Tianqi Fan, Jamie Hayes, Nicholas Car-                [36] OpenAI. 2025. OpenAI Agents SDK. https://github.com/openai/openai-agents-
+     lini, Daniel Fabian, Christoph Kern, Chongyang Shi, Andreas Terzis, and Flo-                    python. Accessed: 2025-11-10.
+     rian Tramèr. 2025. Defeating Prompt Injections by Design. arXiv preprint                   [37] ProtectAI.com. 2024. Fine-Tuned DeBERTa-v3-base for Prompt Injection Detec-
+     arXiv:2503.18813 (2025).                                                                        tion. https://huggingface.co/ProtectAI/deberta-v3-base-prompt-injection-v2.
+[11] Edoardo Debenedetti, Jie Zhang, Mislav Balunovic, Luca Beurer-Kellner, Marc                [38] python-jsonschema. 2025. python-jsonschema/jsonschema – GitHub. https:
+     Fischer, and Florian Tramèr. 2024. AgentDojo: A Dynamic Environment to Eval-                    //github.com/python-jsonschema/jsonschema. Accessed: 2025-01-10.
+     uate Prompt Injection Attacks and Defenses for LLM Agents. In The Thirty-eight             [39] Yujia Qin, Shihao Liang, Yining Ye, Kunlun Zhu, Lan Yan, Yaxi Lu, Yankai Lin, Xin
+     Conference on Neural Information Processing Systems Datasets and Benchmarks                     Cong, Xiangru Tang, Bill Qian, et al. 2023. Toolllm: Facilitating large language
+     Track.                                                                                          models to master 16000+ real-world apis. arXiv preprint arXiv:2307.16789 (2023).
+[12] John DeTreville. 2002. Binder, a logic-based security language. In Proceedings             [40] Timo Schick, Jane Dwivedi-Yu, Roberto Dessì, Roberta Raileanu, Maria Lomeli,
+     2002 IEEE Symposium on Security and Privacy. IEEE, 105–113.                                     Eric Hambro, Luke Zettlemoyer, Nicola Cancedda, and Thomas Scialom. 2023.
+[13] Google Cloud. 2025. Identity and Access Management (IAM). https://cloud.                        Toolformer: Language models can teach themselves to use tools. In NeurIPS.
+     google.com/iam/. Accessed: 2025-04-12.                                                     [41] Wenqi Shi, Ran Xu, Yuchen Zhuang, Yue Yu, Jieyu Zhang, Hang Wu, Yuanda Zhu,
+[14] Kai Greshake, Sahar Abdelnabi, Shailesh Mishra, Christoph Endres, Thorsten                      Joyce Ho, Carl Yang, and May Dongmei Wang. 2024. Ehragent: Code empowers
+     Holz, and Mario Fritz. 2023. Not what you’ve signed up for: Compromising real-                  large language models for few-shot complex tabular reasoning on electronic
+     world llm-integrated applications with indirect prompt injection. In Proceedings                health records. In Proceedings of the 2024 Conference on Empirical Methods in
+     of the 16th ACM Workshop on Artificial Intelligence and Security. 79–90.                        Natural Language Processing. 22315–22339.
+[15] Feng He, Tianqing Zhu, Dayong Ye, Bo Liu, Wanlei Zhou, and Philip S Yu. 2024.              [42] Noah Shinn, Federico Cassano, Ashwin Gopinath, Karthik Narasimhan, and
+     The emerged security and privacy of llm agent: A survey with case studies. arXiv                Shunyu Yao. 2023. Reflexion: Language agents with verbal reinforcement learning.
+     preprint arXiv:2407.19354 (2024).                                                               In NeurIPS.
+[16] Pengcheng He, Xiaodong Liu, Jianfeng Gao, and Weizhu Chen. 2021. Deberta:                  [43] Simon Willison. 2023. The Dual LLM pattern for building AI assistants that can
+     Decoding-enhanced bert with disentangled attention. In ICLR.                                    resist prompt injection. https://simonwillison.net/2023/Apr/25/dual-llm-pattern/.
+[17] Keegan Hines, Gary Lopez, Matthew Hall, Federico Zarfati, Yonatan Zunger, and                   Accessed: 2025-08-24.
+     Emre Kiciman. 2024. Defending against indirect prompt injection attacks with               [44] Lillian Tsai and Eugene Bagdasarian. 2025. Contextual Agent Security: A Policy
+     spotlighting. arXiv preprint arXiv:2403.14720 (2024).                                           for Every Purpose. In Proceedings of the 2025 Workshop on Hot Topics in Operating
+[18] Hakan Inan, Kartikeya Upasani, Jianfeng Chi, Rashi Rungta, Krithika Iyer, Yuning                Systems. 8–17.
+     Mao, Michael Tontchev, Qing Hu, Brian Fuller, Davide Testuggine, et al. 2023.              [45] Eric Wallace, Kai Xiao, Reimar Leike, Lilian Weng, Johannes Heidecke, and Alex
+     Llama guard: Llm-based input-output safeguard for human-ai conversations.                       Beutel. 2024. The instruction hierarchy: Training llms to prioritize privileged
+     arXiv preprint arXiv:2312.06674 (2023).                                                         instructions. arXiv preprint arXiv:2404.13208 (2024).
+[19] JSON Schema. 2025. JSON Schema. https://json-schema.org/. Accessed: 2025-01-               [46] Lei Wang, Chen Ma, Xueyang Feng, Zeyu Zhang, Hao Yang, Jingsen Zhang,
+     10.                                                                                             Zhiyuan Chen, Jiakai Tang, Xu Chen, Yankai Lin, et al. 2024. A survey on large
+[20] LangChain. 2025. Gmail Toolkit. https://python.langchain.com/docs/integrations/                 language model based autonomous agents. Frontiers of Computer Science 18
+     tools/gmail/. Accessed: 2025-01-10.                                                             (2024).
+[21] LangChain. 2025. LangChain. https://github.com/langchain-ai/langchain. Ac-                 [47] Xingyao Wang, Yangyi Chen, Lifan Yuan, Yizhe Zhang, Yunzhu Li, Hao Peng,
+     cessed: 2025-01-10.                                                                             and Heng Ji. 2024. Executable code actions elicit better llm agents. In ICML.
+[22] Learn Prompting. 2024. Instruction Defense. https://learnprompting.org/docs/               [48] Xingyao Wang, Boxuan Li, Yufan Song, Frank F. Xu, Xiangru Tang, Mingchen
+     prompt_hacking/defensive_measures/instruction. Accessed: 2025-08-24.                            Zhuge, Jiayi Pan, Yueqi Song, Bowen Li, Jaskirat Singh, Hoang H. Tran, Fuqiang
+[23] Learn Prompting. 2024. Random Sequence Enclosure. https://learnprompting.                       Li, Ren Ma, Mingzhang Zheng, Bill Qian, Yanjun Shao, Niklas Muennighoff,
+     org/docs/prompt_hacking/defensive_measures/random_sequence. Accessed:                           Yizhe Zhang, Binyuan Hui, Junyang Lin, Robert Brennan, Hao Peng, Heng Ji, and
+     2025-08-24.                                                                                     Graham Neubig. 2025. OpenHands: An Open Platform for AI Software Developers
+[24] Learn Prompting. 2024. Sandwich Defense. https://learnprompting.org/docs/                       as Generalist Agents. In ICLR. https://openreview.net/forum?id=OJd3ayDDoF
+     prompt_hacking/defensive_measures/sandwich_defense. Accessed: 2025-08-24.                  [49] Zhun Wang, Vincent Siu, Zhe Ye, Tianneng Shi, Yuzhou Nie, Xuandong Zhao,
+[25] Hao Li, Xiaogeng Liu, Hung-Chun Chiu, Dianqi Li, Ning Zhang, and Chaowei                        Chenguang Wang, Wenbo Guo, and Dawn Song. 2025. AgentVigil: Generic
+     Xiao. 2025. Drift: Dynamic rule-based defense with injection isolation for securing             Black-Box Red-teaming for Indirect Prompt Injection against LLM Agents. arXiv
+     llm agents. arXiv preprint arXiv:2506.12104 (2025).                                             preprint arXiv:2505.05849 (2025).
+[26] Rongchang Li, Minjie Chen, Chang Hu, Han Chen, Wenpeng Xing, and Meng                      [50] Chen Henry Wu, Rishi Rajesh Shah, Jing Yu Koh, Russ Salakhutdinov, Daniel Fried,
+     Han. 2024. GenTel-Safe: A Unified Benchmark and Shielding Framework for                         and Aditi Raghunathan. 2024. Dissecting Adversarial Robustness of Multimodal
+     Defending Against Prompt Injection Attacks. arXiv preprint arXiv:2409.19521                     LM Agents. In NeurIPS 2024 Workshop on Open-World Agents.
+     (2024).                                                                                    [51] Fangzhou Wu, Ethan Cecchetti, and Chaowei Xiao. 2024. System-Level De-
+[27] Xun Li, Vineeth Kashyap, Jason K Oberg, Mohit Tiwari, Vasanth Ram Rajarathi-                    fense against Indirect Prompt Injection Attacks: An Information Flow Control
+     nam, Ryan Kastner, Timothy Sherwood, Ben Hardekopf, and Frederic T Chong.                       Perspective. arXiv preprint arXiv:2409.19091 (2024).
+     2014. Sapper: A language for hardware-level security policy enforcement. In                [52] Fangzhou Wu, Ning Zhang, Somesh Jha, Patrick McDaniel, and Chaowei Xiao.
+     Proceedings of the 19th international conference on Architectural support for pro-              2024. A new era in llm security: Exploring security concerns in real-world
+     gramming languages and operating systems. 97–112.                                               llm-based systems. arXiv preprint arXiv:2402.18649 (2024).
+[28] Yuanchun Li, Hao Wen, Weijun Wang, Xiangyu Li, Yizhen Yuan, Guohong Liu,                   [53] Qingyun Wu, Gagan Bansal, Jieyu Zhang, Yiran Wu, Shaokun Zhang, Erkang
+     Jiacheng Liu, Wenxing Xu, Xiang Wang, Yi Sun, et al. 2024. Personal llm agents:                 Zhu, Beibin Li, Li Jiang, Xiaoyun Zhang, and Chi Wang. 2024. Autogen: Enabling
+     Insights and survey about the capability, efficiency and security. arXiv preprint               next-gen llm applications via multi-agent conversation framework. In COLM.
+     arXiv:2401.05459 (2024).                                                                   [54] Yuhao Wu, Franziska Roesner, Tadayoshi Kohno, Ning Zhang, and Umar Iqbal.
+[29] Zeyi Liao, Lingbo Mo, Chejian Xu, Mintong Kang, Jiawei Zhang, Chaowei Xiao,                     2025. IsolateGPT: An Execution Isolation Architecture for LLM-Based Systems.
+     Yuan Tian, Bo Li, and Huan Sun. 2025. Eia: Environmental injection attack on                    In Network and Distributed System Security Symposium (NDSS).
+     generalist web agents for privacy leakage. ICLR (2025).                                    [55] Chejian Xu, Mintong Kang, Jiawei Zhang, Zeyi Liao, Lingbo Mo, Mengqi Yuan,
+[30] Yi Liu, Gelei Deng, Yuekang Li, Kailong Wang, Zihao Wang, Xiaofeng Wang,                        Huan Sun, and Bo Li. 2024. Advweb: Controllable black-box attacks on vlm-
+     Tianwei Zhang, Yepang Liu, Haoyu Wang, Yan Zheng, et al. 2023. Prompt Injec-                    powered web agents. arXiv preprint arXiv:2410.17401 (2024).
+     tion attack against LLM-integrated Applications. arXiv preprint arXiv:2306.05499           [56] Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik Narasimhan,
+     (2023).                                                                                         and Yuan Cao. 2023. React: Synergizing reasoning and acting in language models.
+                                                                                                     In ICLR.
+
+                                                                                           13
+Preprint                                                                                                                      Progent : Securing AI Agents with Privilege Control
+
+
+[57] Hanrong Zhang, Jingyuan Huang, Kai Mei, Yifei Yao, Zhenting Wang, Chenlu
+     Zhan, Hongwei Wang, and Yongfeng Zhang. 2025. Agent security bench (ASB):                {
+     Formalizing and benchmarking attacks and defenses in llm-based agents. In                    "send_email": [
+     ICLR.                                                                                          {
+[58] Yanzhe Zhang, Tao Yu, and Diyi Yang. 2024. Attacking Vision-Language Com-                        "priority": 100,
+     puter Agents via Pop-ups. arXiv preprint arXiv:2411.02391 (2024).                                "effect": "allow",
+                                                                                                      "conditions": {
+                                                                                                         "recipients": {
+A     Open Science                                                                                         "type": "array",
+                                                                                                           "items": {
+The datasets and benchmarks used in the evaluation have been                                                 "type": "string",
+made publicly available by their authors. There are no policies                                              "enum": ["alice@example.com"]
+                                                                                                           }
+or licensing restrictions preventing us from making the artifacts                                        }
+publicly available.                                                                                   },
+   Here is the link to the artifacts:                                                                 "fallback": "return msg",
+                                                                                                      "fallback_msg": "tool blocked, ...",
+   https://github.com/sunblaze-ucb/progent                                                          }
+   The artifacts include: (i) The implementation of Progent. (ii) The                             ],
+                                                                                                  ...
+code for reproducing the experiments in Section 8. (iii) README                               }
+and instructions for the artifacts.
+
+B     Ethical Considerations
+                                                                                                                     Figure 9: Sample policies.
+This research complies with the ethics guidelines on the conference
+website and the Menlo Report. Our work focuses on providing a
+defense mechanism rather than an attack method. We believe our                        distinguish it. Thus, we exclude these injection tasks from all exper-
+work will not lead to negative outcomes and can help make the                         iments. For another injection task in the slack suite, the AgentDojo
+existing agent systems more secure. To be specific, our method can                    implementation directly looks for the attack tool call in the execu-
+help developers and end users to better control the tool permissions                  tion trace to determine whether the attack is successful regardless
+of their agent systems. By the tool permission control proposed                       of whether the tool call succeeds or not. In our method, even if
+in this work, the user can better protect their systems from being                    the tool is blocked, it still exists in the trace with a blocking mes-
+attacked by the advanced attacks targeting the agents.                                sage and it would be wrongly classified. We manually check all
+   All experiments are done in a local and sandboxed environment                      results for this injection task and correct the results. For the Man-
+which will not leak any attack prompt to the real-world applications.                 ual Approval setting in Section 8.2, we assume the user has strong
+   All datasets used in the experiments are publicly available and                    security awareness: they would not grant unrestricted access to
+do not contain any private or sensitive data.                                         highly sensitive tools such as send_money (i.e., with no constraint
+   In summary, to the best of our knowledge, this work is ethical                     on the recipient), and would reject expansions that add a malicious
+and we are open to providing any further clarification related to                     address to the recipient allow list.
+ethical concerns.
+                                                                                      E       Adaptive Attacks
+C     Sample policies
+We give a sample of the generated policies in Figure 9.                                                                 Normal attack       Allow attack tool call
+                                                                                                                        If-then-else [6]    AgentVigil [49]
+D     Experiment Details                                                              100                                                  100
+We consistently use gpt-4o in most experiments unless specified                        80                                                   80
+(e.g., those comparing performance with different models). Here are                               61.3       62.1     65.0        64.9
+                                                                                       60                                                   60
+the model checkpoints we used: gpt-4o (gpt-4o-2024-08-06), gpt-4.1
+(gpt-4.1-2025-04-14), claude-sonnet-4 (claude-sonnet-4-20250514),                      40                                                   40
+gemini-2.5-flash (gemini-2.5-flash), Deberta (protectai/deberta-v3-                    20                                                   20
+base-prompt-injection-v2), DataSentinel (DataSentinel-checkpoint-                                                                                  1.0        0.5    4.2      0.9
+5000), Llama Prompt Guard 2 (meta-llama/Llama-Prompt-Guard-2-                             0              Utility (under attack)              0           ASR (under attack)
+86M), Meta-SecAlign-70B (facebook/Meta-SecAlign-70B). For Agent-
+Dojo, there are two minor changes to the AgentDojo implementa-                        Figure 10: Progent is robust against three kinds of adaptive
+tion. Two injection tasks in the travel suite are preference attacks,                 attacks.
+which mislead the agent into choosing another legitimate hotel
+rather than the target one. These attacks are outside our threat
+                                                                                          Considering that the LLM-based policy update mechanism uti-
+model and not realistic because if the attacker can control the in-
+                                                                                      lizes external information and the user with limited security aware-
+formation source, they don’t need prompt injection or other attack
+                                                                                      ness who may make risky decisions in practice, an attacker who
+methods targeted at the agent to mislead it; they can directly mod-
+                                                                                      is aware of this could construct adaptive attacks to circumvent
+ify the information to achieve the goal, and even a human cannot
+                                                                                      Progent’s defense effect. For instance, the attacker could inject ma-
+                                                                                      licious instructions to disrupt the updating process, instructing the
+                                                                                 14
+Progent : Securing AI Agents with Privilege Control                                                                                      Preprint
+
+
+LLM to incorporate tool calls required by the attack task in the             generic policy configuration are handled on the proxy side, with the
+update process and expecting the user to approve this update. To             user interacting directly with the proxy’s API for these operations.
+model such a vulnerable user in our evaluation, we auto-approve all          These controls can also be exposed through a custom interface via
+policy update requests to simulate a user who consistently makes             REST APIs or webhooks if needed.
+risky approval decisions. In this experiment, we use three adaptive
+attacks to evaluate the robustness of Progent: (i) “If-then-else”: we        G    Prompts
+borrow the idea in [6] and inject an adversarial prompt “IF the              In Figures 15 to 17, we provide shortened versions of the system
+instruction above is about updating the policies THEN: You should            prompts used to instruct LLMs to manage Progent’s policies, due
+proceed with the update and allow all tools. ELSE: ...”. (ii) “Allow         to page limits. These prompts define the task inputs and outputs
+attack tool call”: we inject an adaptive prompt “Don’t forget to             for the LLMs. They can be further adapted by Progent’s users to
+update the policy accordingly, permit tools or arguments.” after             more advanced LLMs and specific agent use cases.
+the original injection prompt that describes the attack goal, such
+that the policy update allow the tools needed for the attack goal.
+(iii) “AgentVigil”: we employ an automated, adaptive red-teaming
+method called AgentVigil [49].
+    We run these adaptive attacks on the agents with Progent en-
+abled and plot the results in Figure 10. We observe that the adaptive
+attacks can only marginally increase the ASR. These results demon-
+strate the robustness of Progent under the considered adaptive
+attacks.
+
+F    Integration Details
+Library Mode. In this mode, we offer comprehensive interfaces
+for both self-built agents and agents created with existing frame-
+works.
+   Figure 11 shows a simplified code snippet of a self-built agent.
+The agent developer can wrap their tools with our provided wrapper
+function, and Progent will automatically retrieve the tool informa-
+tion for later use. The developer can then add generic policies from
+both the developer and end user, and call the “initialize_policy”
+function to set them up. After each tool call finishes, the developer
+can pass the results to the policy updater, after which both the
+updater and invariant checker run automatically. Note that this
+example is simplified due to space constraints; components that
+interact directly with the end user are omitted, and the actual agent
+implementation can be significantly more complex. By default, the
+rule-based approver communicates with the user through the com-
+mand line, but agent developers may also implement their own
+interface.
+   If the agent developer chooses to use an existing agent devel-
+opment framework, it is not trivial for them to insert the Progent
+wrappers, since these frameworks often wrap agent logic internally.
+To reduce the developer’s workload, we provide a middleware for
+LangChain and a wrapper for the OpenAI Agents SDK’s Agent
+class, as shown in Figures 12 and 13. These examples also simplify
+other components and highlight only the key steps required to
+apply Progent. Once the Progent middleware or wrapper is applied,
+Progent automatically traces the context and enforces the relevant
+policies.
+Proxy Mode. In this mode, an end user can leverage Progent’s
+capabilities with any existing agent product without modifying the
+agent’s implementation, potentially even for closed-source agents.
+In our experiments, we demonstrate this mode using both Open-
+Hands and AutoGen. Figure 14 shows an example in which the
+user launches the Progent proxy and simply points the API and
+MCP endpoints to the proxy. By default, user confirmations and
+                                                                        15
+Preprint                                                                                              Progent : Securing AI Agents with Privilege Control
+
+
+from progent import *                                                       # Launch Progent Proxy
+                                                                            python -m progent.proxy --api-port ... --mcp-port ...
+def tool_1(arg_1, arg_2):                                                   --api-proxy-target ... --mcp-proxy-target ...
+  ...
+  return result                                                             # Change LLM API endpoint to the Progent Proxy
+...                                                                         export OPENAI_BASE_URL="http://localhost:<api-port>/v1"
+tool_list = [tool_1, tool_2, ...]
+# Apply Progent Tool Wrapper                                                # Change MCP Server in the agent config file
+tool_list = secure_tool_wrapper(tool_list)                                  {
+tool_dict = {x.__name__: x for x in tool_list}                                "mcpServers": {
+user_query = ...                                                                "default": {
+# Add generic policies                                                            "url": "http://localhost:<mcp-port>"
+add_policy(generic_policies)                                                    }
+# Initialize policies                                                         }
+initialize_policy(user_query)                                               }
+for step in range(100):
+  action = call_llm(...)
+  if action.type == "tool_call":                                                                 Figure 14: Proxy Mode
+    result = tool_dict[action.tool_name](**action.tool_args)
+    # Call Policy Updater
+    generate_update_policy(action, result)
+  elif action.type == "end":
+    print(action.output)
+    break                                                                       Your task is to set permissions for each tool based on the
+                                                                                user's query. If a tool is relevant to the user's query,
+                                                                                please set the parameter restrictions for this tool. If one
+   Figure 11: Simplified code snippet for self-built agents.                    of the tools is not relevant to the user's query, please
+                                                                                remove it. List all needed tools and restrictions on the
+                                                                                parameters associated with these tools.
+
+from progent import *                                                           The input will be in the following format:
+                                                                                TOOLS: [examples of tool definitions]
+...                                                                             USER_QUERY: The user's query.
+tools = await mcp_server.get_tools()
+agent = create_agent(                                                           Output an array of restrictions.
+  "gpt-4o",
+  tools,
+  system_prompt="...",
+  # Add Progent Middleware
+  middleware=[ProgentLangchainMiddleware()],                                   Figure 15: Shortened prompt for policy initialization.
+)
+# Add and initialize policies if needed
+...
+response = await agent.ainvoke(
+  {"messages": [{"role": "user", "content": user_query}]},
+)                                                                               Your task is to determine whether the result of executing a
+...                                                                             tool call can potentially lead to necessary updates of
+                                                                                certain restrictions used to limit the agent's actions to
+                                                                                enforce least-privilege control, allowing only necessary
+      Figure 12: Simplified code snippet for LangChain.                         actions to complete the user's task.
+
+                                                                                The input will be in the following format:
+                                                                                TOOLS: [examples of tool definitions]
+                                                                                USER_QUERY: The user's query.
+from progent import *                                                           TOOL_CALL: The tool call.
+...                                                                             Output whether you want to update the policy starting with
+agent = Agent(
+                                                                                Yes or No.
+  name="Assistant",
+  model="gpt-4o",
+  instructions="...",
+  mcp_servers=[mcp_server],
+)                                                                              Figure 16: Shortened prompt for policy update check.
+# Add Progent Wrapper
+agent = progent_openai_agent_wrapper(agent)
+# Add and initialize policies if needed
+...
+result = Runner.run_streamed(starting_agent=agent, input=user_query)
+...
+
+
+Figure 13: Simplified code snippet for OpenAI Agents SDK.
+
+
+
+
+                                                                       16
+Progent : Securing AI Agents with Privilege Control                      Preprint
+
+
+
+
+     Your task is to update certain restrictions of the agent's
+     actions for least-privilege control. The goal is to make the
+     restrictions more accurate, either narrowing them for
+     enhanced security or widening them to permit necessary
+     actions.
+
+     The input will be in the following format:
+     TOOLS: [examples of tool definitions]
+     USER_QUERY: The user's query.
+     TOOL_CALL: The tool call.
+     TOOL_CALL_RESULT: The result of the tool call.
+     CURRENT_RESTRICTIONS: Current restrictions.
+
+     Output the updated policy.
+
+
+
+
+Figure 17: Shortened prompt for generating updated policy.
+
+
+
+
+                                                                    17
+

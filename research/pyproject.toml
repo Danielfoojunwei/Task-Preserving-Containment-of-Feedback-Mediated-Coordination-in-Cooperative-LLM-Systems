@@ -1,0 +1,20 @@
+[project]
+name = "kinetic-audit-colosseum-overlay"
+version = "0.1.0"
+description = "Research-only Colosseum feedback interventions and evidence-grounded skill selection"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+test = ["pytest>=8", "PyYAML>=6"]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["kinetic_audit*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

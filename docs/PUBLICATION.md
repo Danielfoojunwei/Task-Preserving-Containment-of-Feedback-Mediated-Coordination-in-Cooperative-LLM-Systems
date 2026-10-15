@@ -1,0 +1,15 @@
+# GitHub research snapshot
+
+Prepared 15 October 2026. The root project previously contained only the initial README and license. The research overlay is now imported under [research/](../research/README.md), with implementation, configuration, tests, historical build evidence, all study directories, raw model records, analyses, reports, figures and retained archives. Current sprint notes, the supplied template and contribution ledger remain under docs/.
+
+The import records 37,877 regular source/evidence files and eight relocated pilot-result symlinks in [IMPORT_MANIFEST.json](../research/IMPORT_MANIFEST.json). File bytes are unchanged. Historical absolute symlinks now point to equivalent relative locations inside the repository; their targets are included. Frozen protocol, source and result contents were not rewritten. The old development README is preserved as BUILD_README.md, with a new current entrypoint beside it. Current root documentation links now work after cloning; recorded historical paths remain in provenance.
+
+Excluded items are local virtual environments, caches, runtime call locks and PID files. Credentials are not included. The publication audit scanned 78,076 regular files/archive members, including 37,831 ZIP members, and reported zero matches for credential patterns or the configured key literal. This is a concrete scan, not an assurance about every possible kind of sensitive content.
+
+The expanded evidence archive is 105,119,701 bytes, above GitHub's 100 MiB file limit. Four parts and checksums preserve the exact original ZIP. Run [restore_bundles.py](../scripts/restore_bundles.py) to reconstruct it; both per-part and full hashes are checked. The original full ZIP remains available locally and is ignored by Git. The latest 42,676,487-byte control-plane archive is tracked intact. Smaller historical bundles are retained.
+
+Validation of the imported checkout passed 44 core pytest tests, 15 client/canned-integration unittest tests, the host-mask offline self-test, exact offline reproduction of both latest primary analyses, source/evidence byte verification and reconstruction of the expanded ZIP to a new file. These checks make no paid model calls. The new [CI workflow](../.github/workflows/research.yml) runs the core, snapshot, client, host-mask and saved-analysis checks without an API key. Local passage does not assert that a GitHub-hosted workflow has completed.
+
+Native live-runtime work still requires the separately pinned Colosseum checkout and Terrarium dependencies. That upstream checkout and its CoLLAB submodule were clean; there is no omitted local patch. See the research entrypoint for versions and setup.
+
+This publication does not submit the sprint entry, establish human authorship of a final report, or change the status of unsupported/exploratory findings. Source evidence and prior/event chronology remain explicit. Git commit and remote state are verified through Git rather than written into their own content-addressed snapshot.

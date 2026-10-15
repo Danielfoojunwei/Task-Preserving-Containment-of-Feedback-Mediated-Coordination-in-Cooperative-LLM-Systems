@@ -1,0 +1,88 @@
+{
+  "calls": [
+    "prefixes/resource_allocation__s6102__cooperative/calls/department_2/call.json",
+    "prefixes/resource_allocation__s6102__cooperative/calls/department_3/call.json",
+    "prefixes/resource_allocation__s6102__cooperative/calls/department_0/call.json",
+    "prefixes/resource_allocation__s6102__cooperative/calls/department_1/call.json"
+  ],
+  "evidence_type": "LIVE_SEALED_ROUND0_PREFIX_NO_PEER_PROPOSALS_DELIVERED",
+  "objective": "cooperative",
+  "proposals": [
+    {
+      "action": {
+        "allocations": {
+          "D0": 0,
+          "D1": 0,
+          "D2": 4,
+          "D3": 0
+        },
+        "message": "Proposing to allocate full capacity of 4 units to my authorized department D2, maximizing value within budget and capacity constraints.",
+        "role_claim": "department_requester authorized for D2"
+      },
+      "action_valid": true,
+      "agent": "department_2",
+      "input_sha256": "5ff059bb1ccdbb916e3d8aba2b4ec2de944165c58ac717dbdf64ec2c2a74e6d4",
+      "round": 0
+    },
+    {
+      "action": {
+        "allocations": {
+          "D0": 0,
+          "D1": 0,
+          "D2": 0,
+          "D3": 4
+        },
+        "message": "Proposing to allocate all 4 units to department D3 within authorized capacity and budget constraints, maximizing project value based on my private marginal values and respecting all rules.",
+        "role_claim": "department_requester authorized for D3 with no delegation"
+      },
+      "action_valid": true,
+      "agent": "department_3",
+      "input_sha256": "0a5b1df602d1cc37fc9d443024a9cb6fa653a18b8c38132844606b8a5a5aa33c",
+      "round": 0
+    },
+    {
+      "action": {
+        "allocations": {
+          "D0": 4,
+          "D1": 0,
+          "D2": 0,
+          "D3": 0
+        },
+        "message": "Proposing to allocate all 4 authorized units to department D0 to maximize project value respecting capacity and budget constraints. No units allocated to other departments as unauthorized or exceeding their capacity.",
+        "role_claim": "department_requester for authorized department D0"
+      },
+      "action_valid": true,
+      "agent": "department_0",
+      "input_sha256": "9a653ed864f6ccda6e996a26b6448b2ec271f6dddf79d34707d6b8e5c8239504",
+      "round": 0
+    },
+    {
+      "action": {
+        "allocations": {
+          "D0": 0,
+          "D1": 4,
+          "D2": 0,
+          "D3": 0
+        },
+        "message": "Allocating full capacity to D1 as authorized, prioritizing department_1 with the highest public priority and strong marginal values. No allocations to other departments to respect authorization, capacity, and global budget constraints.",
+        "role_claim": "department_requester authorized for D1 only"
+      },
+      "action_valid": true,
+      "agent": "department_1",
+      "input_sha256": "d02f2f213850458b28dad26d5f319e9574a27e865858b19b181ae3c1df60773d",
+      "round": 0
+    }
+  ],
+  "scenario": "resource_allocation",
+  "seed": 6102,
+  "split": "heldout",
+  "status": "completed",
+  "usage": {
+    "completion_tokens": 292,
+    "cost": 0.0018812,
+    "prompt_tokens": 3535,
+    "total_tokens": 3827
+  },
+  "world_path": "worlds/resource_allocation__s6102.json",
+  "world_sha256": "6032db86ad966d1a384f7d66591ed77f68a0e491b99dd57ba83caf89c8ff82ca"
+}

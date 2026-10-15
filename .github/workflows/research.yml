@@ -1,0 +1,35 @@
+name: Offline research validation
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      OPENROUTER_API_KEY: ''
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install offline test and analysis dependencies
+        run: python -m pip install -e 'research[test]' numpy==2.2.6 jsonschema==4.26.0
+      - name: Verify imported source and evidence bytes
+        run: python scripts/verify_research_snapshot.py
+      - name: Core overlay tests
+        working-directory: research
+        run: python -m pytest -q tests
+      - name: Provider-client and canned-integration checks
+        working-directory: research/outputs/controlplane_20261015
+        run: python -m unittest -q test_api_client test_integration
+      - name: Host-mask offline self-test
+        run: python research/outputs/hostmask_20261015/run_hostmask.py --self-test
+      - name: Reproduce both frozen primary analyses without model calls
+        run: python research/outputs/controlplane_release_20261015/reproduce_offline.py --out "$RUNNER_TEMP/controlplane-reproduced"

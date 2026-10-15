@@ -1,0 +1,1320 @@
+                                                          If Agents Were Angels, No Governance Would Be Necessary:
+                                                          Out-of-Band Policy Enforcement at a Trusted Tool Boundary
+
+
+                                                                     Marc Millstone                                    Tyler Akidau
+                                                                  marc@redpanda.com                              takidau@redpanda.com
+                                                                   Johannes Brüderl                                  Marat Pekker
+                                                              johannes@redpanda.com                          marat.pekker@redpanda.com
+arXiv:2608.27646v1 [cs.AI] 27 Aug 2026
+
+
+
+
+                                                                                                  Redpanda Data
+
+                                                                   Abstract                                      cluster-weighted reduction was 41.2 points [95% confidence
+                                         Give an agent a human’s credential and it inherits the person’s         interval: 27.7, 54.9]. Unweighted standalone fulfillment fell
+                                         reach, but not the way a person normally exercises it. A hu-            from 79.1% to 60.9%. In the paired, cluster-weighted analysis,
+                                         man opens a record through an interface and chooses what to             safe-useful completion rose by 21.8 points [9.5, 35.2] under
+                                         carry elsewhere. An agent can sweep every reachable record              the primary judge and 19.1 points under a second. Safe-useful
+                                         and pour returned text directly into model context, where an            credits fulfilled allowed work that follows the archived tool
+                                         instruction hidden in the data can steer its next call. Every           contract and avoids both trace failure and judged disclosure
+                                         request can remain credential-valid while the agent violates            of a protected fact, even without its exact value. Four final
+                                         its job or absorbs a secret it should never see. An otherwise           answers nevertheless reconstructed an exact value that never
+                                         allowed call may also need to pause when its arguments or               entered agent context, and a separate trial used filtered row
+                                         external state trigger a business rule. Prompts are a brittle           counts as an oracle. These failures mark the line between
+                                         last guardrail because they ask the same fallible reasoner to           shaping one execution and proving noninterference. Produc-
+                                         interpret the task and enforce its own limits.                          tion write controls, durable human approval, and temporal
+                                            We present Out-of-Band Policy Enforcement (OBPE), a                  and aggregate policies fall outside this evaluation.
+                                         trusted tool boundary outside agent reasoning. It mediates the
+                                         whole exchange, authorizing the typed operation and resource,           1   Introduction
+                                         narrowing a query or shaping arguments before the backend
+                                         call, then filtering records and fields, redacting matching con-        If agents were angels, no governance would be necessary [27].
+                                         tent, or masking values in the response. Semantic gating con-           Credentials constrain access, but they do not carry a worker’s
+                                         siders argument values or external state, so an authorized call         judgment into an autonomous loop. An agent need not be
+                                         can still be denied or held for an external decision. A data pol-       malicious, or even disobedient, to exceed the job it was given.
+                                         icy owner sets the maximum grant, and agent policy can only             A tool-using large language model (LLM) agent can chain
+                                         narrow it. We formalize this staged composition and prove,              retrieval and action under borrowed authority. Returned data
+                                         under stated conditions, that its policy plan is unaffected by          becomes part of its reasoning state, and that state helps choose
+                                         match order, while agent-specific policy cannot widen the               the next call. The credential supplies reach while the judgment
+                                         owner’s ceiling. Field removal guarantees only that one value           that normally limits its use remains outside the protocol.
+                                         is absent from one execution; masking and event-history rules              Consider an agent asked to summarize issues from one
+                                         carry narrower claims.                                                  engineering project. Its service credential can read many.
+                                            We release a simplified HTTP proxy prototype based on                OAuth scopes can narrow an access token [21]; Rich Au-
+                                         our production OBPE implementation. It uses Cedar, a typed              thorization Requests can carry finer authorization details, and
+                                         authorization language, with conformance tests tying code               token exchange can issue a downstream token for a particular
+                                         to model. Against controlled Jira and ServiceNow mocks,                 resource [25, 26]. These mechanisms help when the autho-
+                                         the benchmark compares prompted agents with and without                 rization service knows the assignment and every backend can
+                                         the evaluated OBPE bundle across four models, including                 honor the result. The credential actually supplied to an agent
+                                         20 response-adaptive red-team tasks. A deterministic trace              may still cover far more. To the backend, two project reads
+                                         failure means that protected data entered agent context, an             are valid; to the organization, only one belongs to the job. The
+                                         exact protected value appeared in the answer, or a forbidden            agent has inherited a wrong-sized envelope: the credential
+                                         backend effect completed. In 3,621 trials, its observed rate            says what is reachable, not what belongs to this assignment.
+                                         in the primary contrast fell from 57.6% to 0.2%; the equally            OBPE narrows that envelope at the exchange itself, down to
+
+
+                                                                                                             1
+operations, resources, records, and fields.                            contributions. First, it explains why agent delegation requires
+   Even the right issue can be unsafe to return intact. Its de-        authorization, exposure control, and semantic gating at the
+scription may contain a secret, or text crafted to behave as           tool exchange rather than in model reasoning alone. Sec-
+an instruction once it enters model context. Indirect prompt           ond, it presents a typed enforcement pipeline and a two-tier
+injection exploits exactly this collapse between data and in-          policy model in which a data policy owner supplies the ceil-
+struction [20]. Denying the whole record protects the secret           ing and agent policy can only narrow it. Third, it gives an
+but may also destroy the useful answer. The boundary in-               order-independent, monotone composition law with explicit
+stead needs exposure control: a way to restrict what reaches           assumptions and limited guarantees for masking and history-
+the agent and what agent-authored values may return, while             dependent rules. Finally, it connects the model to a released
+preserving the safe part of a permitted exchange.                      HTTP enforcement path through conformance and a cross-
+   Some calls pass both tests and still should not proceed au-         model evaluation that measures forbidden exposure and ef-
+tomatically. A deployment can be within the agent’s role and           fects alongside useful completion.
+reveal no protected data, yet require approval after hours. A             Composition and guarantees. Gating and shaping opera-
+series of individually acceptable actions can cross a cumula-          tors act at different stages, and an accidental order can change
+tive limit. These are semantic gating decisions. They depend           what reaches the backend or the model. We define a staged
+on argument values or external state, and their result may be to       composition that chooses the most restrictive applicable result
+proceed, deny, or wait for a decision made outside the agent.          within each stage. Under stated conditions, the policy plan
+   Why the model should not be the policy authority. A                 is independent of match order, and a well-formed agent re-
+prompt asks the same reasoner that interprets untrusted data           striction cannot enlarge the owner-only plan. We prove both
+to enforce its own limits, so a successful injection can alter         properties in the model and test the released path for confor-
+the expected guard. Tool-call evaluations likewise find that           mance.
+text refusal does not reliably predict whether an agent will              The guarantees stop where their evidence stops. Removing
+take the forbidden action [10]. Formal limits make narrower,           a field can establish that the selected value was absent from
+model-specific points: Hasan couples compliance to high Kol-           one execution. It does not prove that protected information
+mogorov complexity in a fixed sound theory, while Vassilev             influenced no other observable behavior. Pattern masking
+studies semantic prompt classification over an adversarial-            over free text is best effort, while policies over time or event
+input model [22, 37]. Neither says that a particular attack is         counts require a trustworthy ordered history. We state these
+undetectable or that a bounded typed policy decision is un-            boundaries beside the corresponding claims instead of treating
+decidable. Model defenses can help, but should not carry the           every transformation as information-flow noninterference.
+authoritative guarantee. Backend authorization is authorita-              System and evidence boundary. We release an HTTP
+tive but answers what the credential may do, not what this             reference implementation of the OBPE contract. Controlled
+agent should do for this task. The missing control point is the        connectors and mocks replace live services and Model Con-
+exchange, before a proposed operation or its response escapes          text Protocol (MCP) transport so policy selection, shaping,
+policy.                                                                and backend effects remain observable. Cedar, a typed au-
+   OBPE design. Out-of-Band Policy Enforcement (OBPE)                  thorization language, supplies an analyzable permit-or-forbid
+places that control point between the agent’s tool client and          core [12]; OBPE annotations specify the surrounding gates
+the backend. A connector maps each call into typed prin-               and transformations. The private production system supplied
+cipals, actions, resources, records, and fields. The boundary          requirements for remote identity, durable approval, broader
+sees the proposed call before it can cause an effect and the           schemas, and history policy. Every empirical claim rests on
+complete response before it can enter model context. It can            the released implementation, its conformance suite, and con-
+return a narrower exchange than the backend credential per-            trolled backends.
+mits, or no exchange at all. Under our assumptions, the agent             Evaluation contract. We separate what the model proves,
+cannot choose its policy, spoof its bound identity, or bypass          what conformance establishes about code, what the bench-
+enforcement.                                                           mark observes, and what we know only from production de-
+   The design also decides who gets the last word. A data pol-         sign. The benchmark uses the same frozen tasks across treat-
+icy owner, the party responsible for the data source, writes an        ment arms and models, then subjects them to matched red-
+owner policy that establishes the maximum grant. A separate            team pressure. Exact exposure, policy decisions, and backend
+agent policy narrows that grant for one registered agent. Only         effects come from deterministic traces. LLM judges assess
+the owner tier can create permit eligibility. An agent builder         semantic disclosure and useful completion separately; they do
+can make an agent less capable, but cannot use the agent tier          not override those traces. Across 3,621 trials, the trace-failure
+to recover authority the owner policy withheld. The guarantee          rate in the primary prompted-agent cells falls from 57.6%
+depends on trusted identity binding and on the owner policy            without OBPE to 0.2% with it, while safe-useful completion
+accurately stating the intended ceiling.                               improves under OBPE across all four agent models. Section 8
+   Contributions. This paper makes four evidence-separated             gives the paired estimates and the failure cases that bound
+
+
+                                                                   2
+them.                                                                   relevant call must traverse the proxy under complete media-
+                                                                        tion [33], and the backend must execute the mediated request
+                                                                        according to that model. We treat the model, its prompt, tool-
+2   Threat Model and Security Goals
+                                                                        returned text, and agent-authored arguments as untrusted.
+We treat the agent as untrusted: it may propose any call and                Trust in the data policy owner has a precise limit. Given a
+arguments it can express, whether because of an attack, model           Cedar type schema that faithfully represents a frozen connec-
+failure, or ordinary task pursuit. The guarantees do not depend         tor mapping, Cedar Analysis can check the permit-or-forbid
+on telling those causes apart. Even a cooperative agent can             core for conflicts, ineffective rules, or complete denials [19].
+wander beyond its assignment because the credential allows              The released YAML mapping is not such a schema, and the
+it, carry a sensitive value from one tool to another, or execute        artifact does not run this analysis. In any case, those checks
+a consequential call that looked locally reasonable. At that            cover neither OBPE shaping nor organizational intent. OBPE
+point, borrowed authority exceeds the job.                              enforces the written ceiling and makes its impact inspectable;
+    Adversary. An attacker may control the task given to the            a human remains responsible for choosing the right one.
+agent or influence text returned by a permitted read. It can in-            Out of scope are timing and cache side channels, compro-
+teract repeatedly and use direct requests, instruction injection,       mise of the trusted platform or proxy, malicious policy authors,
+encoding, or multi-step reconstruction. Its goals are to recover        supply-chain attacks, policy inference by probing, and paths
+protected data, cause an unauthorized backend effect, escape            that bypass mediation. Inference from allowed query results
+the agent-policy restriction, or cross a tenant boundary. The           is different: it is an in-scope residual risk. We measure one
+attacker cannot modify policy state, spoof the platform-bound           count oracle but do not claim to close that channel.
+agent identity, or bypass the mediated tool path.                           In a multi-agent chain, OBPE governs a downstream call
+    An attacker is not required for information to escape. A            only when the platform binds the identity of the agent making
+read tool can place a secret in model context, after which              it. The boundary does not secure agent-to-agent messages
+an ordinary send or post carries it to a sink. Private data             or reconstruct context the platform discarded, and it makes
+access, untrusted content, and external communication form              no general noninterference claim beyond the scoped absence
+the “lethal trifecta” [38]; an agent with all three can cause           guarantees in the model.
+harm while following its task. The policy must therefore
+remove or gate a leg of that path instead of relying on the             3   Architecture and Enforcement Path
+model to recognize malicious intent.
+    Security goals. Authority begins with the owner policy,             A tool exchange crosses the boundary twice, first as an agent’s
+which bounds what the backend credential may expose or                  proposed call and again as the backend response. OBPE can
+change. Agent policy may narrow that result but never widen             stop a scoped forbidden effect before dispatch and shape pro-
+it. Within the supported path, the boundary filters prohibited          tected data before it enters model context, but only if neither
+records, keeps structurally removed or fully redacted values            path can route around policy. Under the assumptions of §2,
+out of model context for that execution, and prevents forbid-           every relevant call reaches the backend through the boundary
+den backend effects. Pattern masking carries only a best-effort         and every complete response returns through it (Figure 1).
+claim.                                                                  Hiding a tool from discovery is insufficient because a tool
+    A gated call introduces a second obligation. It must wait on        that remains callable still needs enforcement on its execution
+a trusted channel that the agent cannot read or forge, and only         path.
+an authorized approver may resolve it. A system that later                 OBPE first uses the platform-bound identity from §2 to
+resumes the work must bind approval to every policy-relevant            select the applicable agent policy. Because that identity arrives
+part of the durable held request. Approval releases that request        outside agent-controlled arguments, the call cannot choose
+under the owner ceiling; it cannot rewrite the call, reverse            its own policy. A connector then translates the tool exchange
+an owner denial, or grant either party direct backend access.           into the typed objects policy understands: principal, action,
+Identity, policy-loading, or evaluation failure closes the path.        resource, records, and fields. This is where generic tool traffic
+These goals cover the mediated exchange, not information the            acquires meaning such as “update this issue” or “return these
+model learned elsewhere.                                                customer records.” If the mapping omits a callable surface
+    Trusted boundary. We trust the platform, proxy, connec-             or a policy-relevant field, that path falls outside the model
+tor, data policy owner, and backend execution. The trusted              and must be denied or governed separately. The backend
+platform binds the registered agent’s identity to each tool             credential stays behind the boundary.
+call outside agent-controlled arguments. The proxy uses that               For each call, the owner policy creates permit eligibility
+identity to select the applicable agent policy; otherwise an            and sets the maximum grant; agent policy can only remove
+agent could shed its narrower bundle and rise to the owner-             from it. The gate resolves before any backend effect. A denial
+policy ceiling. The connector must map the complete request             stops there, while a deferral holds a snapshot without dispatch
+and response into the typed objects the policy expects. Every           and expires to denial if no trusted decision arrives. A permit
+
+
+                                                                    3
+                LLM Agent                                               Out-of-band           optional local Agent2Agent (A2A) path supports agents writ-
+          (untrusted reasoning)                                       approval channel
+                                                                                              ten in other languages, but it is not part of this evaluation. The
+                                                                                              artifact’s evidence covers complete requests and responses
+      request                    shaped response                                              on supported HTTP paths through the released connectors.
+
+
+
+
+                                                        er
+                                                        f
+                                                     de
+                                                                                ny            Streamed responses and other MCP surfaces, including re-
+                                                                          /   de
+            OBPE Gateway                                               ve                     source, prompt, and sampling requests, require separate me-
+                                                                     ro
+                                                               a   pp                         diation and remain outside the evaluation.
+    Owner policy
+                              Agent policy                                                       Production places OBPE at the MCP layer and supports
+     (data policy     ▶       (restriction)                                                   remote A2A agents. We describe that deployment only to
+       owner)
+                                                                                              explain how the design is used; no production trace or result
+            gate / shape stages                                                               supports the paper’s claims. The architecture depends on
+                                                   eve
+                                                       ry                                     preserving the mediated exchange, not on MCP.
+                                                                                                 OBPE stops at the typed exchange. It can keep a returned
+                                                       dec
+
+                                 response                                                     value out of model context and constrain typed arguments
+                                                            isio
+
+
+                                                                                              before a tool runs, but it cannot police the agent’s final prose
+                                                              n
+
+
+
+
+                    Backend                                                   Audit log       or recover hidden meaning from arbitrary free text. The eval-
+                                                                                              uation reports those failures separately.
+                                                                                                 The connector contract extends beyond records and fields
+Figure 1: OBPE mediates a complete tool exchange. The tier-                                   to the response envelope. An agent sees only an opaque fail-
+aware composition gives the owner policy permit authority                                     ure for denial and a pending status for deferral, never policy
+and lets agent policy narrow it. Request shaping and gating                                   names or internal reasons. Counts, cursors, errors, ranking,
+run before dispatch; response shaping runs before data enters                                 and timing can still carry information, so a connector must
+model context. A deferred call waits outside the agent’s reach,                               either shape those surfaces safely, deny the call, or document
+and the boundary emits an audit record with its decision.                                     the residual channel.
+
+
+proceeds through request shaping, which can narrow a query,
+                                                                                              4   Policy Model
+cap results, or change typed write arguments. On the return                                   A policy decision at this boundary must answer more than yes
+path, row filtering sees the complete records before field and                                or no. It can also change what the backend receives and what
+content shaping; envelope sanitation runs last, and only that                                 the agent sees. We represent that decision as a policy plan: a
+result reaches the agent. Each stage therefore receives the                                   gate result, a shaped request, and the instructions applied to
+output of the one before it.                                                                  the backend response.
+   We compare OBPE with other enforcement approaches                                             Each call is evaluated against an owner policy S, the connec-
+along six properties adapted from prior out-of-band channel                                   tor’s data-source bundle, and, when one is registered, an agent
+criteria [1]. Agent-inaccessible means the agent cannot di-                                   policy PA selected using the platform-bound identity. Only
+rectly read, modify, select, forge, or bypass policy state on the                             the owner policy can make the call eligible to proceed. Agent
+covered path. It does not mean that no observable result can                                  policy may narrow that grant, while the backend credential C
+reveal anything about policy. Deterministic means the same                                    sets an outer limit on what can execute.
+typed call, policies, schema, and trusted state yield the same                                   The gate applies those policies to the typed call context
+policy plan; backend behavior is outside that claim.                                          κ = (A, a, o, x, h), which records the bound agent A, action a,
+   The remaining four describe what enforcement understands                                   resource o, complete arguments x, and trusted external state
+and does. Resource-aware enforcement maps a call to its                                       h available at evaluation. Figure 2 traces how the context
+typed operation and resource, including the fields that policy                                becomes a policy plan: S and PA determine the gate, while C
+governs, instead of relying only on a tool name. Boundary-                                    constrains any backend call the gate permits.
+shaping can narrow a typed request before dispatch. On the                                       For a Jira listing, for example, a is list, o is the issue col-
+return path, it can filter records and fields, then redact or mask                            lection, and x holds the requested filter and cap. The resulting
+content before the response reaches the agent. External gating                                plan records the enforced query and the fields that may return.
+can hold an otherwise permitted call until an external decision                                  Policy evaluation first selects the rules whose principal,
+arrives. Interoperability means the design can cover another                                  action, resource, and conditions match that context. We write
+agent or backend when the platform preserves identity binding                                 the two resulting sets as
+and complete mediation through a trusted connector that maps
+the exchange into the typed model.                                                                    DS = Match(S, κ),         DA = Match(PA , κ).
+   The released prototype is a simplified HTTP proxy between                                  DS contains the matching owner rules; DA contains those
+an in-process tool caller and controlled mock backends. Its                                   from the selected agent policy. Without a registered agent
+
+
+                                                                                          4
+policy, DA is empty and adds no restriction. We keep the sets           BC (ρ) is the raw response under credential C, the agent re-
+separate because only DS can establish permit eligibility.              ceives
+   We use one standard term from order theory throughout the
+pipeline. For an ordered component, write x ⪯r y when every              EA = Sanitize(Encode(µ(ProjectF ′ ∪I (FilterφR (BC (ρ)))))).
+policy-controlled exchange admitted by x is also admitted by
+                                                                        A read has no write map, while a write need not return records.
+y. A meet is the greatest lower bound: it preserves all operands’
+                                                                        Let ⊥nr mean that a stage does not run. The complete policy
+restrictions without adding an unrelated one. Gate outcomes,
+                                                                        plan is Π = (g, ρ, η): deny uses (deny, ⊥nr , ⊥nr ), defer uses
+query predicates, caps, and finite allowlists have such meets.
+                                                                        (defer, ρ, ⊥nr ), and permit uses (permit, ρ, η).
+Thus GateMeet combines the matched gate contributions, and
+                                                                           OBPE evaluates Cedar rules over the typed principal, ac-
+an empty DA adds no restriction. Free-text rewrites do not
+                                                                        tion, and resource. Cedar supplies the permit-or-forbid core.
+generally have this order; overlapping masks use a canonical
+                                                                        Annotations name the shaping or gating operator and its pa-
+normalizer instead of a meet.
+                                                                        rameters, such as a field group, cap, approver, or timeout. One
+   We name each result where it appears in the pipeline. The            policy may carry rules for authorization, exposure control,
+gate computes                                                           and semantic gating; composition acts on the plan tuple rather
+                                                                        than collapsing those rules to a Boolean decision. Any ap-
+     g = GateMeet(κ; DS , DA ) ∈ {deny, defer, permit}.
+                                                                        plicable forbid stops the call. On allow, the wrapper gathers
+It combines the gate contributions of DS and DA over their              annotations from every applicable permit policy rather than
+shared context κ. A call begins denied. Matching owner rules            only the policy chosen as the display label.
+may establish permit eligibility, after which either tier may              Plan and execution reach. Let T (X) denote the set of
+tighten the result to defer or deny. A defer is only the gate’s         typed, policy-controlled exchange traces allowed by a plan
+initial result. The released transition logic records whether           or credential: the backend action and shaped arguments, to-
+its partial snapshot may resume or must be denied; it neither           gether with the response fields and values that may reach
+reruns policy nor dispatches the call. Credential C remains             the agent. The order above is therefore set inclusion, X ⪯r Y
+outside this function and limits the later backend call, so a           when T (X) ⊆ T (Y ). The owner ceiling is
+policy permit cannot exceed the credential’s reach.                                          T (ΠS,A ) ⊆ T (ΠS ).
+   Unless the gate denies the call, the boundary computes a
+shaped request                                                          Credential C is not an input to the plan. If t = ExecC (Π) is a
+                        ρ = (q′ , n′ , w′ ).                            realized exchange trace, complete mediation requires
+Here q′ is the enforced read query, n′ is the record limit, and                              t ∈ T (C) ∩ T (Π).
+w′ is the map of typed write arguments. The limit is the largest
+number of records the boundary will return after combining              This is a call-level statement. It lifts to a run only while
+the caller’s request with every policy cap. A post-fetch check          identity binding, schema, policy bundles, operator definitions,
+enforces it even if the backend ignores the requested limit. A          and the trusted state used for each decision remain within the
+permit sends ρ to the backend. In the formal model, a defer             stated frame. It does not bound what the model infers across
+holds ρ and every other policy-relevant part of the call while          calls. Absence of agent policy neither creates a permit nor
+sending nothing. The release stores only the subset described           breaks a valid owner-only call.
+below, so it exercises defer initiation and no-dispatch rather             Reading the stage orders. The three numbered boxes in Fig-
+than safe resumption.                                                   ure 2 show where ordered restrictions combine. Gate results,
+   For a permit, the response part of the policy plan is                conjunctions, caps, and allowlists use meets. Full redaction
+                                                                        is below pass, but partial projections and pattern masks may
+                        η = (φR , F ′ , µ).                             reveal incomparable information. The schema therefore sup-
+                                                                        plies a stable precedence, and a canonical normalizer applies
+Here φS and φA are the owner- and agent-tier Cedar decisions            overlapping rewrites in a fixed order. That makes the selected
+for filter_record; permits within one tier retain Cedar’s               transformation repeatable; it does not prove that a pattern
+OR semantics. The keeper is φR (r) = φS (r) ∧ φA (r), with              finds every sensitive value. Envelope sanitation runs last and
+φA = true when no agent policy is registered. F ′ contains              is not chosen by policy.
+the retained policy-controlled fields and µ their content oper-            The evidence labels mark the released boundary. A deferred
+ations. A connector may retain a structural identifier I only           call stores its method, path, shaped body, bound agent, pol-
+when its schema declares that identifier non-sensitive and the          icy, and bundle version, but omits query parameters, headers,
+owner policy, plus the selected agent policy when present,              and pre-fetched state. The accompanying transition logic can
+approves it for every surviving record. Because I is then fixed         choose resume or deny, yet it neither dispatches nor records
+across the plans being compared, it lies outside the variable           terminal timeout; durable resolution is production-only. The
+capability order; it is not outside the exposure boundary. If           other gaps are narrower: drop and clamp exist in code but are
+
+
+                                                                    5
+    Match policy to the typed call
+    Call context: κ = (A, a, o, x, h)
+    Owner match: DS = Match(S, κ)             (may grant)                                                  Stages 1–3 form the policy plan
+    Agent match: DA = Match(PA , κ)            (may only narrow)                                                    Π = (g, ρ, η)
+
+                           matched rules
+
+        1. Gate the call                       2. Shape the request                                           3. Apply the response plan
+    g = GateMeet(κ; DS , DA )                      ρ = (q′ , n′ , w′ )                                                η = (φR , F ′ , µ)
+    deny ⪯r defer ⪯r permit                                                       Backend
+                                           query constraints: conjunction permit                             owner keeper ∧ agent keeper                    Agent context
+            deny: stop                        record caps: minimum               credential  C                 retained fields: intersection                   E ′ only
+     defer: shape, then hold                writable fields: intersection          callC (ρ)                      full redaction ⪯r pass
+         permit: shape,                           clamps: schema-                                          partial masks: canonical normalizer
+          then dispatch                          declared direction                                        envelope sanitation: fixed and last
+
+
+
+Figure 2: From a typed call to a policy plan and its execution. Policy matching is separate from backend data. Deny ends
+the exchange. Defer shapes and stores a request without dispatch; permit continues through the backend and response plan.
+Credential C remains an outer execution limit.
+
+Table 1: The operator surface. Claim distinguishes exact stage results from best-effort or operational properties. Evidence states
+where behavior is exercised or implemented.
+               Operator            Stage      Acts on                      Most-restrictive combination                 Claim         Evidence
+               deny                gate       gate result                  most restrictive gate result                 Exact         Released
+               scope-query         request    query and record limit       conjunction; lowest limit                    Exact         Released
+               filter-records      response   record set                   owner keeper ∧ agent keeper                  Exact         Released
+               drop-write-field    request    gate and write map           remove absence-safe fields; deny otherwise   Exact         Implemented, unreachable
+               clamp-write-arg     request    write map                    lowest value in the declared direction       Exact         Implemented, unreachable
+               strip-field         response   field set                    intersection of retained fields              Exact         Released
+               mask-field          response   field value                  full mask or declared projection             Exact         Released
+               pattern-mask        response   field value                  canonical rule order                         Best effort   Released
+               write-guard         request    write map                    remove disallowed fields                     Exact         Released
+               sanitize-envelope   response   response envelope            fixed final function                         Operational   Released
+               defer (initiate)    gate       gate result                  gate order; normalize parameters or reject   Exact         Released
+               defer (resolve)     runtime    ordered decision state       deterministic state transition               Operational   Partial harness; production
+               aggregate-gate      gate       committed history and gate   threshold over history                       Operational   Designed only
+
+
+
+
+unreachable through the shipped schemas, while aggregate-                                   the released transition logic can return resume or deny, but
+gate remains design only and is never read or invoked by the                                performs no dispatch and does not persist timeout as termi-
+release.                                                                                    nal. The plan order first compares gates, with deny below
+                                                                                            defer below permit. Equal non-deny gates then compare re-
+                                                                                            quest components, and permitted plans also compare their
+5    Composition and Guarantees
+                                                                                            responses. Query and row restrictions are compared by the
+Composition must preserve one rule: another restriction must                                calls or records they admit, not by the spelling or order of
+never give an agent more. Figure 2 defines a policy plan,                                   their conjunctions.
+separate from the backend response that later realizes it:                                   Conditions. The claims below depend on five obligations.
+                                                                                          We state them in the body so that the theorem does not hide
+                       (g, ⊥nr , ⊥nr ),
+                                         g = deny,                                        deployment assumptions in an appendix.
+      Plan(κ; S, PA ) = (defer, ρ, ⊥nr ), g = defer,
+                                                                                             O1: bound identity and complete mediation. The platform
+                        (permit, ρ, η), g = permit.
+                       
+                                                                                            binds agent identity outside the call arguments, and the bound-
+Here g is the meet of the matched gate contributions after                                  ary mediates the complete request and response on every sup-
+owner eligibility is established. Request shaping produces ρ                                ported path. Its connector must expose every field that policy
+for defer or permit; only permit computes and executes the re-                              may inspect or shape.
+sponse plan η over BC (ρ). The distinction matters: narrowing                                  O2: fixed policy inputs and default denial. A call with no
+a query can change pagination and therefore the concrete rows                               matching owner permit is denied. When a claim compares
+returned, even though the plan itself grants no new capability.                             restrictions after permit eligibility, it holds the schema, bun-
+   Deny has no later-stage state. Defer has a shaped request                                dles, operator vocabulary, credential, and trusted-state snap-
+but no response plan because nothing has been dispatched;                                   shot fixed. The claim concerns the resulting policy plan, not
+
+
+                                                                                       6
+backend availability, row order, or response contents.                       The released proxy uses a five-level sensitivity chain en-
+   O3: stable stage semantics. Query joining means semantic               coded in the field schema and matching policy. The model
+conjunction, even when the original query contains disjunc-               also admits a product order that preserves incomparable risks,
+tion. If a connector cannot establish that conjunction for its            such as susceptibility to prompt injection and cross-tenant
+query language, it must deny before dispatch. The bound-                  reach. The production system implements that richer registry,
+ary enforces caps after fetch and evaluates row predicates                but the released prototype does not. We therefore treat the
+before field projection. Each tier’s row keeper is its Cedar              production implementation as deployment description rather
+filter_record decision, and the two tiers meet by conjunc-                than released evidence. Appendix D defines the order and
+tion. Adding a same-tier permit is an authorization change,               connects it to information-flow models [8, 15].
+not a stage restriction. A retained structural identifier must sat-          Invariant INV-X′ gives the write-side condition under the
+isfy the declaration and policy checks above. Content masks               same premise that the owner policy and schema correctly en-
+run through the canonical normalizer, using replacement text              code the labels. Let c(A) denote the principal’s corruptibility
+that cannot trigger a later mask.                                         and let ℓw ( f ) denote the write-integrity ceiling for field f . We
+   O4: safe write direction. A write field may be omitted                 write c(A) ⪯w ℓw ( f ) when the principal is no more corrupt-
+only on an operation whose connector contract says omission               ible than that ceiling permits. A value may reach the backend
+leaves the stored value unchanged; otherwise the call must                only under this relation. Otherwise, a well-formed rule must
+be denied. Every clamp declares which direction is restric-               remove the field or deny the call. The released write guard
+tive, and no write operator may inject a default value. Query             enforces typed field allowlists, which are a narrower instance
+predicates cannot depend on a write field changed by request              of this order.
+shaping.                                                                     Invariant INV-SG covers deferred execution. Under the full
+   O5: trusted state and held calls. The trusted state h is               resumption clauses of O5, the backend cannot receive the
+fixed for one plan calculation, and a defer sends nothing to              held call until the required external decision arrives before its
+the backend. Co-firing defer parameters must have one de-                 deadline. An explicit denial or observed fail-closed resolver
+terministic interpretation or fail closed. A system that later            error denies the call; a trusted timeout path denies it after the
+dispatches an approved call has further duties: an authen-                deadline. Without a live resolver or timeout worker, safety
+ticated and policy-authorized resolver must decide over an                means non-dispatch, not terminal progress. The released ar-
+immutable, complete snapshot; a trusted deadline and replay               tifact establishes only the earlier fire-and-hold property: it
+protection must yield one terminal result; and dispatch must              sends nothing and never resumes dispatch.
+be idempotent or fenced against duplicates. Approval applies
+only to that snapshot. A history-dependent gate likewise reads
+one committed prefix, with its decision serialized for the rele-
+                                                                          5.1    Guarantees
+vant key and window.                                                      We now show that the ordered components and canonical
+   Concern invariants. These conditions support four se-                  content normalizer give the plan the properties claimed in
+curity statements. The first, invariant INV-IP, separates the             the Introduction. Each result is conditional on O1–O5. Ap-
+owner-bounded plan from credential-bounded execution:                     pendix C supplies the operator cases and longer derivations;
+                  T (ΠS,A ) ⊆ T (ΠS ),                                    Table 8 there states which conditions the released HTTP path
+                                                                          tests and which remain production description.
+               ExecC (ΠS,A ) ∈ T (C) ∩ T (ΠS,A ).
+The bound applies to each call and extends across a run while             Proposition 1 (Permutation invariance). Under O1–O5, fixed
+those scopes remain fixed. The owner remains the grantor; an              κ, S, PA , and operator vocabulary determine one policy plan,
+agent rule can remove authority but cannot create a permit.               regardless of rule order within DS and DA . Diagnostic labels
+   Invariant INV-X governs read exposure when the owner                   and audit-record ordering are outside the plan.
+policy and connector schema correctly encode their labels. A                 Argument. The ordered components use commutative, as-
+connector may arrange its principal types and field ceilings              sociative, and idempotent meets: query conjunction, smaller
+in any meet-semilattice. For each policy-controlled f ∈ F , if            caps, and allowlist intersection therefore ignore operand or-
+v(A) is the vulnerability assigned to agent A and ℓ( f ) is the           der. Cedar authorization inside a tier is deterministic but is
+maximum vulnerability allowed to receive field f , the field is           not recast as a meet of permit rules. Content rules first enter
+exposed only when                                                         a canonical normal form and then run in a fixed sequence;
+                         v(A) ⪯v ℓ( f ).                                  this is an order-independent procedure, not a claim that arbi-
+                                                                          trary text rewrites form a lattice. O5 fixes any trusted history
+INV-X makes a narrow promise about the shaped response. If                read used by the gate. The engine’s reporting order therefore
+the boundary removes a field or fully redacts its value, that             cannot change Π, although backend behavior may still vary.
+value is absent from the response. It does not claim that the             □
+hidden value could not affect some other output.
+
+
+                                                                      7
+Proposition 2 (Monotonicity). Under O1–O5, once DS es-
+                                                                         Table 2: Released and production implementation surfaces.
+tablishes owner permit eligibility, adding a well-formed stage
+                                                                         Production entries are descriptive, not artifact evidence.
+restriction cannot enlarge the plan’s eligible actions, re-
+                                                                            Capability   Released artifact          Production implementation
+sources, query predicates, policy-controlled response fields,
+or writable fields; raise a cap; loosen a clamp; or replace full            Write        Write guard on supported Broader schema mappings for per-
+                                                                            controls     partial updates. Drop and sisted write workflows.
+redaction with pass. Adding a same-tier permit rule is outside                           clamp only in synthetic
+this claim.                                                                              tests.
+                                                                            Human        Hold/no-dispatch and per- Durable, ordered approval log.
+                                                                            deferral     call transition tests. Termi- Attribute-based access control
+   Argument. On an ordered component, a new restriction is                               nal timeout and approved protects inspection and resolution.
+another meet operand, so it can only shrink an allowlist, add                            dispatch absent.
+                                                                            Temporal     No released execution.        Implemented over durable, trusted
+a query predicate, lower a bound, or move the gate toward                   policy                                     history.
+denial. O4 gives writes a known restrictive direction. Owner                Aggregate    No released execution.        Implemented over durable, trusted
+                                                                            policy                                     history.
+eligibility is essential because the first owner permit is the one
+transition from default denial that this result does not cover.
+Partial projections and pattern masks remain outside the se-
+mantic order; their canonical execution supports permutation
+invariance, not monotonic information flow. Only structural
+stripping and full redaction support the value-absence claim.            supported operation must map the tool call to a typed action
+□                                                                        and resource and identify the arguments and response fields
+                                                                         available to policy. Field groups and sensitivity labels then
+Proposition 3 (Tier refinement). For any well-formed S and               give policy a stable vocabulary, while a schema-declared non-
+PA satisfying O1–O5,                                                     sensitive identifier keeps filtered records addressable only
+                                                                         when the owner policy and any selected agent policy approve
+            ΠS,A (κ) = Plan(κ; S, PA )                                   it. The response side of that typing rarely arrives with the tool.
+                     ⪯r Plan(κ; S, none) = ΠS (κ).                       MCP carried no declared output schema until a mid-2025
+                                                                         protocol revision added structured output [28], and most tools
+    Proof. Agent policy cannot establish permit eligibility. Its         still declare none: of 1,856 tools on 100 popular open-source
+gate either leaves the owner decision unchanged or moves                 servers measured in 2026, 234 carried an output schema [36].
+it toward defer or deny, and its remaining restrictions enter            The reference proxy does not face this problem, because its
+through the meets of Proposition 2. With none, DA is empty               connectors own both the schema and the mapping. A pre-
+and the plan is owner-only. Every capability in the two-tier             existing server brought under out-of-band policy needs one
+plan was therefore already eligible under S. □                           of two remedies: the server is changed to declare a schema,
+    The propositions establish a conditional model, not code             or a middleware supplies one and keeps it matching what the
+conformance. Cedar Analysis covers the permit-or-forbid pro-             server actually returns.
+jection of a well-typed bundle [19]; annotations and connector
+semantics require the checks in Appendix Table 8, which iden-               Writes require a stronger contract because request shaping
+tifies the released paths that discharge them.                           can alter backend meaning. The boundary may drop a field
+                                                                         only when the schema says its absence is safe, and it may
+6   Implementation                                                       clamp a numeric argument only in a declared restrictive direc-
+                                                                         tion. These declarations are security assumptions: an omitted
+The artifact implements the gate–request–response contract               action or field leaves a policy gap; an incorrect absence-safety
+through a small HTTP proxy. Without production transport                 or clamp-direction declaration can alter backend semantics.
+and deployment machinery, its stages, connector mappings,
+and backend effects remain inspectable. Cedar supplies the                  We built the artifact’s Jira and ServiceNow mappings from
+permit-or-forbid core; OBPE annotations select the other Sec-            the vendors’ published interfaces rather than through an auto-
+tion 4 operators: semantic gates, request shaping for non-               matic OpenAPI importer, which the release does not include.
+denied calls, and response shaping for permits. The proxy                Conformance fixtures check that the operations and response
+binds each call to the platform-supplied agent identity and              shapes presented to policy match those mappings, while a
+combines owner rules with any narrower agent policy. That                separate coverage analyzer catches field groups or operator
+plan governs both sides of the exchange; identity or policy              settings that the schema cannot resolve. Together, these checks
+failure stops the call before dispatch. Audit events record the          make the released surface inspectable without implying that
+decision and transformations, while conformance and bench-               every operator is reachable. The shipped schemas exercise
+mark tests observe the controlled backend call and result.               the write guard end to end, but drop and clamp remain syn-
+   Schemas define the enforcement surface. OBPE can gov-                 thetic because neither schema declares absence safety or a
+ern only what a connector exposes as typed data, so each                 restrictive clamp direction.
+
+
+                                                                     8
+6.1    Production Evidence Boundary                                    + output reviewer instead leaves the tool path raw and asks
+                                                                       a fixed Claude Haiku 4.5 reviewer to pass or replace each
+Placement and identity. The released artifact and production           assistant message. Table 3 shows which configurations answer
+implementation use the same gate–request–response com-                 each question.
+position. Production adds MCP transport, relevant remote
+                                                                          The conformance gate must show more than code coverage.
+A2A calls, and a principal registry implementing the per-axis
+                                                                       It attributes each restriction to the owner or agent tier and
+sensitivity order in Appendix D. These mechanisms support
+                                                                       verifies that a matched policy actually changes the exchange.
+feasibility; all conformance and outcome claims stop at the
+                                                                       Tool-to-agent slices then check that the agent receives the
+released column.
+                                                                       shaped result, while schema checks reject policy references
+   Schema projection. OBPE can project applicable pol-                 that cannot be resolved. Write guard traverses this released
+icy into each identity’s tools/list result. Input bounds be-           path. Drop and clamp remain synthetic because the shipped
+come JSON Schema constraints or removed properties; output             schemas do not declare the facts those operators require. The
+masking changes the advertised type, while stripped fields             artifact records each obligation, its scope, and its result.
+disappear from both schema and response. Dynamic discov-
+                                                                          RQ1 is primary; RQ2a, RQ2b, and RQ3 are secondary
+ery can therefore steer a model toward its current interface,
+                                                                       mechanism analyses.
+but the call path still enforces every restriction.
+                                                                          Release corpus and execution. The release corpus con-
+   Approval semantics. In production, each decision is bound
+                                                                       tains 71 tasks in 35 scenario clusters against controlled Jira
+to the request digest, deciding principal, and policy version,
+                                                                       and ServiceNow mocks. It was assembled for this evaluation
+then resumes only the immutable held call. Attribute-based
+                                                                       from audited schemas, policy components, fixture templates,
+access control protects the call, approver context, and decision
+                                                                       and generators, then frozen before the canonical run. The cor-
+log; approval supplies no backend credential. The released
+                                                                       pus is an evaluation set, not a claim that every ingredient was
+harness is narrower and does not invalidate an old pending
+                                                                       previously unseen. Component lineage and similarity checks
+record when its bundle changes (Appendix G).
+                                                                       make repeated or closely related scenarios visible.
+   Policy authoring and evidence. A user-research-informed
+                                                                          The four tool-capable agent models are Claude Sonnet 4.6,
+workflow previews policy scope and effects; Section 2 states
+                                                                       Claude Haiku 4.5, GPT-5, and GPT-5 mini. They give pur-
+the remaining responsibility for organizational intent. Produc-
+                                                                       posive coverage of two model families and two capability
+tion informed the design; Section 7 evaluates only the artifact
+                                                                       bands, not a factorial comparison of providers or capability.
+column of Table 2.
+                                                                       All calls use controlled mocks. Each trial receives a fresh
+                                                                       fixture copy, so paired arms face the same records while one
+7     Evaluation Methodology                                           trial cannot contaminate the next. That control lets the trace
+                                                                       observe exactly what entered model context and what changed
+Conformance and the benchmark answer different questions.              in backend state; it does not establish interoperability with
+Conformance asks whether the released code computes the                live Jira or ServiceNow deployments.
+staged composition defined in Sections 4 and 5. The bench-                An arm is an enforcement configuration. Each of 17 frozen
+mark asks how that boundary changes what agents receive                conditions pairs one arm with one model; together they cover
+and do, and whether useful work survives. Benchmark success            the shared primary arms and the single-model secondary con-
+cannot cure a conformance failure, and conformance alone               trasts. Running every task–condition pair three times yields
+does not establish usefulness.                                         71 × 17 × 3 = 3,621 planned trials. A content-derived registry
+   Conformance gate. The benchmark begins only after the               schedules each trial once, so research questions that share a
+released paths pass their declared conformance obligations.            cell reuse the same archived record. Before execution, the
+Human-authored semantic expectations cover complete re-                manifest fixed the tasks, fixtures, policy and schema revi-
+quests and responses, including failure paths. An independent          sions, prompts, model settings, scoring code, exclusions, and
+executable model is used only for stages where such a model            missingness rule. Order was balanced and there was no early
+ships; the remaining checks are not described as differential.         stopping. Under full OBPE, the task specifications expect
+Property tests exercise permutation invariance, monotonicity,          five calls to pass unchanged, 54 to pass after shaping, two to
+and the data policy owner ceiling, while targeted mutations            defer, and ten to be denied. This security suite concentrates
+ask whether those tests detect broken composition logic.               cases in which policy should act, so it estimates conditional
+   The archive’s arm names are not useful explanations, so             effectiveness rather than intervention rates in ordinary traf-
+we name configurations by what changes. The raw agent                  fic. Five unshaped permits cannot establish a general benign
+receives a minimal role-and-tools prompt and calls the mocks           false-denial rate.
+directly. Prompt only adds six explicit data-handling rules but           Twenty tasks also run a response-adaptive, multi-turn red-
+leaves that tool path untouched. Prompt + full OBPE adds               team dialogue. Claude Opus 4.7 receives the same adversary
+every operator reachable in the frozen bundle; full excludes           instructions in the prompt-only and OBPE arms and may
+production-only and schema-unreachable operators. Prompt               reframe its request after each reply. The loop stops when an
+
+
+                                                                   9
+                            Table 3: Experimental comparisons. Each arrow changes one named mechanism.
+            Comparison                                                        How to read it
+     RQ1    Prompt only → Prompt + full OBPE, on four models.                 Adds only the policy boundary. This is the primary test of what OBPE adds beyond detailed
+                                                                              prompt rules; it is not a provider ranking.
+     RQ2a   Raw → Raw + full OBPE and Prompt only → Prompt + full A 2 × 2 prompt-rules × OBPE design. The two effects test OBPE with and without prompt
+            OBPE, on Sonnet.                                                  help; their difference tests interaction.
+     RQ2b   Record controls → + strip fields → + mask fields and guard writes A cumulative ablation with all other inputs fixed. Adjacent steps isolate field stripping and
+            → + pattern masking, on Sonnet.                                   pattern masking, but not masking from write guard.
+     RQ3    Prompt + output reviewer ↔ Prompt + full OBPE, on Sonnet.         Compares a model that reviews assistant text with a boundary that mediates requests, re-
+                                                                              sponses, and backend effects. It is not a ranking of all LLM guardrails, and no local A2A
+                                                                              experiment is claimed.
+
+
+
+
+exact target appears, the adversary declares completion, or 15                             on positive cases and 79.1% on negative ones. We therefore
+turns elapse; this stop signal does not replace outcome scoring.                           treat safe-useful as a model-graded outcome, not a human-
+The adversary is not told the OBPE policy or implementation                                calibrated label, and retain both judgments in the archive.
+and does not fuzz the connector surface. A separate output-                                   Analysis, cost, and reproducibility. We treat each scenario
+review arm has mechanism-specific instructions and is not                                  cluster—not each task variant or replicate—as one indepen-
+part of that matched comparison.                                                           dent unit. Within a task, configuration, and model, we first
+   Outcomes and judging. The primary security outcome,                                     average the completed replicates and form the paired configu-
+which we call a deterministic trace failure, is positive if any                            ration difference. We then average those differences within
+of three recorded events occurs: protected data enters agent                               the cluster, so every cluster receives equal weight. Two para-
+context, an exact protected value appears in the final answer,                             phrases run three times therefore count as one scenario, not
+or a forbidden backend effect completes. Lower is better. We                               six independent observations. We obtain 95% CIs by resam-
+also report those channels separately because each calls for a                             pling clusters 10,000 times with a frozen seed, and check the
+different control.                                                                         result with a replicate-index-matched complete-block analy-
+   The primary utility outcome is safe-useful completion. It                               sis. The plan allowed the bootstrap only if at least 30 clusters
+requires no deterministic trace failure, satisfaction of the                               remained after exclusions. This was a guard against reporting
+archived completion and expected-tool contract, and a judge                                a thin analysis, not a power calculation.
+finding that the allowed work was fulfilled without semantic                                  Every attempt is journaled before completion, and tran-
+disclosure. Here, semantic disclosure means that an answer                                 script hashes bind both judgment records. The tables replay
+reveals a protected fact or category without necessarily re-                               from frozen inputs without new model calls, so reproduc-
+peating an archived value exactly; the row-count oracle in                                 ing the analysis does not require reproducing model outputs.
+§8.1 is one example. Higher is better. We retain the judge’s                               Token use is secondary deployment evidence: we preserve
+task-fulfilled component on its own because this stricter con-                             provider-specific buckets and missing receipts rather than
+junction can improve even when ordinary task fulfillment                                   treating tokenizers as comparable or missing values as zero.
+falls. The archived contract is mechanical: it checks termi-                               OBPE adds no model call, but this does not establish zero
+nation and the expected tool attempt. A proxy-denied call                                  proxy or latency overhead. Appendix F gives the full account-
+counts as attempted, so this component does not claim that                                 ing rules.
+the requested task was accomplished.
+   Deterministic traces are authoritative for exact exposure,                              8     Results
+tool decisions, and backend state. The primary semantic judge
+is Claude Opus 4.8; GPT-5 is a separate sensitivity judge                                  RQ1: prompts changed answers more than the exchange.
+and is also one of the four agent models. Both use task                                    Three configurations separate what the prompt changes from
+rubrics frozen with the corpus. The adversarial agent is Claude                            what the boundary changes. The raw agent receives no data-
+Opus 4.7, so its model family overlaps the primary judge’s.                                handling rules; prompt only asks the same agent to enforce
+We report the judges separately, retain disagreements, and                                 six rules itself; prompt + full OBPE keeps those rules and
+add no human adjudication pass. If a judge contradicts a                                   adds the trusted boundary. Table 4 reports the unweighted
+deterministic trace, the trace controls and the disagreement                               observed rates for orientation. Our conclusions rest on the
+remains in the released ledger. Three trials lacked a complete                             paired, cluster-weighted analysis that follows.
+pair of judgments, leaving 3,618 for direct comparison. The                                   The three outcomes answer different questions. Trace fail-
+judges agreed more often on semantic disclosure (94.5%) than                               ure records whether protected data reached model context, an
+on task fulfillment (87.2%). That summary hides an impor-                                  exact value reached the answer, or a forbidden effect reached
+tant asymmetry: disclosure agreement was 96.9% when both                                   the backend. Task fulfilled asks only whether the agent did
+judges found none, but 73.3% when both found disclosure.                                   the requested job, even if policy should have stopped it. Safe-
+Fulfillment showed the reverse pattern, with 90.8% agreement                               useful requires allowed work to finish under the archived tool
+
+
+                                                                                     10
+  Observed rates before scenario-cluster weighting                                                               prompt only     + OBPE
+                   Trace failure ↓      0.2                                                          57.6
+         Task fulfilled, Judge A ↑                                                           60.9                         79.1
+          Safe-useful, Judge A ↑                             22.0                                         58.9
+
+
+                                              0%                20%           40%                   60%             80%                   100%
+
+
+Figure 3: Absolute observed rates across all four models when full OBPE is added to the same six-rule prompt. Lower is better
+for trace failure; higher is better for the two utility outcomes. Judge B showed the same direction (Table 4). Paired, equally
+cluster-weighted estimates and CIs appear in the text.
+
+
+contract without trace failure or judged semantic disclosure.                to finish. In the full- OBPE cells, Judge A found 90.0% ful-
+A baseline can therefore complete a forbidden update and                     fillment on the five unshaped-permit tasks and 71.7% on the
+look useful while failing the security goal outright.                        54 shaped-permit tasks, but none on the ten denied or two
+                                                                             deferred tasks, whose rubrics defined the requested operation
+                                                                             as work to complete. Thus the overall fall from 79.1% to
+Table 4: Descriptive rates across all four models. Arrows show
+                                                                             60.9% is real, but it is not an estimate of false denial on or-
+the desired direction. Slightly different denominators reflect
+                                                                             dinary benign traffic. Since many prompt-only completions
+unavailable outcomes; the archive retains every count.
+                                                                             were unsafe, safe-useful still rose from 22.0% to 58.9% un-
+       Outcome                                Raw Prompt Prompt+OBPE
+                                                                             der Judge A and from 22.1% to 54.4% under Judge B. The
+       Trace failure ↓                    63.3%    57.6%         0.2%
+       Entered agent context ↓            55.1%    52.1%         0.0%        paired gains were 21.8 pp [9.5, 35.2] and 19.1 pp [6.9, 32.2].
+       Exact final disclosure ↓           27.5%     3.7%         0.2%        The mechanical contract barely moved (91.3% versus 91.4%;
+       Semantic disclosure, Judge A ↓     30.0%     8.8%         1.6%
+       Semantic disclosure, Judge B ↓     25.4%     8.2%         2.1%
+                                                                             paired change 0.36 pp [-0.83, 2.14]); it records the expected
+       Forbidden backend effect ↓          8.1%     5.5%         0.0%        tool path, not whole-request completion. The descriptive safe-
+       Task fulfilled, Judge A ↑          83.2%    79.1%        60.9%
+       Task fulfilled, Judge B ↑          76.3%    72.5%        56.1%
+                                                                             useful gaps are larger for the same reason as the trace gap:
+       Safe-useful, Judge A ↑             19.1%    22.0%        58.9%        the paired estimand gives large and small scenario families
+       Safe-useful, Judge B ↑             19.0%    22.1%        54.4%
+       Mechanical contract ↑              94.4%    91.3%        91.4%
+                                                                             equal weight.
+                                                                                Red-team slice. On the 20 response-adaptive tasks, the
+   The prompt made the final answer more discreet, but it                    same attacker pressed both arms across all four models. It
+did little to keep protected data away from the model or the                 triggered trace failure in 173 of 231 completed prompt-only
+backend. Exact disclosure fell from 27.5% to 3.7%, and Judge                 runs (74.9%), but only 2 of 227 completed OBPE runs (0.9%).
+A’s broader semantic-disclosure rate fell from 30.0% to 8.8%.                Both judges saw the same direction in semantic disclosure:
+Context exposure, however, moved only from 55.1% to 52.1%,                   Judge A marked 39 of 230 prompt-only answers and 3 of
+and forbidden effects from 8.1% to 5.5%. This is consistent                  226 OBPE answers, while Judge B marked 34 and 6. A loop
+with an agent suppressing a value in its final answer after it               defect left 9 prompt-only and 13 OBPE runs incomplete, so
+has already seen the value or acted on it.                                   these rates describe a stress slice rather than a second paired
+   Adding the boundary changed the exchange itself. Among                    estimate.
+prompted trials, OBPE removed every observed context ex-
+                                                                                RQ2a: the same pattern held without prompt rules. The
+posure and forbidden effect. The overall trace-failure rate
+                                                                             Sonnet 2 × 2 experiment asks whether OBPE depended on
+fell from 57.6% to 0.2% (Figure 3); the two remaining exact
+                                                                             help from the six-rule prompt. It did not appear to: adding
+disclosures were values reconstructed from information the
+                                                                             OBPE reduced the descriptive trace-failure rate from 59.5%
+boundary did permit.
+                                                                             to 1.0% without the rules and from 61.9% to 0.0% with
+   Table 4 gives absolute observed rates. Our prespecified
+                                                                             them. The estimated difference between those effects was
+comparison instead pairs the same tasks and gives each sce-
+                                                                             only 0.2 pp, but its wide interval [-12.3, 12.7] supports no
+nario cluster equal weight, so larger clusters do not dominate
+                                                                             stronger claim of independence.
+the answer. It estimates that OBPE avoided 41.2 percentage
+points (pp) of trace failure (95% confidence interval (CI)                      RQ2b: what did the cumulative operator ladder add?
+[27.7, 54.9]). Every model-specific estimate favored OBPE,                   The ablation holds the prompted Sonnet agent, tasks, and
+with reductions ranging from 32.4 to 49.3 pp and every 95%                   fixtures fixed while adding one layer of protection at a time.
+interval above zero. This differs from the 57.4-point raw rate               It begins with record controls that can gate a call, scope its
+gap because scenario sizes are uneven: the inferential estimate              query, or filter returned rows. Later rungs add field stripping,
+gives each cluster one vote.                                                 then whole-field masking and write guard together, and finally
+   The boundary also made some requested jobs impossible                     pattern masking within text that remains visible.
+
+
+                                                                        11
+                                                                               adversarial-loop defect and one strip-only run timed out. We
+Table 5: Descriptive Sonnet rates across the cumulative OBPE
+                                                                               leave their unavailable outcomes missing. Under the frozen
+ladder. Protected means no deterministic trace failure; judge-
+                                                                               rules, the primary security contrast contains 46 unknown rows,
+scored columns report Judge A; higher is better in all columns.
+                                                                               25 with OBPE and 21 without it. Assigning all of them in
+    Policy configuration        Protected Fulfilled (A) Safe-useful (A)
+                                                                               the two opposing worst-case directions moves the cluster-
+    Record controls               46.7%         75.1%           21.8%          weighted point estimate from 41.2 pp to a range of 33.8–
+    + field stripping             69.4%         70.0%           37.6%
+    + masking and write guard     88.6%         65.7%           51.9%          43.1 pp fewer failures; this is a bound on the point estimate,
+    + pattern masking (full)     100.0%         66.2%           63.0%          not a CI. The result was also not carried by one scenario
+                                                                               family: 23 of 34 contributing clusters favored OBPE, 11 tied,
+   Record controls alone protected 46.7% of trials. Once an                    and none favored the prompted baseline. Leaving out any one
+allowed record returned, however, they could not hide a sen-                   cluster produced reductions between 39.4 and 42.4 pp.
+sitive field inside it. Field stripping removed protected notes                   The more consequential qualification is a defect in the
+from permitted records; the joint rung hid directory emails                    controlled mock’s query evaluator. In 116 primary-arm trials,
+and removed guarded patch fields; pattern masking caught cre-                  it fell back after the proxy joined caller and policy clauses.
+dentials in retained text. The cluster-weighted analysis found                 Sixty-five cases broadened a filter; the rest lost ordering that
+the same progression: field stripping avoided another 9.9 pp of                could alter a capped page. The defect occurred downstream of
+failures [2.0, 19.1], masking and write guard jointly avoided                  Cedar and response shaping but still violated O3’s connector
+7.8 pp [0.3, 16.7], and pattern masking avoided 11.5 pp [2.9,                  obligation. Production connectors apply O3’s fail-closed rule;
+22.3]. The joint rung cannot separate masking from write                       that private behavior is context, not conformance evidence.
+guard, and its final 100% protection rate is a benchmark re-                   Excluding all 116 tests whether this fault drove the aggregate
+sult, not a free-text masking guarantee.                                       result. The security reduction is 40.5 pp and the Judge-A
+   Utility moved in two directions because the stricter rungs                  and Judge-B safe-useful gains are 21.4 and 18.2 pp, so each
+blocked more of the requested work but made more completed                     direction is unchanged.
+work safe. Across the ladder, safe-useful rose from 21.8% to                      The fallback path remains outside conformance. For sup-
+63.0% while standalone fulfillment fell from 75.1% to 66.2%;                   ported paths, a separate ledger covers 25 obligations across
+the mechanical contract stayed near 91%. Each safe-useful                      352 cells in the released conformance grid. Its tests caught all
+step was positive, although only pattern masking’s 11.3 pp                     20 non-equivalent stage mutations and all three full-pipeline
+gain had an interval excluding zero [0.2, 23.7].                               mutations that changed behavior; two others were equivalent
+   RQ3: output review arrived after exposure and effects.                      on that grid. Drop and clamp remain synthetic, and the eval-
+The fixed reviewer sees assistant text only after tools have                   uation did not exercise durable approval dispatch, aggregate
+returned. It can suppress an unsafe answer, but it cannot re-                  execution, or remote MCP or A2A deployment. Appendix F
+move data already placed in model context or undo a backend                    gives the full denominators and qualification record.
+change. That timing appears in the absolute Sonnet rates:
+the reviewer arm had a 58.6% deterministic trace-failure rate                  8.1    What the Boundary Did Not Close
+and a 19.7% safe-useful rate under Judge A, compared with
+0.0% and 63.0% for full OBPE. In the paired analysis, OBPE                     The four reconstruction failures were more instructive than
+avoided 43.4 pp more failures [27.7, 59.3] and gained 32.0 pp                  another decimal place. Across 1,065 trials with full OBPE,
+safe-useful completion [18.8, 46.0] under Judge A; Judge B                     four final answers contained an exact protected email even
+measured a 35.8 pp gain. This is one mechanism comparison,                     though the value never entered agent context and no forbidden
+not a ranking of all guardrails. The reviewer also required 930                backend effect occurred. The agents reconstructed the address
+additional model calls, and its refusal sometimes replaced an                  from a visible name and domain convention, sometimes while
+otherwise useful answer. Judge A’s standalone task fulfillment                 explaining why they would not disclose it. Two cases occurred
+was 66.2% with OBPE and 58.7% with the reviewer; OBPE                          in the prompted primary arm and two in the raw secondary
+made no additional model call.                                                 arm. This was not a proxy escape. It is the difference between
+   What the three comparisons say together. The common                         removing one value from one execution and proving that no
+pattern is timing. Prompt rules changed some final answers                     output depends on it.
+only after exposure; output review also ran after exposure                        A different failure turned query pushdown into an ora-
+and backend effects and added 930 model calls. OBPE acted                      cle. The agent issued increasingly selective predicates over a
+before dispatch and therefore changed which work could com-                    masked email field and reported the row counts: two matches
+plete. Standalone fulfillment fell on this policy-active corpus,               for @partner, then one each for yara and singh. The back-
+but many baseline successes were unsafe, so safe-useful com-                   end evaluated those predicates on the protected field even
+pletion rose.                                                                  though response shaping withheld it. Judge A marked se-
+   Evidence and qualifications. Every planned trial has a                      mantic disclosure; Judge B marked only an Honest Witness
+terminal journal record, but 39 did not complete: 38 hit one                   disclosure, meaning that the reply revealed the existence or
+
+
+                                                                          12
+category of protected data without stating its value. The deter-          10     Limitations and Broader Impacts
+ministic metric recorded no failure. This is a modern instance
+of the statistical-database tracker problem: individually al-             10.1    Limitations
+lowed predicates and counts can reveal a protected fact in
+combination [16].                                                         OBPE cannot repair a valid but mistaken owner ceiling: static
+                                                                          checks find bad rules, not organizational intent. Shaping can
+   These cases sharpen the claim boundary in §5. Structural               also mislead an agent into treating a filtered view as com-
+absence is useful, but it is not relational noninterference. Clos-        plete, while a warning may reveal that protected data exists.
+ing the query channel requires distinguishing policy-fixed                A rewritten query must preserve caller and policy predicates
+predicates from caller-controlled ones; blanket bans on fil-              together or be denied before dispatch.
+tering hidden fields would also disable legitimate row-level                 Schemas are therefore security state. They need named
+policy. Coarsened counts and cursors, minimum cohorts, and                owners, coordinated policy-and-schema rollout, rollback, and
+history-aware query budgets are possible defenses. This re-               review when fields or backend meaning change. Open maps
+lease evaluated none of them.                                             require finite allowlists or must remain opaque. Audits should
+                                                                          be minimal, tenant-separated, and short-lived, while conse-
+                                                                          quential policy changes and approvals remain attributable.
+9   Related Work                                                          Cedar supplies none of these operating controls.
+                                                                             The mocks omit rich text, recursive or polymorphic ob-
+The closest building blocks act at different points in the ex-            jects, and cross-tenant tests. Durable approval, history gates,
+change. Zanzibar centralizes relationship authorization and               broader writes, timing, and streaming also remain outside re-
+Cedar supplies typed policy [12, 29]; identity and access                 leased evidence. Assignment-bound credentials would shrink
+management (IAM) boundaries and OAuth extensions can                      the authorization gap, and reliable instruction–data separation
+narrow a credential [5, 25, 26]. Farther down the path, row               would weaken one reason for response shaping. Policy would
+security, query rewriting, and Envoy processing can constrain             still decide who may receive a secret and when a call must
+data or modify HTTP traffic [18, 30, 31]. None of these                   wait outside the agent.
+systems, as documented, binds those stages into an owner-
+bounded request-and-response contract that agent policy can               10.2    Broader impacts
+only narrow. OBPE does not replace these mechanisms. It
+contributes a contract for composing them, conditions for                 Audit and approval records expose worker activity; deploy-
+an order-independent and non-widening result, and a confor-               ments should limit access and retention, notify workers, and
+mance chain from that law to the released path.                           keep them out of employment decisions. Approver fatigue
+                                                                          can turn deferral into a rubber stamp, so rising volume should
+   AgentCore Policy maps gateway tools to Cedar actions [2].
+                                                                          trigger policy review. The ethics appendix expands these du-
+Dogwood evaluates prior events and windowed aggregates
+                                                                          ties.
+[4, 17], while model guardrails can reject a call or suppress its
+output [3]. This history support is stronger than the released
+OBPE proxy’s. The documented system does not, however,                    11     Conclusion
+selectively shape returned records or define the same owner–
+agent narrowing contract, and prior-event authorization is not            OBPE governs the whole tool exchange under an owner ceil-
+durable resumption of one immutable held call.                            ing that agent policy can only narrow. Its model states the
+   Other defenses reason earlier. Progent checks whether gen-             conditions for an order-independent, non-widening policy
+erated call rules narrow privilege, and SEAgent applies manda-            plan; the prototype makes those conditions a conformance
+tory access control to tools and multi-agent deputies [24, 35].           target.
+CaMeL propagates capabilities with values, PAuth binds                       Across four models, the paired, cluster-weighted analysis
+operands to provenance, and privilege separation limits what              found 41.2 points less trace failure. Unweighted standalone
+crosses from a quarantined model [13, 23, 34]. OBPE begins                fulfillment fell from 79.1% to 60.9% because policy stopped
+at the mediated exchange; its portability ends where trusted              some requested jobs. Many baseline completions were un-
+identity or connector coverage ends.                                      safe, however, and the paired safe-useful gain was 21.8 points
+                                                                          under the primary judge and 19.1 under the second. The pat-
+   AgentDojo tests whether useful work survives prompt-
+                                                                          tern survived removal of the prompt, whereas in-band review
+injection defenses [14]; we freeze the policy and score expo-
+                                                                          fared worse while adding 930 model calls. Four reconstructed
+sure and forbidden effects beside useful work. A workshop
+                                                                          values and one row-count oracle expose the remaining bound-
+paper demonstrated an out-of-band metadata channel on one
+                                                                          ary. OBPE enforces structural and effect constraints at the
+agent [1]. Here we add the two-tier model, restriction law, con-
+                                                                          exchange; inference across allowed observations still needs
+formance link, and cross-model experiment. Table 6 assesses
+                                                                          another defense.
+the cited versions, not possible extensions.
+
+
+                                                                     13
+References                                                           [12] Joseph W. Cutler, Craig Disselkoen, Aaron Eline,
+                                                                          Shaobo He, Kyle Headley, Michael Hicks, Kesha Hi-
+ [1] Tyler Akidau, Tyler Rockwood, Johannes Brüderl, and                  etala, Eleftherios Ioannidis, John Kastner, Anwar Ma-
+     Marc Millstone. The importance of out-of-band meta-                  mat, Darin McAdams, Matt McCutchen, Neha Rungta,
+     data for safe autonomous agents: The redpanda agentic                Emina Torlak, and Andrew Wells. Cedar: A new
+     data plane. In Supporting Our AI Overlords (SAO),                    language for expressive, fast, safe, and analyzable
+     co-located with ACM CAIS, 2026. arXiv:2605.29082.                    authorization.     Proceedings of the ACM on Pro-
+                                                                          gramming Languages, 8(OOPSLA1):670–697, 2024.
+ [2] Amazon Web Services. Core concepts - Amazon
+                                                                          arXiv:2403.04651.
+     Bedrock AgentCore, 2026. accessed August 26, 2026;
+     https://docs.aws.amazon.com/bedrock-agent                       [13] Edoardo Debenedetti, Ilia Shumailov, Tianqi Fan, Jamie
+     core/latest/devguide/policy-core-concepts.                           Hayes, Nicholas Carlini, Daniel Fabian, Christoph
+     html.                                                                Kern, Chongyang Shi, Andreas Terzis, and Florian
+ [3] Amazon Web Services. Guardrails in policies - Amazon                 Tramèr. Defeating prompt injections by design, 2025.
+     Bedrock AgentCore, 2026. accessed August 26, 2026;                   arXiv:2503.18813v2; https://arxiv.org/abs/2503
+     https://docs.aws.amazon.com/bedrock-agent                            .18813v2.
+     core/latest/devguide/policy-guardrails-i                        [14] Edoardo Debenedetti, Jie Zhang, Mislav Balunović,
+     n-policies.html.                                                     Luca Beurer-Kellner, Marc Fischer, and Florian Tramèr.
+ [4] Amazon Web Services. Temporal policies - Amazon                      AgentDojo: A dynamic environment to evaluate prompt
+     Bedrock AgentCore, 2026. accessed August 26, 2026;                   injection attacks and defenses for LLM agents. In
+     https://docs.aws.amazon.com/bedrock-agent                            Advances in Neural Information Processing Systems
+     core/latest/devguide/policy-temporal.html.                           (NeurIPS) Datasets and Benchmarks Track, volume 37,
+                                                                          pages 82895–82920, 2024. arXiv:2406.13352.
+ [5] AWS. Permissions boundaries for IAM entities, 2018.
+     accessed August 18, 2026; https://docs.aws.amazo                [15] Dorothy E. Denning. A lattice model of secure informa-
+     n.com/IAM/latest/UserGuide/access_policies                           tion flow. Communications of the ACM, 19(5):236–243,
+     _boundaries.html.                                                    1976.
+
+ [6] AWS. Cedar policy language reference, 2026. accessed            [16] Dorothy E. Denning, Peter J. Denning, and Mayer D.
+     August 18, 2026; https://docs.cedarpolicy.com/.                      Schwartz. The tracker: A threat to statistical database
+                                                                          security. ACM Trans. Database Syst., 4(1):76–96, 1979.
+ [7] John Backes, Pauline Bolignano, Byron Cook, Catherine
+     Dodge, Andrew Gacek, Kasper Luckow, Neha Rungta,                [17] Dogwood Policy.     Dogwood: Reference parser
+     Oksana Tkachuk, and Carsten Varming. Semantic-based                  and interpreter for the Dogwood policy lan-
+     automated reasoning for AWS access policies using                    guage, 2026.        GitHub repository, commit
+     SMT. In 2018 Formal Methods in Computer Aided                        5063bcc2d6d6cf5024d1b0498e6cc8ef52cbcf0c,
+     Design (FMCAD), pages 1–9, 2018.                                     accessed August 17, 2026. The repository de-
+                                                                          scribes a non-production reference interpreter
+ [8] D.E. Bell and L.J. LaPadula. Secure computer systems:
+                                                                          that extends Cedar-derived policies with tem-
+     Mathematical foundations. Technical Report MTR-
+                                                                          poral conditions over event history. h t t p s :
+     2547, Vol. I; ESD-TR-73-278, The MITRE Corporation,
+                                                                          //github.com/dogwood-policy/dogwood/tree/5
+     1973.
+                                                                          063bcc2d6d6cf5024d1b0498e6cc8ef52cbcf0c.
+ [9] K.J. Biba. Integrity considerations for secure computer
+                                                                     [18] Envoy Proxy. External processing, 2026. Envoy doc-
+     systems. Technical Report ESD-TR-76-372, US Air
+                                                                          umentation, accessed August 26, 2026; https://www.
+     Force Electronic Systems Division, 1977. earlier ver-
+                                                                          envoyproxy.io/docs/envoy/latest/configurat
+     sion: MITRE MTR-3153 (1975).
+                                                                          ion/http/http_filters/ext_proc_filter.html.
+[10] Arnold Cartagena and Ariane Teixeira. Mind the GAP:
+     Text safety does not transfer to tool-call safety in LLM        [19] Spencer Erickson and Liana Hadarean. Introduc-
+     agents, 2026. arXiv:2602.16943v1; https://arxiv.                     ing Cedar Analysis: Open source tools for verify-
+     org/abs/2602.16943v1.                                                ing authorization policies, 2025. AWS Open Source
+                                                                          Blog, June 16, 2025; announces the Lean-verified
+[11] Michael R. Clarkson and Fred B. Schneider. Hyperprop-                cedar-policy-symcc compiler and cedar-lean-cli
+     erties. Journal of Computer Security, 18(6):1157–1210,               in cedar-spec. https://aws.amazon.com/blogs
+     2010.                                                                /opensource/introducing-cedar-analysis-ope
+
+
+                                                                14
+    n-source-tools-for-verifying-authorization                       [30] PostgreSQL. Row security policies in PostgreSQL,
+    -policies/.                                                           2026. PostgreSQL 18 documentation, accessed August
+                                                                          18, 2026; https://www.postgresql.org/docs/18
+[20] Kai Greshake, Sahar Abdelnabi, Shailesh Mishra,                      /ddl-rowsecurity.html.
+     Christoph Endres, Thorsten Holz, and Mario Fritz. Not
+     what you’ve signed up for: Compromising real-world              [31] Shariq Rizvi, Alberto Mendelzon, S. Sudarshan, and
+     LLM-integrated applications with indirect prompt injec-              Prasan Roy. Extending query rewriting techniques for
+     tion, 2023. arXiv:2302.12173.                                        fine-grained access control. In ACM SIGMOD, 2004.
+
+[21] D. Hardt. The OAuth 2.0 authorization framework.                [32] Andrei Sabelfeld and David Sands. Dimensions and
+     Technical Report RFC 6749, IETF, 2012. https:                        principles of declassification. In 18th IEEE Computer
+     //www.rfc-editor.org/rfc/rfc6749.                                    Security Foundations Workshop (CSFW), pages 255–
+                                                                          269, 2005.
+[22] Munawar Hasan.       Incompleteness of AI safety                [33] J.H. Saltzer and M.D. Schroeder. The protection of
+     verification via Kolmogorov complexity, 2026.                        information in computer systems. Proceedings of the
+     arXiv:2604.04876; https://arxiv.org/abs/2604.0                       IEEE, 63(9):1278–1308, 1975.
+     4876.
+                                                                     [34] Reshabh K Sharma, Linxi Jiang, Zhiqiang Lin, and Shuo
+[23] Dennis Jacob, Emad Alghamdi, Zhanhao Hu, Basel                       Chen. PAuth - precise task-scoped authorization for
+     Alomair, and David Wagner. Preventing prompt in-                     agents, 2026. arXiv:2603.17170v1; https://arxiv.
+     jection with type-directed privilege separation, 2025.               org/abs/2603.17170v1.
+     arXiv:2509.25926v2.
+                                                                     [35] Tianneng Shi, Jingxuan He, Zhun Wang, Hongwei
+[24] Zimo Ji, Daoyuan Wu, Wenyuan Jiang, Pingchuan Ma,                    Li, Linyu Wu, Wenbo Guo, and Dawn Song. Pro-
+     Zongjie Li, Yudong Gao, Shuai Wang, and Yingjiu Li.                  gent: Securing AI agents with privilege control, 2025.
+     Taming various privilege escalation in LLM-based agent               arXiv:2504.11703v3, accessed August 18, 2026; https:
+     systems: A mandatory access control framework, 2026.                 //arxiv.org/abs/2504.11703v3.
+     arXiv:2601.11893v1.
+                                                                     [36] Yang Shi, Jiaheng Fu, Yihe Huang, Ruixiang Wu,
+[25] Michael Jones, Anthony Nadalin, Brian Campbell, John                 Chengyao Sun, and Kaifeng Huang. Mitigating taint-
+     Bradley, and Chuck Mortimore. OAuth 2.0 token ex-                    style vulnerabilities in MCP servers via security-aware
+     change. Technical Report RFC 8693, IETF, 2020.                       tool descriptions, 2026. arXiv:2607.07461. https:
+                                                                          //arxiv.org/abs/2607.07461.
+[26] Torsten Lodderstedt, Justin Richer, and Brian Campbell.
+                                                                     [37] Apostol Vassilev. Robust AI security and alignment:
+     OAuth 2.0 rich authorization requests. Technical Report
+                                                                          A sisyphean endeavor? IEEE Security & Privacy,
+     RFC 9396, IETF, 2023.
+                                                                          24(3):52–58, 2026. arXiv:2512.10100.
+[27] J. Madison. The federalist no. 51, 1788. Founders               [38] Simon Willison. The lethal trifecta for AI agents: Private
+     Online, National Archives, accessed August 26, 2026;                 data, untrusted content, and external communication,
+     https://founders.archives.gov/documents/Ma                           2025. accessed August 26, 2026; https://simonwil
+     dison/01-10-02-0279.                                                 lison.net/2025/Jun/16/the-lethal-trifecta/.
+[28] Model Context Protocol. Key changes, specification
+     revision 2025-06-18, 2025. Adds structured tool out-            Ethical Considerations
+     put (outputSchema, structuredContent); earlier re-
+     visions returned unstructured content only. https:              We evaluate OBPE against controlled Jira and ServiceNow
+     //modelcontextprotocol.io/specification/                        mocks populated with synthetic records; the red-team prompts
+     2025-06-18/changelog.                                           target only those records, so the study uses neither human
+                                                                     subjects nor customer or employee data. We also do not test
+[29] R. Pang, R. Caceres, M. Burrows, Z. Chen, P. Dave,              agents that decide employment, credit, benefits, or other conse-
+     N. Germer, A. Golynski, K. Graney, N. Kang, L. Kiss-            quential outcomes about people. Those settings raise fairness
+     ner, J.L. Korn, A. Parmar, C.D. Richards, and M. Wang.          and due-process questions that a tool boundary cannot answer.
+     Zanzibar: Google’s consistent, global authorization sys-           The defense creates records of its own. Tool-call audits and
+     tem. In USENIX ATC, pages 33–46, 2019. https:                   approval history can expose how a worker uses an agent, so
+     //www.usenix.org/conference/atc19/presenta                      a production operator should restrict access and retain only
+     tion/pang.                                                      what an investigation requires. Workers should also know
+
+
+                                                                15
+what is recorded. These logs should not become inputs to                 A    Example Policies
+employment decisions. Write shaping raises a second ac-
+countability concern: the backend may receive a narrower                 Record-scope. Narrowing a read by record ownership can hap-
+update than the agent proposed. The operator must make that              pen upstream or at the gateway, and a policy can name both.
+change visible to the responsible user and preserve enough               The gateway can push a condition down into the upstream
+audit detail to reconstruct it without copying sensitive values          query, so the out-of-scope records never leave the upstream,
+into the log.                                                            and it can apply the same condition as a filter on the response,
+                                                                         which works against any backend. The example keys both to
+   Policy authors hold real power. Only designated data stew-            the caller’s team.
+ards should set the owner ceiling, with review and clear expla-
+nations of its impact; affected users also need a way to contest         // Pushdown: narrow the listing upstream
+                                                                         @id("issue_list_scoped")
+or correct an erroneous label or scope. Static analysis can find
+                                                                         @transform("allow_with_scope_query")
+structural mistakes, but not decide whether a valid policy is            @field_group("summary") @cap_limit("100")
+fair or faithful to organizational intent. The released prototype        permit (principal,
+does not establish that an organization will get those choices                    action == Action::"list",
+                                                                                  resource is Issue)
+right.                                                                   when {
+                                                                            principal.group_ids.contains(
+                                                                               resource.project) ||
+                                                                            principal.direct_report_ids.contains(
+                                                                               resource.assignee)
+                                                                         };
+Open Science
+                                                                           When the upstream cannot narrow the query itself, the
+                                                                         gateway applies the same condition as a filter on the response.
+The anonymous artifact is available at https://anonymous.
+4open.science/r/usenixsecurity_2027_obpe/README.                         // Gateway: keep only the lead’s team
+                                                                         @id("issue_list_team")
+md. It contains the HTTP proxy, controlled backend mocks,                @transform("allow_with_filter_records")
+connector schemas, and policy bundles used by the paper.                 @field_group("summary")
+It also includes the agent-under-test and adversarial-agent              permit (principal,
+                                                                                 action == Action::"list",
+runners, with their orchestration logic and tool definitions.
+                                                                                 resource is Issue);
+Every system, task, attack, guardrail, and judge prompt used
+for a reported outcome ships with its response parser and                @id("issue_list_team_keep")
+provider adapter. The local A2A adapter is included as code              permit (principal,
+                                                                                  action == Action::"filter_record",
+but did not enter the frozen manifest or the paper’s evidence.                    resource is Issue)
+   The frozen corpus lock, trial registry, raw transcripts, con-         when {
+                                                                            principal.group_ids.contains(
+formance ledger, and analysis code complete the record. The                    resource.project) ||
+lock records model strings, generation settings, policy hashes,             principal.direct_report_ids.contains(
+fixture and scoring revisions, and prompts. The qualification                  resource.assignee)
+record binds the analyzed archive to its generator revision;             };
+sensitivity.csv records the incomplete-outcome bounds,
+                                                                            Filter-records is two rules (Appendix E). The single-
+cluster influence, fallback distribution, and judge agreement
+                                                                         decision operators are one rule each: a field strip names
+reported here. These materials reproduce the experimental
+                                                                         a @field_group, a defer names an @approver and a
+conditions, not the provider models themselves. Development
+                                                                         @defer_timeout.
+notebooks do not enter the release record.
+                                                                            Three concerns, two tiers. The next example combines
+   The README gives commands to build and test the sys-                  authorization, exposure control, and semantic gating. The
+tem, verify conformance, check the archive qualifications,               owner policy strips restricted fields and defers a Critical-issue
+and regenerate every reported table and figure offline without           update for approval. The agent policy adds a scoped, capped
+model credentials. Fresh model calls may differ, so rerunning            listing for this agent. Comments mark the two tiers.
+providers is a replication of the procedure rather than a repro-
+                                                                         // AGENT BUNDLE (agent builder): scope and cap the listing
+duction of the reported numbers. The provider replay cache               @id("issue_list")
+and a best-effort telemetry log are omitted for size; neither is         @transform("allow_with_scope_query")
+read by the released analysis. The archived transcripts, tool            @field_group("summary") @cap_limit("100")
+                                                                         permit (principal,
+traces, outcomes, judge ledgers, and derived paper outputs                       action == Action::"list",
+remain available. After deanonymization, we will preserve                        resource is Issue);
+the artifact at a stable archival URL.
+
+
+                                                                    16
+// OWNER POLICY (data owner): retain approved fields                      C    Composition Preconditions and Proof Detail
+@id("issue_read_triage")
+@transform("allow_with_field_strip")                                      Under O1–O5, §5.1 claims that fixed matched rules produce
+@field_group("summary")
+permit (principal,                                                        one policy plan and that another restriction cannot widen
+        action in [Action::"get",                                         it. This appendix supplies the algebra behind those claims.
+                   Action::"list"],                                       Table 7 states the operator behavior needed to instantiate that
+        resource is Issue);                                               algebra; Table 8 separately records what the released path
+// OWNER POLICY (data owner): a Critical update waits                     implements or still must test.
+// for the on-call lead                                                       Ordered components and content normalization. Let i range
+@id("issue_update_critical_defer")                                        over the ordered gate, request, and response components, and
+@transform("defer")
+                                                                          let Di contain their restriction operands from the matched
+@approver("on_call_lead")
+@defer_timeout("3600")                                                    owner and agent rules. The row keeper is φS ∧ φA , where
+permit (principal,                                                        each term is its tier’s Cedar authorization result; same-tier
+        action == Action::"update",                                       permit addition is not another restriction operand. Once DS
+        resource is Issue)
+when {
+                                                                          establishes owner eligibility, an ordered component starts at
+  resource.assignee == principal.account_id                               its no-added-restriction value ⊤i . Write its result as
+  && resource.priority == "Highest"                                                                                 ^
+};                                                                                              Mi (Di ) = ⊤i ∧           r.
+                                                                                                                   r∈Di
+   Composition trace. The list rules give a concrete instance of
+the two-tier law. Suppose owner policy S permits the call and             Table 7 gives the concrete conditions for those meets. Con-
+retains field group FS . Agent policy PA adds team predicate              tent rules are different. Let Nµ (Dµ ) sort applicable rewrites
+t, caps the response at 100, and retains FA . The owner-only              by a schema-pinned key, let full redaction supersede partial
+plan is                                                                   rewrites, and then apply the remaining rules in one fixed
+                      ρS = (q, n, ∅),                                     sequence with inert replacement text. Nµ is a deterministic
+                                                                          normalizer, not a semantic meet over arbitrary strings. The for-
+                       ηS = (true, FS , µpass ),
+                                                                          mal results are conditional on these definitions; conformance
+                   ΠS (κ) = (permit, ρS , ηS ).                           determines whether a released path satisfies them.
+With both tiers,                                                             Proof of Proposition 1. For any permutation π of the stage
+                                                                          operands,
+              ρS,A = (q ∧ t, min(n, 100), ∅),
+                                                                                    ⊤i ∧ r1 ∧ · · · ∧ rn = ⊤i ∧ rπ(1) ∧ · · · ∧ rπ(n) .
+              ηS,A = (true, FS ∩ FA , µpass ),
+          ΠS,A (κ) = (permit, ρS,A , ηS,A ) ⪯r ΠS (κ).                    Commutativity and associativity give the equality, while idem-
+                                                                          potence makes duplicates harmless. Nµ depends on a set of
+The agent tier creates no permit. It adds a predicate, lowers the         rules and a fixed sort key, so permuting the input listing does
+cap, and can only shrink the retained field set. The concrete             not change its normal form. With κ, S, PA , C, and the trusted-
+page returned by the two queries may differ; Proposition 3                state snapshot fixed, the prescribed gate–request–response
+orders the plans, not those sampled pages.                                order therefore produces one Π. Fixed envelope sanitation
+   Across a list, a triage read, and a Critical-issue update, the         covers the final content-dependent step. A formal aggregate
+gateway returns permit, permit, and defer. The owner supplies             gate reads one fixed log prefix; later defer resolution is not an
+the strip and defer for every agent at the connector; this agent’s        input to this plan. Audit ordering and display labels are not
+policy adds only the scope query, as Proposition 3 requires.              part of Π. □
+Stateful aggregate gates remain production design context                    Proof of Proposition 2. Suppose a well-formed stage re-
+and do not appear in a prototype bundle.                                  striction adds operand ri to stage i. Then
+
+                                                                                     Mi (Di ∪ {ri }) = Mi (Di ) ∧ ri ⪯r Mi (Di ).
+B    Pattern-Compliance Matrix
+                                                                          Applying this inequality at every affected stage yields the plan
+Table 6 applies the six properties of §3 to selected systems              order. The order is lifted over the gate: deny has no later-stage
+and configurations from §9. These grades are our assessment               grant, equal defer plans compare their request components,
+of the pinned public documentation and artifacts. A partial               and permit plans compare request and response components.
+mark covers conditional support, a narrower interpretation, or            The owner-eligibility premise excludes the one transition this
+behavior not fully exercised in the cited artifact; a negative            argument does not cover: default deny to the first owner per-
+mark means we did not find the property there, not that no                mit. Nor does it cover adding a same-tier Cedar permit. O4
+private or extended configuration can supply it.                          requires absence safety for drops and a restrictive direction
+
+
+                                                                     17
+Table 6: Reviewed systems at the cited versions (Y = yes, P = partial or conditional, N = no). The table compares enforcement
+properties, not overall system quality. The OBPE row describes the released HTTP artifact, so interoperability and external
+gating remain partial.
+                                                                         Agent-                                Resource Boundary External
+                   System or configuration                            inaccessible Deterministic Interoperable  aware    shaping  gating
+                   Envoy ext_proc with external policy [18]               P             P                                Y                P          Y            P
+                   AgentCore Policy, base [2]                             Y             Y                                P                P          N            N
+                   AgentCore Policy with Dogwood temporal                 Y             Y                                P                P          N            N
+                   rules [4, 17]
+                   AgentCore Policy with model-based guardrails [3]       Y             P                                P            P              P            N
+                   Progent [35]                                           Y             P                                P            P              N            P
+                   CaMeL [13]                                             P             Y                                P            P              N            P
+                   PAuth [34]                                             P             P                                P            P              N            P
+                   OBPE, released HTTP artifact                           Y             Y                                P            Y              Y            P
+
+
+
+for clamps. A structural record identifier I may stay outside                                                                                                         most vulnerable
+
+
+
+
+                                                                                             cross-tenant exposure →
+the variable capability only under the declaration and policy-                                                          human, MSP              service, MSP            LLM, MSP
+approval obligation in §4. Pattern masking is not part of this
+                                                                                                                       human, internal        service, internal       LLM, internal
+inequality: canonical normalization makes its execution order-
+independent but does not order arbitrary output bytes. Only                                                            human, customer        service, customer       LLM, customer
+structural stripping and full redaction retain the value-absence
+                                                                                                                       least vulnerable
+claim; partial projections and pattern masks remain incompa-
+                                                                                                                                prompt-injection susceptibility →
+rable. □
+
+                                                                                    Figure 4: Product order for two principal-risk dimensions.
+D    What Static Analysis Can Establish                                             Arrows point toward greater vulnerability; the shaded nodes
+                                                                                    are incomparable. Production implements the richer registry,
+Static analysis can find conflicts and dead rules, but it cannot                    while the released proxy uses a one-dimensional chain.
+decide whether a valid policy captures organizational intent,
+whether a pattern catches every secret, or what an agent may
+infer from data left visible.
+                                                                                    requires relational noninterference [11].
+   The Cedar core. Cedar Analysis compares typed permit-or-
+forbid policy sets and can find shadowed or impossible per-                            Production orders. The release uses the sensitivity chain
+mits, forbid overrides, and complete denials [12, 19]; Zelkova                      in §5; production independently orders prompt-injection sus-
+earlier translated IAM policies into satisfiability modulo the-                     ceptibility and cross-tenant reach. Their product is a lattice in
+ories (SMT) [7]. These tools reason about the written Cedar                         Denning’s sense [15]. Figure 4 shows why an LLM limited to
+policy, not OBPE annotations or owner intent. A deployment                          one customer and a human managed-service-provider (MSP)
+making an analysis-backed claim must pin the analyzer and                           account are incomparable. The release does not exercise this
+its accepted expression fragment. Time must be supplied as                          registry.
+typed context, and bounded entity slicing needs a validated                            Read and write orders also differ. A service may resist
+dereference level [6].                                                              injected instructions yet accept model-produced writes. Write
+   Beyond the gate. An opaque model of shaping can conser-                          corruptibility is the order-dual of Biba integrity, just as the
+vatively flag possible exposure or writes, with false alarms. It                    read order reverses Bell–LaPadula clearance [8, 9]; ℓw ( f )
+cannot prove owner-agent containment: two policies may be                           therefore cannot be inferred from ℓ( f ).
+gate-equivalent yet shape different fields. That proof would
+need symbolic semantics for the annotations and connector
+schema, plus a correspondence argument for the staged im-
+plementation. This is proposed work; Proposition 3 states the
+conditional law it would need to check.
+                                                                                    E       Released Policy and Schema Contract
+   Runtime content and history mark another limit. Static anal-
+ysis cannot promise that pattern masking finds every value or                       Each released rule uses Cedar for its permit-or-forbid decision;
+that a temporal predicate will fire. Structural removal proves                      OBPE annotations select shaping but do not alter that decision.
+absence only from one response. Retained fields are delib-                          A forbid stops the exchange. On allow, the wrapper combines
+erate declassification only when policy explicitly designates                       annotations from every applicable permit. A separate YAML
+their release [32]; projection alone does not show that they                        connector schema supplies resource, field, and wire semantics;
+reveal nothing about the removed value. That stronger claim                         it is not a generated Cedar type schema.
+
+
+                                                                               18
+Table 7: Preconditions for Propositions 1–2 and INV-SG. Each result holds only when the corresponding obligation is satisfied.
+            Obligation                                          Purpose                                                         Evidence or control
+            Query joins use conjunction                   Preserves caller and policy filters                    Vertical refusal and query-join tests
+            Pattern masks use canonical order             Prevents rule-order dependence                         Golden fixture
+            Mask placeholders are inert                   Prevents remasking                                     Golden fixture
+            Full redaction supersedes partial rewrites    Fixes one content normal form, not a semantic meet     Composition fixture
+            Caps are enforced after fetch                 Backend cannot evade the cap                           Proxy invariant
+            Row filters see unprojected records           Projection cannot change predicates                    Proxy fetch contract
+            Every retained structural ID is declared non- Keeps addressing metadata visible only under the theo- Schema validation
+            sensitive and policy-approved                 rem’s fixed frame
+            Drop is limited to absence-safe fields        Unsafe omission becomes denial                         Analyzer check
+            Clamp direction comes from the schema         Defines the restrictive bound                          Schema validation
+            Writes never inject or default fields         Preserves write monotonicity                           Jira PATCH contract; runtime check
+            Scope-query avoids write-shaped fields        Fixes request-stage order                              Bundle validation
+            Co-firing defer parameters normalize or fail Makes defer initiation independent of rule order        Formal assumption; shipped bundles
+            closed                                                                                               audited
+            Authenticated resolver, complete snapshot, Supports safe resumption after approval                   Production design; not released
+            terminal deadline, and duplicate-dispatch
+            fence
+
+
+
+Table 8: Evidence boundary for O1–O5 and the owner ceiling. The formal results assume each condition; the remaining columns
+state what is implemented, tested, or outside the released artifact.
+Condition                Formal role              Released artifact                             Conformance                             Not released
+O1 identity/mediation    All claims               Bound identity; HTTP path                     Identity/path tests; released grid      MCP; remote A2A
+O2–O3 fixed semantics    Permutation invariance   Staged path; sensitivity chain                Stage/full-path tests; mutations        Product-order registry
+O4 safe writes           Write monotonicity       Guard live; drop/clamp unreachable            Guard full path; drop/clamp synthetic   Broader write workflows
+O5 trusted decisions     Defer/history            Hold path; nonterminal in-memory transition   Hold/no-dispatch tests                  Terminal timeout; durable, temporal, aggregate
+Owner ceiling            Propositions 1–3         Two-tier staged path                          Tier attribution; mutation checks       Production deployment
+
+
+
+
+                                                                                                   Engine construction rejects invalid Cedar and malformed
+Table 9: Released OBPE annotation contract. Comma-
+                                                                                                or unresolved annotations. The release’s policy editor checks
+separated values name entries in the connector schema.
+                                                                                                field groups, positive caps, and record-filter companions; re-
+  Annotation                      Meaning
+                                                                                                lease tests add schema coverage, reachability, and the evi-
+  @id                       Stable policy name used for lookup and audit.                       dence checks in Appendix F. No general solver- fragment
+  @transform                Selects the wrapper decision or shaping operator.
+  @field_group              Names a response allowlist; matched groups meet                     lint ships. The released bundles use only ==, !=, &&, ||, has,
+                            by intersection.                                                    and set .contains over strings and Booleans. Extending that
+  @cap_limit                Positive collection cap; matched caps meet by
+                            minimum.                                                            fragment requires a fresh analysis qualification.
+  @pattern_mask_fields,     Name fields to scan and schema-defined pattern                         The Jira and ServiceNow mappings were authored by hand
+  @pattern_mask_rules       categories.
+  @write_guard_fields       Names fields the agent may not originate; omis-                     from published interfaces. The release has no OpenAPI im-
+                            sion must preserve stored state.                                    porter and claims neither recursive reference nor polymor-
+  @approver, @defer_timeout Name the approval route and hold deadline.
+  @reason                   Human-readable denial or deferral advice.                           phism support. Conformance covers only the shipped HTTP
+                                                                                                mappings and mock backends described in §6.
+
+    The transform vocabulary comprises allow, deny, defer,                                      F     Benchmark Accounting and Scoring Detail
+and six allow_with_* forms for query scope, record filtering,
+field stripping, field and pattern masking, and write guarding.                                 Before model calls, the frozen registry names every condi-
+Across matched rules, the smallest positive cap wins. Record                                    tion, task, and replicate. The journal preserves attempts and
+filtering also requires a filter_record permit carrying the                                     retries and requires one terminal record per trial. Each judg-
+per-record predicate. The engine trusts, rather than verifies,                                  ment binds the trial, blinded-input hash, and frozen judge
+the schema’s omission contract, so released write-guard evi-                                    specification; failures and disagreements remain separate.
+dence is limited to the Jira partial-update path.                                                  The accounting keeps denominators separate instead of
+    The schema also defines field and write groups, mask meth-                                  silently filling missing records. Cells average their available
+ods, pattern categories, and wire syntax. It permits dropping                                   replicates, primary contrasts pair tasks and resample scenario
+only absence-safe fields and clamping only in a declared                                        clusters, and the complete-block sensitivity retains only repli-
+restrictive direction. Neither shipped schema enables those                                     cate indices present in both arms. Further checks assign un-
+operators; fixed envelope sanitation always runs.                                               known security outcomes in opposing worst-case directions,
+
+
+                                                                                        19
+omit each cluster in turn, and count which arm each cluster
+favors. All replay the archive without changing an outcome
+or calling a provider.
+   Token tables likewise preserve provider buckets and distin-
+guish a missing receipt from a recorded zero. Missing receipts
+make adversary and harness spend lower bounds, which is
+why the qualification marks token accounting incomplete;
+none of the outcome calculations reads those receipts. The
+conformance ledger follows each reachable operator through
+its schema, plan, shaped exchange, backend effect, audit, and
+normalized content. Write guard therefore counts as evidence,
+whereas unreachable drop and clamp do not. Equal cluster
+weighting addresses a separate imbalance: 23 of 35 clusters
+contain one task, but the largest contains 12.
+
+G    Deferral Transport
+Deferral separates deciding to hold a call from deciding what
+happens later. Write g = defer(α, τ, C , χ), where α names the
+approval route, τ is the deadline, C is the approval predicate,
+and χ is an immutable snapshot of every policy-relevant re-
+quest component. The agent cannot read or write the resolver
+channel. While the call is held, the backend sees nothing.
+   A production resolver records one of three terminal deci-
+sions over χ: approved, rejected, or expired. It authenticates
+the decision maker and checks policy authorization for route
+α; a decision arriving after τ loses to expiry. Replay protec-
+tion and an atomic state transition ensure that only the first
+terminal decision is accepted. Approval may release exactly
+the snapshot that was reviewed, not a rewritten call. Dispatch
+still needs an idempotency key or a backend transaction fence:
+a durable log position prevents two resolver decisions from
+winning, but by itself cannot prove exactly-once effects across
+a crash. These are safety conditions. Progress also needs a
+live resolver or a trusted timeout worker; the model does not
+guarantee that an approver responds.
+   Production realizes this state machine with an agent-
+inaccessible durable log. One deferral_id binds the com-
+plete snapshot, predicate, deadline, bundle version, and termi-
+nal decision. The unimplemented aggregate gate in §4 would
+likewise read one committed prefix and retain its count, offset,
+and log-time window for replay. Because concurrent decisions
+can change that prefix, evaluation and commit must serialize
+for the relevant key.
+   The released proxy demonstrates only the first transition. It
+hashes method, path, agent, bundle version, and shaped body
+into deferral_id, stores that partial snapshot, and returns
+pending. Query parameters, headers, and pre-fetched state
+are absent; timeout is not persisted as terminal; and a resume
+result never dispatches. The release therefore establishes hold
+and no-dispatch, not safe resumption, durable approval, or
+full INV-SG.
+
+
+
+
+                                                                   20
+

@@ -1,0 +1,160 @@
+Failed to continue conversation at step 2: Error code: 401 - {'error': {'message': 'Missing Authentication header', 'code': 401}}
+Traceback (most recent call last):
+  File "/workspace/colosseum/.venv/lib/python3.11/site-packages/terrarium/agents/base.py", line 379, in _multi_step_response_generation
+    response, response_str = await run_blocking(
+                             ^^^^^^^^^^^^^^^^^^^
+  File "/workspace/colosseum/.venv/lib/python3.11/site-packages/terrarium/async_utils.py", line 27, in run_blocking
+    return fut.result()
+           ^^^^^^^^^^^^
+  File "/workspace/.local/python/cpython-3.11.17-linux-x86_64-gnu/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/workspace/.local/python/cpython-3.11.17-linux-x86_64-gnu/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/workspace/.local/python/cpython-3.11.17-linux-x86_64-gnu/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/colosseum/.venv/lib/python3.11/site-packages/llm_server/clients/openai_client.py", line 252, in generate_response
+    response = self._responses_create_with_retries(api_params)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/colosseum/.venv/lib/python3.11/site-packages/llm_server/clients/openai_client.py", line 178, in _responses_create_with_retries
+    return self.client.responses.create(**api_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/colosseum/.venv/lib/python3.11/site-packages/openai/resources/responses/responses.py", line 876, in create
+    return self._post(
+           ^^^^^^^^^^^
+  File "/workspace/colosseum/.venv/lib/python3.11/site-packages/openai/_base_client.py", line 1297, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/colosseum/.venv/lib/python3.11/site-packages/openai/_base_client.py", line 1070, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.AuthenticationError: Error code: 401 - {'error': {'message': 'Missing Authentication header', 'code': 401}}
+Failed to continue conversation at step 2: Error code: 401 - {'error': {'message': 'Missing Authentication header', 'code': 401}}
+Traceback (most recent call last):
+  File "/workspace/colosseum/.venv/lib/python3.11/site-packages/terrarium/agents/base.py", line 379, in _multi_step_response_generation
+    response, response_str = await run_blocking(
+                             ^^^^^^^^^^^^^^^^^^^
+  File "/workspace/colosseum/.venv/lib/python3.11/site-packages/terrarium/async_utils.py", line 27, in run_blocking
+    return fut.result()
+           ^^^^^^^^^^^^
+  File "/workspace/.local/python/cpython-3.11.17-linux-x86_64-gnu/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/workspace/.local/python/cpython-3.11.17-linux-x86_64-gnu/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/workspace/.local/python/cpython-3.11.17-linux-x86_64-gnu/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/colosseum/.venv/lib/python3.11/site-packages/llm_server/clients/openai_client.py", line 252, in generate_response
+    response = self._responses_create_with_retries(api_params)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/colosseum/.venv/lib/python3.11/site-packages/llm_server/clients/openai_client.py", line 178, in _responses_create_with_retries
+    return self.client.responses.create(**api_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/colosseum/.venv/lib/python3.11/site-packages/openai/resources/responses/responses.py", line 876, in create
+    return self._post(
+           ^^^^^^^^^^^
+  File "/workspace/colosseum/.venv/lib/python3.11/site-packages/openai/_base_client.py", line 1297, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/colosseum/.venv/lib/python3.11/site-packages/openai/_base_client.py", line 1070, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.AuthenticationError: Error code: 401 - {'error': {'message': 'Missing Authentication header', 'code': 401}}
+Can't get LLM response: Error code: 401 - {'error': {'message': 'Missing Authentication header', 'code': 401}}
+Traceback (most recent call last):
+  File "/workspace/colosseum/.venv/lib/python3.11/site-packages/terrarium/agents/base.py", line 299, in generate_response
+    return await self._multi_step_response_generation(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/colosseum/.venv/lib/python3.11/site-packages/terrarium/agents/base.py", line 340, in _multi_step_response_generation
+    response, response_str = await run_blocking(
+                             ^^^^^^^^^^^^^^^^^^^
+  File "/workspace/colosseum/.venv/lib/python3.11/site-packages/terrarium/async_utils.py", line 27, in run_blocking
+    return fut.result()
+           ^^^^^^^^^^^^
+  File "/workspace/.local/python/cpython-3.11.17-linux-x86_64-gnu/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/workspace/.local/python/cpython-3.11.17-linux-x86_64-gnu/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/workspace/.local/python/cpython-3.11.17-linux-x86_64-gnu/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/colosseum/.venv/lib/python3.11/site-packages/llm_server/clients/openai_client.py", line 252, in generate_response
+    response = self._responses_create_with_retries(api_params)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/colosseum/.venv/lib/python3.11/site-packages/llm_server/clients/openai_client.py", line 178, in _responses_create_with_retries
+    return self.client.responses.create(**api_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/colosseum/.venv/lib/python3.11/site-packages/openai/resources/responses/responses.py", line 876, in create
+    return self._post(
+           ^^^^^^^^^^^
+  File "/workspace/colosseum/.venv/lib/python3.11/site-packages/openai/_base_client.py", line 1297, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/colosseum/.venv/lib/python3.11/site-packages/openai/_base_client.py", line 1070, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.AuthenticationError: Error code: 401 - {'error': {'message': 'Missing Authentication header', 'code': 401}}
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/workspace/colosseum_task_preserving_starter/kinetic_audit/run.py", line 159, in <module>
+    if __name__=="__main__":main()
+                            ^^^^^^
+  File "/workspace/colosseum_task_preserving_starter/kinetic_audit/run.py", line 158, in main
+    asyncio.run(execute(root,selected,a.out/selected.key,model,a.timeout_seconds))
+  File "/workspace/.local/python/cpython-3.11.17-linux-x86_64-gnu/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/workspace/.local/python/cpython-3.11.17-linux-x86_64-gnu/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/.local/python/cpython-3.11.17-linux-x86_64-gnu/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/workspace/colosseum_task_preserving_starter/kinetic_audit/run.py", line 83, in execute
+    result=await asyncio.wait_for(runtime._run_single(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/.local/python/cpython-3.11.17-linux-x86_64-gnu/lib/python3.11/asyncio/tasks.py", line 489, in wait_for
+    return fut.result()
+           ^^^^^^^^^^^^
+  File "/workspace/colosseum/experiments/collusion/run.py", line 474, in _run_single
+    agent,
+          
+  File "/workspace/colosseum_task_preserving_starter/kinetic_audit/instrumentation.py", line 182, in agent_planning_turn
+    return await super().agent_planning_turn(agent,agent_name,agent_context,environment,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/colosseum/experiments/common/local_protocol.py", line 303, in agent_planning_turn
+    return await agent.generate_response(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/colosseum/.venv/lib/python3.11/site-packages/terrarium/agents/base.py", line 299, in generate_response
+    return await self._multi_step_response_generation(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/colosseum/.venv/lib/python3.11/site-packages/terrarium/agents/base.py", line 340, in _multi_step_response_generation
+    response, response_str = await run_blocking(
+                             ^^^^^^^^^^^^^^^^^^^
+  File "/workspace/colosseum/.venv/lib/python3.11/site-packages/terrarium/async_utils.py", line 27, in run_blocking
+    return fut.result()
+           ^^^^^^^^^^^^
+  File "/workspace/.local/python/cpython-3.11.17-linux-x86_64-gnu/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/workspace/.local/python/cpython-3.11.17-linux-x86_64-gnu/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/workspace/.local/python/cpython-3.11.17-linux-x86_64-gnu/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/colosseum/.venv/lib/python3.11/site-packages/llm_server/clients/openai_client.py", line 252, in generate_response
+    response = self._responses_create_with_retries(api_params)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/colosseum/.venv/lib/python3.11/site-packages/llm_server/clients/openai_client.py", line 178, in _responses_create_with_retries
+    return self.client.responses.create(**api_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/colosseum/.venv/lib/python3.11/site-packages/openai/resources/responses/responses.py", line 876, in create
+    return self._post(
+           ^^^^^^^^^^^
+  File "/workspace/colosseum/.venv/lib/python3.11/site-packages/openai/_base_client.py", line 1297, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/colosseum/.venv/lib/python3.11/site-packages/openai/_base_client.py", line 1070, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.AuthenticationError: Error code: 401 - {'error': {'message': 'Missing Authentication header', 'code': 401}}

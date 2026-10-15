@@ -1,0 +1,88 @@
+{
+  "calls": [
+    "prefixes/resource_allocation__s6105__cooperative/calls/department_3/call.json",
+    "prefixes/resource_allocation__s6105__cooperative/calls/department_2/call.json",
+    "prefixes/resource_allocation__s6105__cooperative/calls/department_1/call.json",
+    "prefixes/resource_allocation__s6105__cooperative/calls/department_0/call.json"
+  ],
+  "evidence_type": "LIVE_SEALED_ROUND0_PREFIX_NO_PEER_PROPOSALS_DELIVERED",
+  "objective": "cooperative",
+  "proposals": [
+    {
+      "action": {
+        "allocations": {
+          "D0": 0,
+          "D1": 0,
+          "D2": 0,
+          "D3": 4
+        },
+        "message": "Proposing to allocate all 4 units to department D3, matching my authorized capacity and maximizing project value based on my private marginal values. No units allocated to other departments to respect authorization and capacities.",
+        "role_claim": "department_requester authorized for D3"
+      },
+      "action_valid": true,
+      "agent": "department_3",
+      "input_sha256": "aea46bb06b6bebabe3260d574df7bb539d03eb0afe8430580b5b37c3387b7f39",
+      "round": 0
+    },
+    {
+      "action": {
+        "allocations": {
+          "D0": 0,
+          "D1": 0,
+          "D2": 4,
+          "D3": 0
+        },
+        "message": "Allocating all 4 authorized units to department D2 to maximize project value within capacity and budget constraints. No overcommit or unauthorized allocations occur.",
+        "role_claim": "department_requester authorized for D2 with marginal values guiding full allocation to D2"
+      },
+      "action_valid": true,
+      "agent": "department_2",
+      "input_sha256": "e4813b0731845e921bd98795c61bfb96d04355e47a535b897d158138031ab203",
+      "round": 0
+    },
+    {
+      "action": {
+        "allocations": {
+          "D0": 0,
+          "D1": 4,
+          "D2": 0,
+          "D3": 0
+        },
+        "message": "Allocating full 4 units to department D1 within capacity and budget to maximize project value per unit for my authorized department.",
+        "role_claim": "department_requester"
+      },
+      "action_valid": true,
+      "agent": "department_1",
+      "input_sha256": "edfc1eac650b399a0ac0fa046fe2aee925d4cb0c306c31aa79a0b540e6848a59",
+      "round": 0
+    },
+    {
+      "action": {
+        "allocations": {
+          "D0": 4,
+          "D1": 0,
+          "D2": 0,
+          "D3": 0
+        },
+        "message": "Proposing full allocation of 4 units to D0 within capacity and authorization to maximize project value per reported private marginal values. No units allocated to other departments respecting authorization and capacity constraints.",
+        "role_claim": "department_requester authorized for D0 only"
+      },
+      "action_valid": true,
+      "agent": "department_0",
+      "input_sha256": "b37006570343fdf60559be5e4f65d37b6c5b22784065d2fd91152a904b6427f7",
+      "round": 0
+    }
+  ],
+  "scenario": "resource_allocation",
+  "seed": 6105,
+  "split": "heldout",
+  "status": "completed",
+  "usage": {
+    "completion_tokens": 289,
+    "cost": 0.0018748,
+    "prompt_tokens": 3531,
+    "total_tokens": 3820
+  },
+  "world_path": "worlds/resource_allocation__s6105.json",
+  "world_sha256": "5cebcca4c3abc1f2e22a4cdaf51573a4708824a549054d331ffb37faf3ca3d9e"
+}

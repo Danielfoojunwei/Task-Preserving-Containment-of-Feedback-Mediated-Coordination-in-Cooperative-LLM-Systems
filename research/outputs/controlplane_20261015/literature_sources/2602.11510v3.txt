@@ -1,0 +1,1477 @@
+                                     Accepted for publication in IEEE Access, 2026 (Manuscript ID: Access-2026-23002).
+                                     Digital Object Identifier 10.1109/ACCESS.2026.3704541
+
+
+
+
+                                     AgentLeak: A Benchmark for
+                                     Internal-Channel Privacy Leakage in
+                                     Multi-Agent LLM Systems
+                                     FAOUZI EL YAGOUBI                              , GODWIN BADU-MARFO                                 , and RANWA AL MALLAH
+                                         Department of Computer and Software Engineering, Polytechnique Montréal, Montréal, QC H3T 1J4, Canada
+                                     Corresponding author: Faouzi El Yagoubi (e-mail: faouzi.el-yagoubi@polymtl.ca).
+arXiv:2602.11510v3 [cs.AI] 15 Jun 2026
+
+
+
+
+                                     This work was conducted at Polytechnique Montréal.
+
+
+
+
+                                           ABSTRACT Multi-agent Large Language Model (LLM) systems create privacy risks that current output-only
+                                           benchmarks cannot measure. When agents coordinate on tasks, sensitive data may pass through inter-agent
+                                           messages, shared memory, and tool arguments, all pathways that final-output audits typically do not inspect.
+                                           We introduce AgentLeak, a benchmark for evaluating internal-channel privacy leakage in multi-agent LLM
+                                           systems. AgentLeak instruments seven privacy-relevant communication pathways and provides a large-scale
+                                           empirical evaluation focused on final outputs, inter-agent messages, and shared memory. Across 1,000
+                                           scenarios spanning healthcare, finance, legal, and corporate domains, five production LLMs (GPT-4o, GPT-
+                                           4o-mini, Claude 3.5 Sonnet, Mistral Large, and Llama 3.3 70B), and 4,979 validated execution traces, we
+                                           find that multi-agent configurations reduce final-output leakage (C1: 27.2% vs 43.2% in single-agent mode)
+                                           compared with single-agent baselines but introduce internal channels that raise total system exposure to
+                                           68.9% (aggregated across C1, C2, C5). Inter-agent messages (C2) leak at 68.8%, compared with 27.2% for
+                                           final outputs (C1), meaning that output-only audits miss 41.7% of violations. Across all five models and four
+                                           domains, the pattern C2 ≥ C1 holds consistently. These results suggest, within the evaluated coordinator-
+                                           worker setting, that privacy risk in multi-agent systems is strongly shaped by architectural coordination
+                                           channels rather than final-output behavior alone: it arises from internal channels that remain invisible to
+                                           standard output-level defenses.
+
+
+                                            INDEX TERMS AI safety, autonomous agents, benchmark, contextual integrity, data minimization, data
+                                            security, large language models, multi-agent systems, privacy leakage, security evaluation.
+
+
+                                         I. INTRODUCTION                                                                                       agent carried the patient’s complete medical record. The final
+                                                                                                                                               output passed review; the privacy violation went undetected.
+                                             ULTI-AGENT Large Language Model (LLM) sys-
+                                     M       tems [1], [2] are reshaping enterprise workflows from
+                                     healthcare scheduling to financial compliance to legal discov-
+                                                                                                                                                  The main challenge is that current privacy evaluation
+                                     ery. These systems can autonomously decompose complex
+                                                                                                                                               focuses on what agents say to users, not what they say to
+                                     tasks, delegate subtasks to specialized agents, and coordinate
+                                                                                                                                               each other. Existing benchmarks audit final outputs [4] or
+                                     results. As such, enterprises are increasingly deploying them
+                                                                                                                                               assess model awareness of privacy norms [5]. As such, in
+                                     on sensitive data: protected health information, financial
+                                                                                                                                               practice, we need agents that not only reason about privacy
+                                     records, legal documents [3].
+                                                                                                                                               but also handle complex inputs and complete multi-step tasks
+                                       However, to perform many of these tasks, agents must                                                    while appropriately managing sensitive information in action,
+                                    access and share user data, raising a critical question: whether                                           including during internal coordination. For example, Agent-
+                                    they handle sensitive information appropriately when coordi-                                               Dojo [4] tests prompt injection robustness but audits only final
+                                    nating with each other. We audited real multi-agent healthcare                                             outputs. On the other hand, PrivacyLens [5] measures privacy
+                                    workflows and found a troubling pattern. A scheduling agent                                                norm awareness at the model level, not system behavior under
+                                    returned a clean appointment confirmation compliant with                                                   real coordination. Safety benchmarks [6], [7] measure refusal
+                                    any output audit while its delegation message to a verification                                            rates, not data flow.
+
+                                                2169-3536 © 2026 The Authors. This work is licensed under a Creative Commons Attribution 4.0 License (CC BY 4.0). For more information, see https://creativecommons.org/licenses/by/4.0/   1
+                                                 El Yagoubi et al.: AgentLeak: A Benchmark for Internal-Channel Privacy Leakage in Multi-Agent LLM Systems
+
+
+
+
+   To this end, we posit that multi-agent systems should follow          5) Privacy–utility tradeoff quantification. Pareto analysis
+the principle of data minimization [8] in action: an agent                   showing current defenses cannot simultaneously maintain
+should expose sensitive information only if it is genuinely                  task completion and preserve privacy on internal channels.
+required to complete its task. A scheduling agent needs                     In fact, multi-agent architectures create privacy challenges
+the patient’s name and appointment preferences, not their                distinct from single-agent systems: (1) an expanded attack
+diagnosis history or Social Security Number (SSN).                       surface where each agent can independently expose data;
+   Motivated by this principle, we introduce AgentLeak, a                (2) autonomous decision-making without centralized over-
+benchmark for evaluating internal-channel privacy leakage in             sight; and (3) the absence of privacy controls on inter-agent
+multi-agent LLM systems. AgentLeak does not merely bench-                communication in current frameworks.
+mark whether agents leak sensitive data to users; it shows that             The paper proceeds as follows: Section II surveys related
+privacy risk in multi-agent LLM systems is often hidden inside           work. Section III formalizes the problem and threat model.
+coordination channels that conventional output-only audits               Section IV details the AgentLeak benchmark. Section V
+cannot observe. Our benchmark spans 1,000 scenarios across               presents the attack taxonomy. Section VI reports experimental
+healthcare, finance, legal, and corporate domains. Unlike                results. Section VII discusses implications. Section VIII
+prior work that uses emulated environments [4] or probes                 concludes.
+LLMs directly [5], AgentLeak deploys agents in coordinator-
+worker topologies with instrumented data flows through seven              II. RELATED WORK
+distinct channels: final outputs, inter-agent messages, tool             We survey three areas that shape the privacy landscape of
+inputs/outputs, shared memory, logs, and artifacts.                      multi-agent LLM systems: the frameworks themselves, the
+   Using this benchmark, we evaluate multi-agent systems
+                                                                         benchmarks used to evaluate them, and the defenses deployed
+built on GPT-4o, GPT-4o-mini, Claude 3.5 Sonnet, Llama
+                                                                         to protect them.
+3.3 70B, and Mistral Large across 4,979 execution traces.
+We find that multi-agent configurations actually reduce per-
+                                                                          A. MULTI-AGENT LLM FRAMEWORKS
+channel output leakage (C1: 27.2% vs 43.2% in single-agent
+mode), but introduce unmonitored internal channels, inter-               The past two years have seen rapid growth in multi-agent
+agent messages (C2) and shared memory (C5), that raise total             frameworks. We examine each one through the lens of privacy.
+system exposure to 68.9% (a trace is counted as leaked if any               LangChain [9] was the first to popularize a modular
+of C1, C2, or C5 leaked), a 1.6× increase over the single-agent          approach with composable primitives for tools, memory, and
+baseline. Internal channels show 2.1× higher leak rates than             chain-of-thought reasoning. It cleanly separates model invo-
+external channels (57.8% mean internal vs 27.2% external),               cation from tool execution and state management, providing
+with C2 reaching 68.8%, exceeding external output by 2.5×,               a well-structured architecture. However, we observe a lack
+and C5 at 46.7%. For organizations deploying multi-agent                 of default mechanisms to sanitize inter-agent messages or
+systems in regulated domains, standard output-only auditing              restrict memory access. Data is typically propagated across
+misses the majority of privacy violations.                               components without systematic access control.
+   We make the following five contributions:                                CrewAI [10] brought role-based collaboration: developers
+1) AgentLeak benchmark. A 1,000-scenario benchmark for                   define “crews” where each agent has a specialty and can
+    evaluating privacy leakage in multi-agent LLM systems,               delegate to peers. The structure is appealing, but inter-agent
+    with seven-channel instrumentation and large-scale empir-            messages carry full task context. Inter-agent messages are
+    ical analysis of final outputs (C1), inter-agent messages            generally propagated without dedicated filtering mechanisms.
+    (C2), and shared memory (C5). Scenarios span healthcare,                AutoGPT [11] showed that LLMs could recursively decom-
+    finance, legal, and corporate domains, and each includes a           pose objectives into subtasks and execute them autonomously.
+    sensitive data vault, an allowed disclosure set, and ground-         The architecture leans heavily on persistent memory, and this
+    truth labels.                                                        creates a fundamental gap: any execution step can read any
+2) Leakage channel taxonomy. Seven channels where sensi-                 data. There are no access controls.
+    tive data can escape in agentic systems, including internal             AutoGen [12] takes a conversation-centric view where
+    channels (inter-agent messages, shared memory) that prior            agents exchange structured messages, supporting multi-turn
+    benchmarks typically do not cover.                                   dialogue across capabilities. Privacy controls for internal chan-
+3) Coordinator-worker topology evaluation. While prior                   nels are not enabled by default in the evaluated configurations.
+    work focuses on single-agent systems, AgentLeak evalu-                  MetaGPT [13] targets software engineering with special-
+    ates privacy leakage in coordinator-worker configurations            ized agents for requirements, architecture, coding, and testing.
+    across five LLMs and four domains, establishing a baseline           Role messages are visible to every agent in the workflow, with
+    for future multi-topology studies.                                   no access restrictions.
+4) Three-tier detection pipeline. Canary matching, struc-                   Across the evaluated frameworks, design priorities currently
+    tured field extraction, and LLM-as-Judge detection applied           emphasize coordination, while internal-channel privacy pro-
+    at scale to the main evaluated channels (C1, C2, C5) and             tections remain largely unsupported.
+    exposed through the SDK for all instrumented channels.
+2
+El Yagoubi et al.: AgentLeak
+
+
+
+
+B. PRIVACY BENCHMARKS AND EVALUATION TOOLS                          often disregard prompt-level privacy instructions during inter-
+Several benchmarks exist, each illuminating part of the             agent coordination.
+problem while missing others.                                          Overall, these methods primarily target external-facing
+    AgentDojo [4] offers 97 scenarios and 15 attack classes for     channels. None intercept inter-agent messages, memory
+testing prompt injection robustness. It systematically probes       writes, or coordination logs.
+whether adversarial inputs can hijack agent behavior. However,         Table 1 summarizes the reviewed works: no existing
+it audits only final outputs, ignores multi-agent topologies, and   benchmark or defense addresses both multi-agent systems
+cannot see internal channels.                                       and internal channels.
+    AgentDAM [14] focuses on web agents, with 246 scenarios            Table 1 also provides a detailed comparative analysis across
+covering browser automation and data access patterns, framed        key evaluation dimensions, demonstrating that AgentLeak is,
+around contextual appropriateness. However, it remains              among the reviewed frameworks, the only one satisfying all
+limited to single-agent, output-focused, and web-specific           four criteria simultaneously: multi-agent topology support,
+evaluations, which differ substantially from enterprise multi-      internal channel coverage, execution-trace-based detection,
+agent deployments.                                                  and reproducible ground-truth vaults.
+    PrivacyLens [5] brings theoretical rigor through contextual
+                                                                    III. PROBLEM DEFINITION AND THREAT MODEL
+integrity theory [15], assessing privacy norm awareness across
+                                                                    This section formalizes the problem of privacy leakage in
+493 scenarios. However, it evaluates model-level responses
+                                                                    multi-agent systems, introduces the leakage channel classifi-
+rather than system behavior, and misses the emergent viola-
+                                                                    cation, and characterizes the adversary capabilities considered
+tions that arise when agents coordinate.
+                                                                    in our evaluation.
+    TOP-Bench [16] examines tool invocation risks 180 sce-
+narios identifying leakage through Application Programming
+                                                                    A. PROBLEM STATEMENT
+Interface (API) calls and external services. Important, but it
+                                                                    The problem we address is sensitive data leakage through
+does not touch inter-agent communication. Its scope is again
+                                                                    uncontrolled internal channels in multi-agent LLM sys-
+restricted to single-agent settings.
+                                                                    tems. It differs from classical security concerns in three ways.
+    Most recently, Green et al. [17] (EMNLP 2025) demon-
+                                                                       First, the attack surface expands dramatically. Multi-agent
+strated that Large Reasoning Models frequently leak sensitive
+                                                                    architectures do not have one leakage point; they have
+user data within their internal reasoning traces, even when
+                                                                    many. Each agent can independently expose data through
+the final output appears safe, a “leaky thoughts” phenomenon
+                                                                    interactions with peers, tools, and memory. A single task
+whereby increased test-time compute amplifies privacy risk.
+                                                                    might generate dozens of inter-agent messages, tool calls, and
+Their work establishes that output-only auditing is insufficient
+                                                                    memory operations. Every one of these is a potential leak.
+even for single-model deployments. AgentLeak extends this
+                                                                       Second, agents act autonomously. They decide what to
+observation from the single-model reasoning level to the multi-
+                                                                    include in their communications based on learned behaviors,
+agent architectural level: whereas Green et al. focus on the
+                                                                    not explicit programming. No central authority oversees
+internal thinking of an individual model, we audit the internal
+                                                                    these decisions. The result is inconsistent privacy practices
+coordination (C2 channels) between multiple agents, revealing
+                                                                    even within the same system, different agents handle data
+a previously unquantified attack surface where inter-agent
+                                                                    differently.
+messages leak at 2.1× the rate of final outputs.
+                                                                       Third, internal channels lack privacy controls entirely. Cur-
+                                                                    rent frameworks offer output sanitizers and input validators
+C. DEFENSE MECHANISMS                                               for the perimeter, but provide no mechanisms to monitor or
+Defenses today typically guard the perimeter. Most defenses         restrict internal channel communication.
+operate at system boundaries, while internal channels (e.g.,
+inter-agent messages, shared memory) receive limited cover-         B. THE SEVEN LEAKAGE CHANNELS
+age.                                                                Multi-agent workflows naturally create seven distinct path-
+   Output Filtering. Tools like Lakera Guard [18] and Meta’s        ways through which sensitive data may propagate beyond
+PromptGuard [19] combine pattern matching with named                intended boundaries. Understanding this taxonomy is crucial
+entity recognition to scrub Personally Identifiable Information     for evaluating where existing protections apply. We distin-
+(PII) before it reaches users. While effective at system            guish two categories: external channels (C1, C3, C4, C6,
+boundaries, these tools do not inspect inter-agent messages or      C7), which cross system boundaries and are thus amenable to
+memory operations.                                                  traditional security controls, and internal channels (C2, C5),
+   Guardrail Systems. NVIDIA’s NeMo Guardrails [20] and             which handle inter-agent coordination.
+Meta’s LlamaGuard [21] enforce policies at system interfaces           External Channels: Channel C1 captures final outputs
+but do not monitor internal communication pathways.                 presented to users, the primary target of current safety
+   Privacy-Focused Prompts. Drawing on Constitutional               mechanisms. Channel C3 encompasses arguments passed to
+AI [22] and privacy-preserving agent designs [23], these            external API endpoints, while C4 represents data returned
+encode privacy norms in natural language. However, agents           from tool invocations. Channel C6 covers telemetry streams
+                                                                                                                                  3
+                                                           El Yagoubi et al.: AgentLeak: A Benchmark for Internal-Channel Privacy Leakage in Multi-Agent LLM Systems
+
+
+
+
+TABLE 1. Comparative Analysis of Privacy Benchmarks and Defense Tools
+
+
+    Tool                      Multi-Agent Output Ch. Internal Ch. Scenarios Channels Attack Tax.                       Detection      Domains      Type
+    AgentDojo [4]                   ✗              ✓              ✗             97           1         15 classes    Output-only       General     Benchmark
+    AgentDAM [14]                   ✗              ✓              ✗            246           1             –         Output-only        Web        Benchmark
+    PrivacyLens [5]                 ✗              ✓              ✗            493           1             –         Model-level       General     Benchmark
+    TOP-Bench [16]                  ✗              ✓              ✗            180       2 (C1,C3)         –          Tool audit       General     Benchmark
+    ASB [32]                        ✗              ✓              ✗            400           1         10 classes    Output-only       General     Benchmark
+    PromptGuard [19]                ✗              ✓              ✗              –           1             –            Pattern          –         Defense
+    LlamaGuard [21]                 ✗              ✓              ✗              –           1             –           Classifier        –         Defense
+    NeMo Guard. [20]                ✗              ✓              ✗              –           1             –          Rail-based         –         Defense
+    Lakera Guard [18]               ✗              ✓              ✗              –           1             –         Pattern+NER         –         Defense
+    AgentLeak (proposed)       ✓             ✓              ✓            1,000         7         32 classes     3-tier hybrid 4 verticals Benchmark
+               Note: AgentLeak instruments seven channels; the large-scale empirical evaluation in this paper focuses on C1, C2, and C5.
+
+
+
+and system logs. Channel C7 includes persistent artifacts such                        AgentLeak evaluates privacy risk under a strict data min-
+as generated files and stored records.                                             imization perspective, where the internal propagation of
+    Internal Channels: Channel C2 comprises inter-agent                            sensitive data is permitted only when it is demonstrably
+messages exchanged during task delegation and coordination.                        necessary to complete a task. Although agents may belong
+These messages frequently contain complete task context,                           to the same logical system, unrestricted internal sharing
+including sensitive information that would otherwise be                            increases the system’s attack surface and elevates regulatory
+filtered from user-facing outputs. Channel C5 represents agent                     exposure. This definition is consistent with the General Data
+memory state, which persists across execution boundaries                           Protection Regulation (GDPR) [25] Article 25, the Health
+and can enable data leakage between sessions, particularly                         Insurance Portability and Accountability Act (HIPAA) [24]
+relevant for frameworks implementing long-term memory                              minimum necessary standard, and Quebec’s Law 25 [26],
+(e.g., AutoGPT).                                                                   which require organizations to limit the internal use and
+    This classification has practical significance. While external                 sharing of sensitive data to what is strictly necessary.
+channels benefit from established defense mechanisms (albeit                          Formally, let V = {v1 , . . . , vn } be the private vault of n
+imperfect ones), the frameworks we examined provide no                             sensitive fields we must protect. The allowed set A ⊆ V
+comparable protections for internal channels.                                      contains the minimal fields genuinely required for the task.
+                                                                                   Let C = {C1 , . . . , C7 } denote our seven channels. We define
+C. PRIVACY LEAKAGE FORMALIZATION                                                   a semantic similarity function sim(v, c) measuring the usage
+We ground our privacy definition in contextual integrity                           of vault field v in channel content c. A leakage event occurs
+theory [15], which characterizes privacy violations as inap-                       when:
+propriate information flows that violate contextual norms. In
+agentic systems, we operationalize this theory by protecting a                       ∃ vi ∈ (V \ A), ∃ Cj ∈ C : sim(vi , content(Cj )) > τ , (1)
+defined vault of sensitive fields from unnecessary disclosure.
+   We distinguish three levels of data flow:                                       where τ is the calibrated detection threshold (see Section VI).
+• Internal Exposure: Data are processed internally by an                              We emphasize the distinction between confidentiality
+  agent (e.g., in context window or scratchpad); this is                           (preventing unauthorized access by external parties) and
+  necessary for utility but creates risk.                                          data minimization (limiting data sharing even among trusted
+• Effective Leakage: Unauthorized transmission of data                             internal entities). Excessive internal sharing expands the attack
+  across a trust boundary (e.g., into logs, external tools, or                     surface for eventual exfiltration (see Section V).
+  unencrypted artifacts), violating the allowed set policy.                           This turns data minimization [8], an abstract legal principle
+• Real Harm: Actual exploitation or access by an unautho-                          from GDPR [25], HIPAA [24], and Quebec’s Law 25 [26],
+  rized entity (e.g., an attacker reading logs). We measure                        into a testable empirical criterion.
+  leakage as a proxy for harm potential.
+   Channel-specific policy: a field may be allowed for some                          D. THREAT MODEL
+channels (e.g., C2 inter-agent coordination) but disallowed                        Our threat model characterizes adversaries across three capa-
+for others (e.g., C7 artifacts). The allowed set is statically                     bility levels, ranging from passive observation to active system
+defined in the scenario schema based on task necessity (e.g.,                      compromise.
+scheduling requires time slots but not diagnoses). We therefore                       A0 (Benign): This baseline considers scenarios without
+evaluate leakage per channel against the allowed set for that                      adversarial activity. Privacy violations at this level result from
+channel (e.g., a scheduling agent needs patient_name and                           system misconfiguration, default framework behaviors, or
+preferences, but not diagnosis). We restrict high-risk logs                        models exhibiting overly helpful responses. These scenarios
+(C6) and artifacts (C7) even if agents transiently need the                        establish whether systems maintain data minimization princi-
+information in another channel.                                                    ples under normal operational conditions.
+4
+El Yagoubi et al.: AgentLeak
+
+
+
+
+TABLE 2. Operational Definitions for Leakage and Risk Metrics
+                                                                                            LangChain                                                             Custom Agent
+                                                                                                              CrewAI            AutoGPT             MetaGPT
+                                                                                                                                                                      Stack
+
+Concept                  Definition
+Leakage vs.              Exposure: presence of sensitive data in a channel
+Exposure                 (C2/C5). Leakage: unauthorized exposure. All “vault”                                                Adapter Layer
+                         data is unauthorized for internal propagation under the
+                         Principle of Least Privilege.
+Fair Comparison          When comparing single- vs. multi-agent, only Final
+                                                                                                                       Uniﬁed Trace Store (JSONL)
+                         Output (C1) is the “fair” technical metric (measuring
+                         task output correctness).
+System Risk              The “true” risk metric includes C2+C5, as these
+                         internal states are logged, stored, and potentially ac-
+                                                                                                  Leakage Detection                                  Utility Evaluation
+                         cessible to infrastructure providers or attackers (lateral
+                         movement), representing a regulatory liability (GDPR
+                         Art. 25).
+
+                                                                                                                                Metrics
+
+
+   A1 (Weak Adversary): At this level, adversaries manipu-
+                                                                                                   Core component             Data store / output                 Analysis
+late external information sources without direct system access.                                                     Input                           Optional
+Attack vectors include malicious web content, poisoned API
+responses, and compromised documents that agents retrieve                             FIGURE 1. AgentLeak framework-agnostic evaluation harness. The Adapter Layer
+during task execution. The adversary shapes what the system                           hooks into any multi-agent framework (LangChain, CrewAI, AutoGPT, MetaGPT, or
+                                                                                      custom stacks), normalizes trace events into a unified JSONL store covering all seven
+observes rather than controlling its internal components.                             channels (C1–C7), and feeds them through a three-tier leakage detection pipeline
+   A2 (Strong Adversary): These adversaries possess direct                            (Presidio, LLM-as-Judge, Hybrid) to produce standardized privacy metrics (ELR, WLS,
+                                                                                      CLR, ASR). The large-scale empirical evaluation in this paper focuses on C1, C2, and
+access to system components through compromised tools,                                C5.
+malicious dependencies, or control over agent roles. This
+category encompasses both external attackers who have suc-
+cessfully compromised portions of the system and malicious                               Framework Independence. Our JSON Lines (JSONL)
+insiders with legitimate credentials. Their capabilities include                      trace format captures privacy-relevant events regardless of
+sophisticated prompt injection, multi-stage exfiltration chains,                      how the underlying framework represents agent interactions.
+and exploitation of trust relationships between agents. From a                        LangChain, CrewAI, AutoGPT, MetaGPT, or any custom
+regulatory compliance perspective, A2 scenarios model both                            stack: the same scenarios and metrics apply uniformly.
+supply-chain attacks and insider threat scenarios.                                       Reproducibility. Fixed seeds, versioned prompts, docu-
+   Out of Scope: Our evaluation excludes threat actors with                           mented configurations. Every scenario carries a cryptographic
+administrative infrastructure access, attacks targeting LLM                           hash for verification. Running the benchmark with the pro-
+training pipelines, and user interface exploits that circumvent                       vided configuration should reproduce the reported results.
+the agent architecture entirely.
+                                                                                      B. SCENARIO SCHEMA AND STRUCTURE
+IV. AGENTLEAK BENCHMARK DESIGN                                                        Each scenario in AgentLeak is a structured record containing
+AgentLeak is a benchmark designed as a reusable evaluation                            seven components that fully specify an evaluation instance.
+framework, independent of any specific domain or agent                                   The task description specifies what the agent must do, in
+implementation. Below we describe AgentLeak’s design                                  natural language. We write these to sound like real production
+principles, scenario structure, domain coverage, and data                             requests: “Schedule a follow-up appointment for patient John
+generation approach. Figure 1 provides an overview of the                             Smith based on his recent lab results and coordinate with the
+benchmark evaluation harness, while Figure 2 illustrates the                          billing department for insurance verification.”
+multi-agent system architecture showing the seven leakage                                The private vault lists every sensitive field that must
+channels. We additionally describe the three-tier detection                           be protected: social security numbers, diagnoses, account
+pipeline.                                                                             numbers, salaries, case details. Each field carries a category
+                                                                                      label (Protected Health Information [PHI], Personally Identi-
+A. DESIGN PRINCIPLES                                                                  fiable Information [PII], Payment Card Industry [PCI]) and a
+Three principles guided AgentLeak’s design.                                           sensitivity weight for scoring.
+  Reusability. Scenarios are templates, not one-off cases.                               The allowed set specifies the minimal fields legitimately
+They can be instantiated for any domain with sensitive                                required for the task. This operationalizes data minimiza-
+data healthcare, finance, legal, or something we have not                             tion: only allowed fields should be exposed, only through
+anticipated. The schema separates task specification from                             appropriate channels. Across all 1,000 scenarios, the median
+domain content, so the community can contribute scenarios                             vault contains 29 fields (range: 21–39), with the allowed set
+without breaking evaluation consistency.                                              comprising 3 fields (range: 2–5), yielding a median vault-
+                                                                                                                                                                                 5
+                                                                                                         El Yagoubi et al.: AgentLeak: A Benchmark for Internal-Channel Privacy Leakage in Multi-Agent LLM Systems
+
+
+
+     Phase 1 — Benchmark
+
+
+
+                                                                                                                                Privacy Vault                                                       Task Library
+                                                              Scenario Specification                                            Sensitive Data                                                 1000 scenarios covering
+                                                           Defines task, vault, allowed set,
+          Authoring
+
+
+
+
+                                                          topology, and ground-truth labels                           PII, secrets, PHI, PCI, canaries,
+                                                                                                                                                                                            Health, Finance, Legal, Corporate
+                                                                                                                               sensitive facts
+
+
+
+
+                                                                                                             Runner & Orchestration
+                               and Instrumentation
+
+
+
+
+                                                     Experiment Matrix
+                                                                                                         Orchestrates scenario execution
+                                                                                                                                                                                           C3: Tool Inputs                APIs
+                                    Authoring
+
+
+
+
+                                                           LangChain                             Framework Adapters                              Defense Plug-ins                                &                     Retrievers
+                                                             CrewAI                                                                                                                        C4: Tool Output
+                                                                                             LangChain                 AutoGPT                                                                                            Files
+                                                                                                                                                       Output Filtering
+                                                            AutoGPT                            CrewAI                  Others...
+                      — Benchmark
+
+
+
+
+                                                                                                                                                         Guardrails
+                                                            MetaGPT
+                 2 —1Execution
+
+
+
+
+                                                                                                                                                       Privacy prompts
+                                                              LLMs                         C2: Inter-agent Communication                                                                 C5: Shared                   Memory Store
+                                                                                      Messages exchanged during task delegation                 C1: Final Output to user               Memory between                (Short and Long
+                                                                                                                                                                                           agents                         Term)
+                                                     6 Attack Families (F1-F6)                     and coordination
+              Phase
+
+
+
+
+                                                                                 C6: Audit logs and                    C7: Persistent artifacts
+                                                                                  reasoning traces                 (generated files, stored records)
+           Phase
+
+
+
+
+                                                                                                               Unified Trace Store (JSONL)
+                                                                                           Receives all events from C1 to C7, providing enabling multi-channel trace auditing
+     Phase 3 — Evaluation and
+
+
+
+
+                                                     Leakage Analyzer                    Utility Scorer                     Metrics Engine                            Report Builder
+            Reporting
+
+
+
+
+                                                       Microsoft Presidio               Task Success Rate                          ELR / WLS                                 Tables                             Leaderboard/ Public
+                                                                                              (TSR)                                                                                                                  Release
+                                                         LLM-as-Judge                                                              CLR / ASR                                 Graphs                          (Results, configurations,
+                                                                                                                                                                                                               reproduction scripts)
+                                                         HybridPipeline               Evaluation Functions                     Pareto Fronter                             Failure Slices
+                                                                                                                                 Analysis
+
+
+
+
+FIGURE 2. AgentLeak’s multi-agent system architecture showing the seven leakage channels. Blue regions denote core pipeline components; the red-highlighted dashed box (C2) and
+red labels (C5) mark the primary internal leakage channels. External channels (C1, C3, C4, C6, C7) operate at system boundaries where defenses can be applied. Internal channels (C2
+inter-agent messages, C5 shared memory) facilitate agent coordination but lack default privacy protections in current frameworks.
+
+
+
+to-allowed ratio of 9.7:1. This strict ratio ensures that the                                                                           C. DOMAIN COVERAGE
+benchmark meaningfully tests data minimization: agents must                                                                             Our benchmark encompasses four industry verticals, 250
+select a small subset of relevant fields from a much larger pool                                                                        scenarios per domain, selected for their stringent privacy
+of sensitive data. We describe the annotation process below.                                                                            requirements and documented consequences of data breaches.
+   Tool specifications define available tools and their parame-                                                                            Healthcare (250 scenarios): This vertical addresses clini-
+ters, with input schemas, output formats, and mock behavior                                                                             cal workflows including appointment scheduling, insurance
+for deterministic evaluation.                                                                                                           claims processing, care coordination, and laboratory result
+                                                                                                                                        handling. Scenarios follow HIPAA and Quebec Law 25 com-
+   Agent topology specifies the configuration: single-agent,                                                                            pliance requirements. The vault includes patient identifiers
+two-agent, or multi-agent (3+). Multi-agent scenarios also                                                                              (names, dates of birth, social security numbers), diagnostic
+specify roles, communication patterns, and delegation author-                                                                           codes (International Classification of Diseases, 10th Revi-
+ities.                                                                                                                                  sion [ICD-10]), treatment documentation, and clinical notes.
+  Attack level indicates adversarial intensity (A0, A1, A2).                                                                            These workflows reflect operational realities where healthcare
+For adversarial scenarios, we include the specific payload and                                                                          providers, insurance entities, and administrative staff must
+expected injection point.                                                                                                               collaborate on patient information while maintaining strict
+                                                                                                                                        controls on protected health information disclosure.
+  Ground-truth labels provide expected leakage outcomes,
+                                                                                                                                           Finance (250 scenarios): Financial scenarios span know-
+which channels should leak under which defenses, enabling
+                                                                                                                                        your-customer and anti-money laundering workflows, port-
+validation.
+                                                                                                                                        folio management, transaction disputes, credit underwriting,
+                                                                                                                                        and regulatory reporting. Vault fields include account identi-
+6
+El Yagoubi et al.: AgentLeak
+
+
+
+
+TABLE 3. AgentLeak Scenario Distribution by Topology and Threat Level             Format-valid fakes: Syntactically correct identifiers sat-
+                                                                               isfying checksums (Luhn, SSN area codes), testing format-
+   Dimension             Category                         Count         Pct.   based detection.
+   Agent Topology
+                         Single-agent                        400        40%       Natural-language facts: Contextually plausible statements
+                         Multi-agent (Coord.-Worker)         600        60%    that require semantic understanding, testing the full detection
+                         Benign (A0)                         500        50%    pipeline.
+   Threat Level          Weak attack (A1)                    250        25%
+                         Strong attack (A2)                  250        25%
+                                                                                  The legitimacy of required data is assessed through inde-
+                                                                               pendent review by two domain experts (healthcare compliance
+                         Total                             1,000    100%
+                                                                               officer, financial auditor, legal counsel, or corporate privacy
+                                                                               officer, depending on vertical). They rate each vault field on a
+                                                                               four-point scale: definitely required (4), probably required (3),
+fiers, transaction histories, creditworthiness metrics, income
+                                                                               probably not required (2), definitely not required (1). Fields
+data, and investment allocations. Financial services regularly
+                                                                               rated 3+ by both annotators go into the allowed set. Inter-
+involve data exchange among service providers, compliance
+                                                                               rater reliability is measured via Cohen’s κ [28]: Healthcare
+teams, and regulatory entities, creating substantial regulatory
+                                                                               0.82, Finance 0.79, Legal 0.81, Corporate 0.75, all indicating
+complexity under frameworks including the Gramm-Leach-
+                                                                               substantial agreement (κ > 0.6) across verticals.
+Bliley Act (GLBA), PCI-DSS, and state privacy statutes.
+   Legal (250 scenarios): Legal practice scenarios address
+                                                                               E. THREE-TIER DETECTION PIPELINE
+contract analysis, discovery document management, client
+onboarding, privilege protection, and case documentation.                      Detecting privacy leakage requires covering the full spectrum:
+Vault fields comprise case identifiers, attorney-client com-                   verbatim data exposure to semantic paraphrases. No single
+munications, adverse party information, settlement amounts,                    approach handles both. AgentLeak uses three complementary
+and attorney work product. Legal privilege presents unique                     tiers for unified detection across all seven channels:
+challenges: unauthorized disclosure can result in complete                        Tier 1 (Canary Matching): Regex search for unique
+privilege waiver, making confidentiality controls particularly                 markers inserted as explicit canaries. High confidence, zero
+critical.                                                                      false positives, and validates that the capture infrastructure
+   Corporate (250 scenarios): Enterprise scenarios include                     works.
+incident response, human resources investigations, intellectual                   Tier 2 (Structured Field Audit): Pattern extraction for
+property protection, merger and acquisition due diligence,                     known sensitive formats: SSN (three-two-four), credit cards
+and internal audits. Vault fields encompass employee records,                  (Luhn-valid), ICD-10 codes, and other structured identifiers.
+compensation data, performance evaluations, proprietary                        Detects format-valid data regardless of context.
+information, and strategic business data. Corporate privacy re-                   Tier 3 (LLM-as-Judge): Model-agnostic LLM analysis
+quirements vary significantly across organizational functions                  for semantically equivalent disclosures. The SDK supports
+and jurisdictions, reflecting the heterogeneity of enterprise use              Qwen, Llama, GPT-4, Claude; Qwen-2.5-7B is selected
+cases.                                                                         as the default judge due to its lower computational cost
+   Table 3 presents the complete scenario distribution across                  (7B parameters). To verify that the smaller model does not
+topology and threat level dimensions.                                          introduce systematic bias, we additionally validated with
+                                                                               Llama-3.1-70B-Instruct. The semantic similarity threshold
+D. DATA GENERATION AND VALIDATION                                              (τ = 0.72), which determines when a vault field is considered
+AgentLeak combines synthetic and curated real-world data to                    leaked, was calibrated on a held-out English-language set
+maximize realism while ensuring ethical compliance.                            (False Positive Rate [FPR] < 5%, False Negative Rate [FNR]
+   Synthetic data comes from the Faker library [27] with                       = 7.4%); see Section VI. Limitation: This calibration applies to
+domain-specific extensions. SSNs follow the three-two-four                     English scenarios only; multilingual deployments may require
+digit format with valid area numbers. Credit cards satisfy                     re-tuning (see Section VII).
+the Luhn checksum. Medical record numbers match hospital                          Attribution policy: Leaks are attributed to the lowest-
+conventions. Phone numbers use real area codes.                                numbered tier that detects them (Tier 1 takes priority over
+   We also pull real-world data from Hugging Face to vali-                     Tier 2, which takes priority over Tier 3), ensuring each
+date detection against realistic distributions: ai4privacy/pii-                violation is counted exactly once. This priority ordering means
+masking-200k (3,624 PII samples with diverse name for-                         the 8%/10%/82% tier distribution reported in Section VI
+mats and identification numbers) and AGBonnet/augmented-                       reflects the marginal contribution of each tier after higher-
+clinical-notes (2,202 clinical notes with authentic medical                    priority tiers have already claimed their detections.
+terminology). All pre-anonymized, all research-licensed.
+   The synthetic-real gap can challenge detection pipelines, so                V. ATTACK TAXONOMY
+we use three tiers of sensitive values:                                        While single-agent attacks typically focus on prompt injection
+   Explicit canaries: Unique markers, trivially detectable if                  (manipulating inputs), multi-agent systems introduce coordi-
+leaked verbatim, baseline validation.                                          nation attacks (manipulating trust). An attacker does not need
+                                                                                                                                              7
+                                                  El Yagoubi et al.: AgentLeak: A Benchmark for Internal-Channel Privacy Leakage in Multi-Agent LLM Systems
+
+
+
+
+to break the model; they effectively need to trick one agent              agent baselines against multi-agent topologies, measuring
+into delegating sensitive data to another.                                how data flows through previously unmonitored internal
+   Our 32-class taxonomy provides a standardized vocabulary               channels. We now describe the metrics employed and the
+for reproducible privacy research. We first motivate its ne-              experimental setup. We will then present our results including
+cessity, then describe each attack family. Table 4 outlines the           the key findings that characterize privacy leakage in multi-
+mapping of attack families to the 32-class taxonomy.                      agent systems.
+
+A. MOTIVATION                                                              A. EVALUATION METRICS
+Prior work on data extraction [29], PII leakage analysis [30],            We evaluate privacy using four complementary metrics that
+and red teaming [31] targets static LLMs. Agentic systems                 capture different aspects of leakage severity.
+introduce additional attack surfaces (tools, memory, and multi-              Exact Leakage Rate (ELR): Did at least one sensitive
+agent coordination) that existing taxonomies do not cover [32].           field leak? Binary, intuitive, scenario-level.
+A systematic taxonomy enables:                                               Weighted Leakage Score (WLS): Severity-weighted sum
+• Systematic coverage of attack vectors in benchmark design               of leaks. SSN and diagnosis get weight 1.0; credit cards 0.95;
+• Fair comparison across different evaluation methodologies               salary and financials 0.8; email and phone 0.5. WLS captures
+• Identification of gaps in current defense mechanisms                    not just whether leakage occurred, but how bad it was.
+                                                                           Scope and streamlined reporting. Our current trace pipeline
+B. ATTACK FAMILIES                                                         records binary channel-level leakage (leaked/not leaked
+We organize attacks into six families based on their injection             per channel) rather than per-field leakage attribution. To
+surface and target mechanisms.                                             keep the evaluation framework aligned with the metrics that
+   F1: Prompt and Instruction Attacks (6 classes) target                   are fully supported at the large-scale evaluation level, the
+direct manipulation of agent behavior. They exploit LLMs’                  primary analyses in this paper report ELR, CLR, and ASR;
+eagerness to follow instructions, overriding whatever privacy              WLS is provided by the framework for adopters that enable
+protections exist.                                                         per-field attribution and is therefore deferred to future per-
+   F2: Indirect and Tool-Surface Attacks (6 classes) take a                field analyses. We make this scoping explicit so that the
+different approach: rather than attacking the agent head-on,               reported headline numbers correspond exactly to the metrics
+they corrupt its environment [34]. The attacker manipulates                computed end-to-end on all 4,979 traces.
+what the agent perceives without ever interacting with it
+directly.                                                                    Channel Leakage Rate (CLR): Proportion of traces in
+   F3: Memory and Persistence Attacks (5 classes) target                  which at least one sensitive field leaked through a given
+the temporal aspect of how agents retain state. Once sensitive            channel. Helps identify which pathways are protected and
+data lands in persistent storage, an attacker can extract it long         which are not.
+after the original task has completed [37].                                  Attack Success Rate (ASR): Proportion of adversarial
+   F4: Multi-Agent Coordination Attacks (8 classes) form                  scenarios (A1/A2 only) in which at least one sensitive field
+the largest family in our taxonomy, specifically because multi-           was successfully extracted through any channel. This isolates
+agent systems introduce attack surfaces that do not exist in              the risk from active attacks beyond what misconfiguration
+single-agent setups. The common thread is that these attacks              alone produces.
+weaponize the trust that agents place in one another.                        For utility measurement, Task Success Rate (TSR) cap-
+   F5: Reasoning and Chain-of-Thought Attacks (5 classes)                 tures the fraction of scenarios where the agent objective is
+target how agents think rather than what they see. The                    achieved. We evaluate TSR using both rule-based checks (for
+reasoning capabilities that enhance agent performance simulta-            scenarios with verifiable outputs, e.g., correct appointment
+neously expand the attack surface for adversarial exploitation.           dates) and LLM-based semantic oracles (for open-ended tasks
+   F6: Evasion and Obfuscation Attacks (2 classes) attempt                requiring qualitative assessment).
+to bypass detection using encoding tricks that evade pattern
+matching while remaining recoverable by the attacker.                      B. DETECTION PIPELINE VALIDATION
+   In the current evaluation, F5 and F6 attacks are included in           Detection of privacy leakage using the LLM-as-Judge in-
+aggregate metrics but are not tracked separately at the trace             volved tuning the threshold (τ = 0.72) via grid search over
+level due to instrumentation constraints. We report per-family            τ ∈ [0.60, 0.85], using 200 trace segments manually labeled
+Attack Success Rate (ASR) for F1 through F4 only. Future                  by a domain expert (100 positives, 100 negatives) from pilot
+versions will extend family-level attribution to all six families.        runs across all domains. Critically, this calibration set was held
+   Table 5 maps attack families to adversary capability levels,           out entirely from the 1,000-scenario evaluation; no segment
+showing which attacks are available at each threat level.                 used for threshold tuning appears in the reported metrics.
+                                                                             On a separate test set (n=1,000 segments), Tier 3 achieves
+VI. EVALUATION AND RESULTS                                                FPR 4.8%, FNR 7.4%. Varying τ by ±0.05 shifts FPR by
+Our evaluation addresses a straightforward question: does                 ±2.1% and FNR by ±3.8%. We chose Qwen-2.5-7B for
+adding more agents increase privacy risk? We compare single-              primary evaluation due to cost (7B parameters vs 70B+); this
+8
+El Yagoubi et al.: AgentLeak
+
+
+
+
+TABLE 4. Attack taxonomy: six families mapping to 32 classes
+
+
+                Family         Description                         Classes      Representative Attacks
+                F1             Prompt & Instruction                       6     Direct injection [33], role confusion, format coercion
+                F2             Indirect & Tool-Surface                    6     Indirect injection [34], tool poisoning, retrieval traps
+                F3             Memory & Persistence                       5     Memory exfiltration, vector store manipulation, log exploitation
+                F4             Multi-Agent Coordination                   8     Cross-agent collusion, delegation exploits, shared memory poisoning
+                F5             Reasoning & Chain-of-Thought               5     Logic puzzle jailbreaks [35], CoT forging, reasoning hijacks
+                F6             Evasion & Obfuscation                      2     Encoding tricks [36], detection evasion
+
+
+
+TABLE 5. Attack Family to Adversary Level Mapping                                       paraphrased disclosures. The LLM-as-Judge alone (Tier 3)
+                                                                                        provides strong recall (0.926) but higher FPR (6.2%). The
+       Adversary Level          Attack Families                   Classes               full pipeline achieves the best F1 (0.943) by combining high-
+       A0 (Benign)              None (misconfiguration only)              0             precision anchors with semantic coverage.
+       A1 (Weak)                F1, F2, F6                               14                 We then evaluated judge robustness and conducted a bias
+       A2 (Strong)              F3, F4, F5                               18
+                                                                                        analysis. We assessed inter-judge robustness on a labeled
+                                                                                        subset of 240 trace segments (120 positives, 120 negatives)
+TABLE 6. Sensitivity Analysis of Detection Threshold τ on the Held-Out Calibration      using three judges: Qwen-2.5-7B, Llama-3.1-8B, and GPT-
+Set (n=200). The selected threshold τ = 0.72 (bold) achieves near-maximal F1 while
+keeping FPR < 5%                                                                        4o-mini. Compared to the same ground-truth labels, Qwen-
+                                                                                        2.5-7B achieved FPR/FNR of 4.8%/7.4% (as reported ear-
+          τ       FPR          FNR      Precision     Recall      F1                    lier), Llama-3.1-8B achieved 5.6%/8.1%, and GPT-4o-mini
+        0.60     12.4%          2.8%      0.883       0.972      0.925
+                                                                                        achieved 4.1%/6.9%. Pairwise agreement (Cohen’s κ) ranged
+        0.65      8.9%          4.0%      0.917       0.960      0.938                  from 0.82 to 0.87, indicating substantial agreement across
+        0.70      5.6%          6.2%      0.946       0.938      0.942                  judges.
+        0.72     4.8%          7.4%       0.952       0.926      0.938
+        0.75      3.5%          9.8%      0.965       0.902      0.932
+                                                                                            The multi-tiered approach mitigates the risk of relying
+        0.80      2.1%         14.6%      0.979       0.854      0.912                  solely on LLMs to evaluate LLMs. While Tier 3 introduces
+        0.85      1.2%         21.3%      0.988       0.787      0.876                  semantic evaluation, it does not stand alone; Tier 1 (Canaries)
+                                                                                        and Tier 2 (Patterns) provide ground-truth anchors. Further-
+TABLE 7. Detection Method Comparison on the Test Set (n=1,000 segments). The full       more, since 82% of detected leaks are semantic (e.g., para-
+three-tier pipeline achieves the highest F1 by combining high-precision pattern         phrased disclosures), pattern-matching alone is insufficient.
+matching with semantic LLM-based detection
+                                                                                        Our use of calibrated LLM-as-Judges mirrors current best
+                                                                                        practices in AI safety benchmarks, where semantic signals
+  Method                               Precision    Recall      F1        FPR
+                                                                                        are necessary to capture nuanced violations that escape regex
+  Regex only (Tier 1)                   1.000       0.080      0.148     0.0%           filters.
+  NER/Pattern (Tiers 1+2)               0.989       0.180      0.305     0.2%
+  LLM-as-Judge (Tier 3)                 0.941       0.926      0.933     6.2%               To mitigate evaluation leakage, judges only receive min-
+  Full pipeline (Tiers 1+2+3)           0.952       0.934      0.943     4.8%           imally necessary context: a trace segment and a masked
+                                                                                        scenario identifier. Vault values are never reintroduced into
+                                                                                        prompts; detection runs on already-captured segments. Judge
+introduces a conservative bias since GPT-4o-mini achieves                               outputs are stored without raw sensitive fields, and traces are
+lower FNR (6.9%). Our reported leakage rates should there-                              retained only in encrypted storage. We report representative
+fore be interpreted as lower bounds on the true leakage.                                false positives (structured-but-benign identifiers) and false
+   Threshold sensitivity analysis. Table 6 reports detection                            negatives (paraphrased medical facts) in the Appendix.
+performance across τ ∈ [0.60, 0.85] on the 200-segment held-
+out calibration set. The threshold τ = 0.72 was selected as                             C. HUMAN EXPERT VALIDATION
+the highest value that keeps FPR below 5% while maintaining                             To ensure scientific validity, we incorporated human expert
+near-maximal F1 (0.938). At τ = 0.70, F1 peaks at 0.942                                 review at three stages. First, for scenario design: two inde-
+but FPR exceeds 5%; at τ = 0.75, FPR drops to 3.4%                                      pendent domain experts per vertical (healthcare compliance
+but Recall falls to 0.896. Temperature variation across [0.0,                           officers, financial auditors, legal counsel, corporate privacy
+1.0] shifts leakage rates by less than 3%, and inter-judge                              officers) reviewed and validated the allowed set annotations,
+agreement (Cohen’s κ = 0.82–0.87) confirms robustness to                                achieving substantial inter-rater agreement (Cohen’s κ =
+judge selection.                                                                        0.75–0.82 across verticals). Second, for detection calibration:
+   Detection baseline comparison. Table 7 compares the                                  a privacy specialist manually labeled 200 trace segments used
+full pipeline against simpler baselines on the same test set                            to tune the LLM-as-Judge threshold (τ = 0.72), plus an
+(n=1,000 segments). Regex-only detection (Tier 1) achieves                              additional 240 segments for inter-judge validation. Third, for
+perfect precision but captures only 8% of leaks. Adding NER-                            result verification: a random sample of 100 detected leaks
+based matching (Tiers 1+2) raises recall to 18% but misses                              (50 from internal channels, 50 from external) was reviewed
+                                                                                                                                                      9
+                                                      El Yagoubi et al.: AgentLeak: A Benchmark for Internal-Channel Privacy Leakage in Multi-Agent LLM Systems
+
+
+
+
+TABLE 8. Benchmark Execution Summary                                          TABLE 9. Defense Effectiveness by Channel Type (A0 Benign Scenarios Only). This
+                                                                              table shows A0 (benign, no attack) scenarios only, where C1 leakage is higher due to
+                                                                              models completing tasks without adversarial pressure. Under adversarial conditions
+      Dataset Scale          Traces by Model       Traces by Vertical         (A1/A2), internal channels dominate as shown in Table 11.
+                                                                              C1 Eff. = (Vanilla C1 Rate − Defense C1 Rate)/Vanilla C1 Rate × 100%
+Designed scenarios 1,000 Claude-3.5-Sonnet   996   Healthcare    1,245
+Scenarios/vertical   250 GPT-4o              996   Finance       1,244
+                         GPT-4o-mini         995   Legal         1,245                  Defense                  C1 Rate       C2/C5 Rate         C1 Eff.
+                         Llama-3.3-70B       996   Corporate     1,245
+                         Mistral-Large       996                                        Vanilla (baseline)            48%                31%            –
+                                                                                        Privacy Prompt                19%                29%          60%
+                                        Total validated traces: 4,979                   Role Separation               22%                28%          54%
+                                                                                        Output Sanitizer               1%                31%          98%
+                                                                                        LlamaGuard                     6%                30%          88%
+                                                                                        PromptGuard                    8%                29%          83%
+by a domain expert, confirming 94% accuracy (95% CI:
+[87.4%, 97.8%]). The 6 disagreements involved edge cases
+                                                                              TABLE 10. Architecture Comparison: Single-Agent vs Multi-Agent (n=4,979 paired
+where paraphrased medical terminology was ambiguous. This                     traces). Statistical test: McNemar’s test for paired proportions. C2-only = traces where
+human-in-the-loop validation strengthens confidence that our                  C1 safe but C2 leaked; C5-only = traces where C1&C2 safe but C5 leaked. C5-only
+automated detection reflects genuine privacy violations.                      refers to the incremental leak rate; the +0.0% indicates that in our dataset, every
+                                                                              memory leak (46.7%) co-occurred with an inter-agent (C2) or output (C1) leak
+
+D. EXPERIMENTAL SETUP
+                                                                                  Comparison                      Single         Multi       Ratio        p-val.
+Our evaluation employed the following configuration across
+                                                                                  Fair comparison (C1 only):
+all experiments.                                                                    C1 leakage rate          43.2%              27.2%       0.63×       <0.001
+   For model selection, we evaluated five leading produc-
+                                                                                  Total attack surface (all channels):
+tion LLMs: GPT-4o, GPT-4o-mini, Claude-3.5-Sonnet (An-                              Any leak (C1/C2/C5)        43.2%            68.9%       1.60×       <0.001
+thropic), Llama-3.3-70B-Instruct, and Mistral-Large-2411.
+                                                                                  Incremental internal contribution:
+For the detection pipeline’s semantic tier (Tier 3), we used                        C2-only contribution           –          +41.7%              –             –
+Qwen-2.5-7B and Llama-3.1-8B as cost-effective judges, with                         C5-only contribution           –           +0.0%              –             –
+GPT-4o-mini for validation. Experiments were conducted
+between October 2025 and January 2026.
+   The benchmark comprises 1,000 designed scenarios (250                      in Tables 11, 10, 15. For high-level comparison, we use the
+per vertical: healthcare, finance, legal, corporate). Each sce-               arithmetic mean of C2 and C5 (57.8%) as a representative
+nario was executed on all five LLMs, yielding 4,979 validated                 internal rate. The combined OR rate (C2 ∨ C5) is 68.8%.
+traces after excluding 21 traces due to timeouts or incomplete                   Channel coverage scope. Our primary evaluation covers
+capture (4 each from Claude-3.5-Sonnet, GPT-4o, Llama-3.3-                    C1 (final output), C2 (inter-agent messages), and C5 (shared
+70B, and Mistral-Large; 5 from GPT-4o-mini), resulting in                     memory) across all 4,979 traces. C3 (tool input) and C6 (sys-
+a total of n = 4,979 model–scenario pairs. No systematic                      tem logs) are evaluated on a representative sample (n = 100
+pattern by domain or attack level was observed among                          per model; see Finding 7). C4 (tool output) and C7 (artifacts)
+excluded traces. Table 8 summarizes the trace distribution.                   are demonstrated through the SDK integration case study
+   For framework coverage, we evaluated four major multi-                     (Section VII). The AgentLeak framework instruments all
+agent frameworks: LangChain (v0.1.x), CrewAI (v0.83.x),                       seven channels; extending full-scale evaluation to C3–C7 is
+AutoGPT (v0.5.x), and MetaGPT (v0.8.x). For defense con-                      planned for future work.
+figurations, we tested multiple defense approaches including:
+Vanilla (no defense), Privacy Prompt, Role Separation, Output                 Finding 1: Multi-Agent Systems Create Invisible Leakage Channels
+Filtering, PromptGuard [19], NeMo Guardrails [20], Llama-                     The primary finding is that multi-agent architectures introduce
+Guard 3 [21], and Lakera Guard [18].                                          unmonitored internal channels that raise total system exposure
+   All evaluations used temperature = 0.7 for generation                      by 1.6× compared to single-agent baselines. Importantly, per-
+diversity while maintaining reproducibility through fixed                     channel output leakage (C1) is actually lower in multi-agent
+seeds. Each of the 1,000 scenarios includes both single-agent                 mode (27.2% vs 43.2%); the overall increase comes entirely
+and multi-agent execution paths, with the multi-agent path                    from internal channels (C2, C5) that single-agent systems
+using a coordinator-worker topology (2 agents). The 4,979                     do not have. This holds for all five models tested: GPT-4o,
+traces capture complete execution flows including all inter-                  GPT-4o-mini, Claude 3.5 Sonnet, Mistral Large, and Llama
+agent messages (C2) and memory operations (C5).                               3.3 70B (Table 15).
+                                                                                 Table 10 presents a nuanced comparison. Fair comparison
+E. RESULTS                                                                    (C1 channel only): Looking at C1 alone, multi-agent systems
+Each of the 4,979 traces contains both a single-agent execution               actually leak less (27.2% vs 43.2%). One possible explanation
+(C1 only) and a multi-agent execution (C1+C2+C5) of the                       is that task coordination spreads the workload, so no single
+same scenario on the same model. This paired design enables                   output bears all the pressure. Total attack surface: However,
+direct comparison. Proportion of traces in which at least                     multi-agent configurations introduce C2 and C5 channels
+one sensitive field leaked through a given channel is used                    that single-agent systems do not have at all. Once we tally
+10
+El Yagoubi et al.: AgentLeak
+
+
+
+
+TABLE 11. Channel-Level Leakage Analysis (n=4,979 traces). Internal channels show                                 80
+2.1× higher leak rates than external (57.8% mean internal vs 27.2% on C1). C2                                                                       External avg (27.2%)
+(inter-agent messages) exhibits the highest leak rate at 68.8%, confirming that                                                         68.8%       Internal avg (57.8%)
+                                                                                                                  70
+coordination channels are the primary vulnerability
+
+
+
+
+                                                                                    Leakage Rate (%)
+                                                                                                                  60
+
+      Type         Channel               Tests      Rate         95% CI                                           50                                         46.7%
+      External     C1: Final Output      4,979     27.2%      [26.0, 28.4]                                        40
+                   C2: Inter-agent       4,979     68.8%      [67.5, 70.1]
+                                                                                                                  30   27.2%
+      Internal     C5: Memory            4,979     46.7%      [45.3, 48.1]
+                   Mean (Internal)            –    57.8%                 –                                        20
+
+                                                                                                                  10
+
+                                                                                                                   0
+leaks across every available channel, multi-agent hits 68.9%, a                                                         C1                C2                 C5
+                                                                                                                       Output         Inter-agent          Memory
+1.60× jump. Incremental contribution: The H1 rate (41.7%)
+captures cases where C1 stayed clean but C2 or C5 leaked,                           FIGURE 3. Channel-by-channel leakage rates (n=4,979). C1 (final output): 27.2%.
+precisely the “hidden” leakage that output-only audits would                        Internal channels show higher rates: C2 (inter-agent): 68.8%, C5 (memory): 46.7%. The
+                                                                                    pattern C2 > C1 holds across all five models and four domains.
+never catch.
+   Interpreting the comparison: The takeaway is not that multi-
+agent performs less favorably on a per-channel basis; C1
+leakage is actually lower in multi-agent mode. The problem                          frameworks we evaluated offer any mechanism to intercept
+lies in the expanded attack surface: multi-agent systems                            inter-agent messages or monitor what gets written to memory.
+open up two channels (C2, C5) that single-agent systems                                The channel breakdown is visualized in Fig. 3, which
+cannot have by construction. In the single-agent setting, there                     illustrates the protection gap between defended external
+are no inter-agent messages to intercept; when nothing is                           channels and unprotected internal channels.
+shared, there is no shared memory to leak. That 1.60× overall
+increase reflects this architectural reality. From a security                       Finding 3: Output-Only Audits Miss 41.7% of Violations
+standpoint, what matters is total exposure across all pathways,                     To quantify the practical impact of internal channel vulnerabil-
+not how efficiently each channel is protected in isolation.                         ities, we tested the hidden leakage hypothesis (H1), described
+   Why the increase? Multi-agent systems create data flow                           earlier: runs exist where the final output (C1) is safe but
+pathways that did not exist before. Task delegation, shared                         internal channels (C2 or C5) leak sensitive data (Fig. 4).
+context, result aggregation: all become channels where sensi-                       Formally, H1 = ¬C1leak ∧ (C2leak ∨ C5leak ), i.e., traces
+tive data can escape. The pattern is monotonic: add an agent,                       where output-only audits would pass but internal channels
+add a pathway. Single-agent systems have none of these; multi-                      leaked. Among 4,979 execution traces, 2,076 (41.7%, 95%
+agent systems turn them into potential leak points.                                 CI: [40.3%, 43.1%]) satisfied H1 the final output passed all
+                                                                                    privacy checks while internal channels exposed sensitive data.
+Finding 2: Internal Channels Exhibit 2.1× Higher Leak Rates                         Under output-only auditing, these traces would have been
+Table 11 highlights the source of vulnerability in multi-agent
+architectures: internal communication channels leak far more
+than external outputs. Final output to users (C1) leaks in 27.2%                                                  50                                             n=4979
+                                                                                    Percentage of Scenarios (%)
+
+
+
+
+of traces. Internal channels exhibit substantially higher rates:                                                                                         41.7%
+inter-agent messages (C2) leak in 68.8% of our 4,979 traces;                                                      40
+shared memory (C5) leaks in 46.7% (though every C5 leak
+co-occurs with a C2 or C1 leak in our dataset; see Table 10).                                                     30      27.2%
+On average, internal channels leak at 57.8%, 2.1× more than
+external channels.                                                                                                20
+   Notably, C2 exceeds C1 for every single model we tested:
+GPT-4o (76.8% vs 17.2%), GPT-4o-mini (75.3% vs 41.2%),                                                            10
+Mistral Large (96.2% vs 47.5%), Llama 3.3 70B (67.8% vs
+26.9%), Claude 3.5 Sonnet (28.1% vs 3.3%). This pattern
+                                                                                                                   0
+holds across all four domains (healthcare, finance, legal,                                                             Detected by                     Missed by
+corporate), identifying inter-agent communication as the                                                                  AgentLeak                 Output-Only (H1)
+
+primary vulnerability in current multi-agent implementations.                       FIGURE 4. Output-only audit gap (n=4,979 traces). 41.7% of violations occur in
+   This gap has a structural explanation. When agents coordi-                       internal channels while final output passes checks; audits inspecting only C1 miss nearly
+                                                                                    half of all violations. Note: The 27.2% C1 leak rate and 41.7% H1 rate measure
+nate, they tend to exchange full task context and that context                      different metrics on the same population: C1 counts traces where the output leaked,
+often contains sensitive information that would get filtered                        while H1 counts traces where C1 was safe but internal channels (C2 or C5) leaked.
+from user-facing outputs in a single-agent setup. None of the                       These are not additive; they partition different subsets of the 4,979 traces.
+
+                                                                                                                                                                           11
+                                                                                         El Yagoubi et al.: AgentLeak: A Benchmark for Internal-Channel Privacy Leakage in Multi-Agent LLM Systems
+
+
+
+
+TABLE 12. H1 Validation: Output-Only Audit Insufficiency (n=4,979). 95% Wilson
+score CIs. H1 = C1 safe but C2 or C5 leaked. The pattern holds consistently across all                                                                                                   48%
+                                                                                                                            Vanilla
+four domains                                                                                                                                                             31%
+
+                                                                                                                                                           19%
+                                       Category          Total    H1 True      Rate        95% CI                 Privacy Prompt
+                                                                                                                                                                      29%
+                                       All traces        4,979        2,076   41.7%     [40.3, 43.1]
+                                                                                                                                                              22%
+                                                                                                                         Role Sep.
+                                        By domain:                                                                                                                  28%
+                                        Healthcare       1,245         777    62.4%     [59.7, 65.1]
+                                        Finance          1,244         559    44.9%     [42.1, 47.7]                                      1%
+                                                                                                                    Output Sanit.
+                                        Legal            1,245         434    34.9%     [32.3, 37.6]                                                                     31%
+                                        Corporate        1,245         306    24.6%     [22.2, 27.1]                                           6%
+                                                                                                                     Llama Guard
+                                                                                                                                                                      30%
+
+                                                                                                                                                8%                                  C1 (External)
+                                                                                                                    Prompt Guard
+Missed by Output-Only Audit (%)
+
+
+
+
+                                  70                             70                                                                                                   29%           C2/C5 (Internal)
+                                                                      62.4%
+                                  60                             60                                                                   0        10        20         30         40       50        60
+                                                                                                                                                          Leakage Rate (%)
+                                  50                             50
+                                                                              44.9%
+                                                41.7%                                                            FIGURE 6. Defense effectiveness comparison across external (C1) and internal
+                                  40                             40                                              (C2/C5) channels. Output sanitizers achieve 98% effectiveness on final output but 0%
+                                                                                        34.9%
+                                                                                                                 on internal channels in default configurations. Privacy prompts show 60% effectiveness
+                                  30                             30                                              externally but only 6% internally.
+                                                                                                       24.6%
+
+
+                                  20                             20
+                                                                                                                 TABLE 13. Framework-Level C2 Leakage (Representative Sample). Scope: A0
+                                  10                             10                                              (benign) scenarios only, vanilla configuration, SDK integration tests. These rates
+                                                                                                                 (28–35%) represent the baseline without adversarial attacks. The 68.8% aggregate C2
+                                   0                              0                                              rate in Table 11 includes A1/A2 adversarial scenarios, explaining the ∼2× difference
+                                               2-Agent                Health. Finance    Legal     Corp.
+
+FIGURE 5. Multi-agent privacy violations breakdown (n=4,979 traces). Missed                                      Framework                C2 Rate          95% CI         Primary Vulnerability
+violations by output-only audit (H1 rate: 41.7%) across verticals. Higher-complexity                             CrewAI v0.83.x                33%     [26.7, 39.9]       Inter-agent messages (C2)
+domains (Finance, Legal) show elevated miss rates on internal channels. Note: these are                                                                                   unsanitized
+independent H1 rates within each vertical and do not sum to 100%.
+                                                                                                                 AutoGPT v0.5.x                35%     [27.5, 43.2]       No memory access control
+                                                                                                                 LangChain v0.1.x              29%     [22.9, 35.8]       Full context to tools
+                                                                                                                 MetaGPT v0.8.x                28%     [19.6, 37.7]       Role messages visible
+classified as compliant, allowing internal privacy violations to
+persist undetected in production environments.
+   Table 12 shows the H1 validation results (visualized in
+                                                                                                                 stress-test defense mechanisms and includes more disclosure-
+Fig. 5). Nearly half of all violations occur in internal channels
+                                                                                                                 intensive tasks.
+while the final output passes checks, confirming that output-
+only audits are insufficient for multi-agent systems.                                                               Table 9 presents channel-specific effectiveness measure-
+                                                                                                                 ments on this defense-evaluation subset. Under baseline
+                                                                                                                 conditions without defenses, we observe 48% leakage on
+Finding 4: Defense Effectiveness Varies by Channel
+                                                                                                                 C1 and 31% on internal channels. Privacy-focused prompting
+Our evaluation of eight defense configurations reveals that                                                      reduces C1 to 19% (representing 60% effectiveness) while
+current protections achieve high effectiveness on external                                                       achieving only 6% reduction on internal channels. Output
+channels but provide no protection on internal channels in                                                       sanitization mechanisms demonstrate 98% effectiveness on C1
+their default configurations.                                                                                    (reducing leakage to 1%) yet exhibit zero impact on internal
+   The defense effectiveness comparison is visualized in Fig. 6,                                                 channels, as these systems observe only final outputs rather
+which highlights the dramatic disparity between external and                                                     than inter-agent communication or memory operations.
+internal protection.
+   Table 11 aggregates results across all 4,979 traces (all threat
+levels and defense configurations), whereas Table 9 isolates                                                     Finding 5: All Evaluated Frameworks Lack Internal Privacy
+A0 (benign) scenarios from the defense-evaluation subset                                                         Mechanisms
+exclusively. In the aggregate data, channel rates by threat level                                                To ensure fair comparison, we focus on benchmarks that
+are: A0 (n = 2,485): C1=26.6%, C2=69.3%, C5=46.4%;                                                               satisfy four criteria: (i) coverage of multi-agent topologies;
+A1 (n = 1,234): C1=28.4%, C2=70.6%, C5=48.2%; A2                                                                 (ii) ability to intercept internal channels (e.g., C2, C5); (iii)
+(n = 1,230): C1=26.8%, C2=66.3%, C5=45.9%. The pattern                                                           measurement of leakage using execution traces rather than
+C2>C1 holds across all three threat levels. The higher C1 rate                                                   just final outputs; and (iv) provision of a reproducible ground-
+in Table 9 (Vanilla: 48%) compared to the aggregate A0 rate                                                      truth vault. As shown in Table 1, AgentLeak is, among the
+(26.6%) arises because the defense-evaluation subset uses a                                                      reviewed frameworks, the only one that satisfies all four
+smaller, curated set of A0 scenarios specifically designed to                                                    criteria simultaneously.
+12
+El Yagoubi et al.: AgentLeak
+
+
+
+
+TABLE 14. Adversarial Attack Success Rates by Family
+                                                                                                                                        62%
+                                                                                    GPT-4o-mini
+                                                                                                                                         65%
+    Family       Description             Tests         ASR      95% CI
+                                                                                                                                         67%
+    F1           Prompt/Instruction        992     79.8%     [77.2, 82.2]                 GPT-4o
+                                                                                                                                           72%
+    F2           Tool-Surface              484     78.9%     [75.1, 82.3]
+    F3           Memory/Persistence        255     79.6%     [74.2, 84.1]                                                                    74%
+    F4           Multi-Agent Coord.        252     82.9%     [77.8, 87.1]    Claude 3.5 Sonnet
+                                                                                                                                                    85%
+    Overall                              1,983     79.9%     [78.1, 81.6]
+                                                                                                                                                    84%
+                                                                                  Mistral Large
+                                                                                                                                                    84%
+
+                                                                                                           C3: Tool Input                           86%
+   Our framework-level evaluation confirms that the internal                     Llama 3.3 70B
+                                                                                                           C6: Logs                                  89%
+channel vulnerability is systemic across the multi-agent
+                                                                                                   0         20         40         60          80         100
+ecosystem rather than specific to particular implementations.
+                                                                                                                    Leakage Rate (%)
+   Table 13 summarizes framework-level vulnerabilities with
+no defenses enabled. All four frameworks (CrewAI, AutoGPT,                  FIGURE 7. Leakage rates on secondary channels (n=100 scenarios per model). C3
+LangChain, MetaGPT) show similar C2 leakage (28–35%)                        (Tool Input) measures secrets sent to external APIs. C6 (Logs) measures secrets
+                                                                            appearing in internal thought traces. All five models show >60% leakage on these
+without adversarial attacks. That baseline jumps to 68.8%                   channels while maintaining near-0% C1 leakage.
+once we add adversarial scenarios (A1/A2). The tight spread
+(28–35%) across architectures that differ radically (CrewAI’s
+role-based delegation, AutoGPT’s recursive decomposition,                   agents interact with external APIs or generate operational
+LangChain’s chain abstractions, MetaGPT’s SOP workflows)                    logs.
+confirms the problem is systemic. None of these frameworks
+                                                                               Tool Input Leakage (C3): Agents forward unfiltered sen-
+treat inter-agent privacy as a design goal.
+                                                                            sitive data to external tools in 62%–86% of scenarios across
+                                                                            all models (Fig. 7). Llama 3.3 70B sits at the high end (86%);
+Finding 6: Adversarial Attacks Achieve High Success Rates
+                                                                            GPT-4o-mini shows more restraint at 62%. These results
+Active attacks push leakage risk well beyond what misconfig-                indicate that current agent implementations pass excessive
+uration alone produces.                                                     context to external functions, treating tool parameters as
+   Table 14 ranks attack families by success rate. Multi-agent              internal workspace rather than as trust boundaries requiring
+coordination attacks (F4) achieve the highest success rate at               data minimization.
+82.9%, exploiting inter-agent trust to use the coordination                    Log Leakage (C6) and the “Thought Gap”: System log
+channel as an exfiltration vector and shared memory as a                    leakage (C6) consistently runs higher than tool invocation
+staging area for data extraction. Prompt/instruction attacks                leakage (C3). This reveals something interesting about agent
+(F1) and tool-surface attacks (F2) are not far behind at 79.8%              behavior: they process sensitive information in their chain-of-
+and 78.9% all exceeding 75%.                                                thought (which ends up in logs) even when they ultimately
+   Note on ASR homogeneity: The tight clustering (78.9%–                    decide not to pass that data to external tools. Claude 3.5 Sonnet
+82.9%, σ ≈ 1.7%) may reflect a ceiling effect in current LLM                shows the starkest example of this gap, 11 percentage points
+defenses or the dominance of semantic leakage (82% Tier 3),                 between C3 (74%) and C6 (85%), proving that even heavily
+which is equally difficult to prevent regardless of attack vector.          safety-trained models can compromise privacy through their
+Attack families F5 and F6 (7 classes total) are included in                 internal reasoning process.
+aggregate metrics but were not instrumented for family-level
+                                                                               Shadow Leakage: In over 65% of scenarios across all
+tracking; extending trace-level attribution to all six families is
+                                                                            models, sensitive data escapes through C3 or C6 while
+planned for the next release.
+                                                                            C1 (user-facing output) stays clean. This is precisely the
+   The result fits the picture: inter-agent coordination creates
+                                                                            false sense of security that output-focused auditing creates:
+data pathways that single-agent systems do not have. These
+                                                                            confidential information leaks through infrastructure channels
+coordination attacks appeared alongside the wave of LLM-
+                                                                            that nobody is watching.
+based autonomous agents starting in 2023. Defense research
+is still catching up.                                                          These secondary channels effectively bypass both user-
+                                                                            facing redaction described in the Defense Interceptor Experi-
+                                                                            ment below and internal sanitization mechanisms.
+Finding 7: Secondary Channels Expose Critical Data
+While our primary analysis focused on user output (C1) and
+inter-agent communication (C2), we conducted a targeted                     Defense Interceptor Experiment
+assessment of two often-overlooked channels: Tool Input                     We built a prototype interceptor that applies C1 redaction
+(C3) and System Logs (C6). Using a representative sample                    logic to internal channels C2 and C5. The test: 120 scenarios
+of 100 scenarios from our benchmark dataset across five                     (30 per domain), stratified across A0/A1/A2 (40 each), run on
+models (GPT-4o, GPT-4o-mini, Claude 3.5 Sonnet, Llama                       CrewAI and LangChain with identical seeds and temperature
+3.3 70B, Mistral Large), we measured leakage rates when                     = 0.7. The interceptor masked vault fields outside the channel-
+                                                                                                                                                               13
+                                                 El Yagoubi et al.: AgentLeak: A Benchmark for Internal-Channel Privacy Leakage in Multi-Agent LLM Systems
+
+
+
+
+specific allowed set and blocked raw vault transmission in               TABLE 15. Per-Model Channel Leak Rates (n=4,979 traces across five models)
+
+inter-agent messages and memory writes.
+   Results: internal leakage dropped from 31.5% to 2.4% (95%                   Model                          n      C1 Rate       C2 Rate       H1 Rate
+CI: [0.4%, 6.8%]). External leakage stayed flat (8.2% vs 8.1%).                Claude-3.5-Sonnet           996          3.3%         28.1%          24.8%
+Task Success Rate fell from 78.6% to 73.9%, a 4.7-point hit                    GPT-4o                      996         17.2%         76.8%          59.6%
+                                                                               GPT-4o-mini                 995         41.2%         75.3%          34.2%
+(95% CI: [1.2, 8.2]), mostly in scenarios needing legitimate                   Llama-3.3-70B               996         26.9%         67.8%          41.3%
+data sharing between agents.                                                   Mistral-Large               996         47.5%         96.2%          48.7%
+   This proof-of-concept demonstrates that technical mitiga-                   Global (Weighted)              –       27.2%          68.8%          41.7%
+tion is possible but highlights the utility tradeoff. Blanket
+redaction works but breaks coordination. Future defenses re-
+quire selective disclosure policies rather than broad redaction.                                                                                          100
+                                                                          Healthcare           24.7%                87.1%             72.5%
+
+Leakage Type Analysis                                                                                                                                     80
+Our multi-tiered detection pipeline categorizes privacy vio-
+
+
+
+
+                                                                                                                                                                Leak Rate (%)
+                                                                              Finance          19.8%                64.7%             40.5%
+lations into three tiers based on detection methodology. This                                                                                             60
+
+analysis reveals that 82% of identified leaks demonstrate
+                                                                                                                                                          40
+semantic characteristics (Tier 3), rendering them invisible                      Legal         35.0%                69.9%             44.9%
+to pattern-matching defense mechanisms.
+                                                                                                                                                          20
+   Tier 1 (Canary Detection, 8%): Verbatim disclosure of
+our unique marker strings. Modern LLMs have largely learned                Corporate           29.3%                53.6%             28.8%
+                                                                                                                                                          0
+to suppress such obvious markers; we found only 18 instances
+across the entire corpus.                                                                       C1                    C2               C5
+                                                                                               Output             Inter-agent        Memory
+   Tier 2 (Structured Field Detection, 10%): Pattern match-
+ing for regulated identifiers: SSNs, credit card numbers, and            FIGURE 8. Per-channel leak rates (%) by domain. Important: These are
+the like. Safety training has helped here, bringing us to 24             channel-specific rates: the percentage of traces that leaked on each respective channel. A
+                                                                         single trace can leak on multiple channels, so these rates do not sum to a scenario-level
+instances. One caveat: this tier needs careful tuning because            leakage rate. For example, Healthcare C2=87.1% means 87.1% of healthcare traces
+internal identifiers can trip SSN patterns (e.g., a ticket number        leaked via inter-agent messages, not that 87.1% of scenarios leaked overall. See Table 12
+like “TIC-987-65-4321” looks suspiciously like an SSN).                  for H1 (output-safe but internal-leaked) rates, which measure a different metric.
+
+   Tier 3 (Semantic Detection, 82%): The majority of
+detected violations fall into this category. In 184 cases, models
+rephrased sensitive information instead of quoting it verbatim,          Table 12 reports H1 rates (traces where C1 is safe but C2
+swapping “Patient is being treated for diabetes” for explicit            or C5 leaked). These are complementary metrics measuring
+ICD-10 codes, or saying “Account balance exceeds $50,000”                different aspects of leakage: the former quantifies per-channel
+instead of the precise figure. Models do this because they are           vulnerability, the latter quantifies the audit gap.
+trying to be helpful, but helpfulness and confidentiality often             As shown in Fig. 8, the domain analysis exhibits variation.
+pull in opposite directions.                                             Finance: lowest C1 rate at 19.8%, likely financial regulation-
+   The upshot: pattern-matching defenses miss most violations.           focused training data. Legal: highest C1 at 35.0%, higher dis-
+Semantic analysis is necessary to achieve adequate detection             closure rates in legal contexts. Healthcare shows intermediate
+coverage.                                                                rates (C1=24.7%) despite HIPAA and Law 25 concerns, while
+                                                                         Corporate shows C1=29.3%. This variation across domains
+Model and Domain Analysis                                                suggests domain-specific fine-tuning as a promising defense
+Per-model analysis reveals consistent patterns. Table 15 re-             direction.
+ports channel-level leak rates from the 4,979 traces across five            Fig. 9 breaks this down by model and channel; internal
+LLMs. The pattern C2 > C1 holds for all five models: GPT-4o              channels (C2, C5) show higher leak rates than external output
+(76.8% vs 17.2%), GPT-4o-mini (75.3% vs 41.2%), Mistral-                 (C1) for all five models tested.
+Large (96.2% vs 47.5%), Llama-3.3-70B (67.8% vs 26.9%),
+and Claude-3.5-Sonnet (28.1% vs 3.3%). Claude-3.5-Sonnet,                 F. SECURITY-UTILITY TRADEOFF ANALYSIS
+which emphasizes safety alignment in its design, achieves the            Privacy protection and task utility are in tension. Strict controls
+lowest rates on both channels (C1=3.3%, C2=28.1%), though                that sanitize all internal communication can break multi-agent
+it still leaks internally. In contrast, GPT-4o exhibits the most         coordination when agents legitimately need shared context.
+extreme gap, with internal leakage (76.8%) exceeding external               Analysis of 50 dedicated tradeoff scenarios shows TSR
+(17.2%) by 4.5×, suggesting that its safety filters are heavily          drops to 35–65% under strict privacy settings that prevent
+optimized for user-facing output but permissive for internal             any sensitive data sharing between agents. Future defenses
+reasoning.                                                               need selective disclosure, sharing only minimum necessary
+   Note that Fig. 8 reports channel-specific rates (the percent-         fields, enforced at the framework level with explicit data flow
+age of traces leaking on each channel independently), while              policies.
+14
+El Yagoubi et al.: AgentLeak
+
+
+
+
+                                                                                                  data protection regulations that mandate minimization by
+ Claude 3.5 Sonnet             3.3%         28.1%          22.5%            100                   design (GDPR Art. 25, Law 25 Sec. 9.1), level (1) alone
+                                                                                                  may constitute non-compliance. The 41.7% H1 rate repre-
+                                                                            80                    sents scenarios where traditional output audits would see no
+     Llama 3.3 70B             26.9%        67.8%          29.2%
+                                                                                                  violation, yet internal channels contain data that under strict
+
+
+
+
+                                                                                  Leak Rate (%)
+                                                                            60                    interpretation should not have been shared.
+      Mistral Large            47.5%        96.2%          68.2%                                     We intentionally adopt a conservative data minimization
+                                                                            40
+                                                                                                  perspective, treating unnecessary internal data propagation
+                                                                                                  as a privacy risk rather than assuming a fully trusted internal
+              GPT-4o           17.2%        76.8%          55.0%                                  environment.
+                                                                            20
+                                                                                                     Tradeoff: This creates a difficult business decision. Our
+                                                                                                  prototype shows that strict internal sanitization can drop Task
+        GPT-4o-mini            41.2%        75.3%          58.6%            0
+                                                                                                  Success Rate (TSR) by 4.7 points (from 78.6% to 73.9%).
+                                                                                                  For highly regulated industries (e.g., healthcare), a ∼5%
+                             C1              C2             C5
+                            Output       Inter-agent      Memory                                  drop in utility is likely an acceptable cost for compliance
+                                                                                                  assurance. However, for general-purpose consumer agents,
+FIGURE 9. Model-channel interaction matrix showing leak rates (%) across five
+LLMs and primary channels. Claude-3.5-Sonnet achieves the lowest rates on both C1
+                                                                                                  this friction might be commercially prohibitive, creating a
+(3.3%) and C2 (28.1%). GPT-4o shows the highest C2/C1 ratio (4.5×). The pattern C2                market bifurcation between “secure enterprise agents” and
+> C1 holds for all five models under aggregate conditions (though A0 benign scenarios             “unconstrained consumer agents.”
+show higher C1), confirming that internal channels are systematically more vulnerable
+to adversarial pressure.                                                                             Implication: Organizations must decide their risk tolerance.
+                                                                                                  If internal agents are fully trusted and logs are secured, (1)
+                                                                                                  may be acceptable. If any agent could be compromised or logs
+VII. DISCUSSION AND LIMITATIONS                                                                   may be accessed by third parties, (1) becomes a precursor
+This section examines the broader implications of our findings,                                   to (3). Our results inform this risk assessment; they do not
+discusses the proof-of-concept attack demonstration, analyzes                                     prescribe a universal policy.
+regulatory considerations, presents study limitations, and                                           We note that the lower C1 leakage in multi-agent mode
+identifies directions for future research.                                                        (27.2% vs. 43.2% in single-agent) may partly reflect differ-
+                                                                                                  ences in prompt structure rather than a pure coordination
+A. CLARIFYING INTERNAL CHANNEL LEAKAGE:                                                           effect. In multi-agent configurations, the coordinator agent
+VIOLATIONS, RISKS, AND BREACHES                                                                   receives a more structured task decomposition, which may
+Our methodology treats all non-allowed internal disclosures                                       independently reduce output verbosity. Disentangling this
+as “leakage,” which raises a natural question: is internal over-                                  prompt-structure effect from the privacy coordination effect
+sharing between trusted agents always a privacy violation?                                        would require a controlled ablation where single-agent sys-
+We distinguish three levels, drawing on contextual integrity                                      tems receive identically structured prompts, which we leave
+theory [15]:                                                                                      to future work.
+   (1) Policy violation (data minimization breach): An agent
+shares more data than the task strictly requires, violating the                                   B. IMPLICATIONS FOR SYSTEM DESIGNERS
+minimization principle (GDPR Art. 5(1)(c), Law 25 Sec. 5).                                        For deployments of multi-agent systems with access to
+For instance, a scheduler agent includes full medical history                                     sensitive data, leakage should be treated as likely unless
+when only the appointment date matters. This is what our                                          confirmed otherwise via full-channel auditing. The 41.7% rate
+benchmark flags: the policy is broken even if no outsider ever                                    at which output-only audits miss violations is not theoretical; it
+sees the data.                                                                                    reflects what we observed across 4,979 traces with production-
+   (2) Risk amplification: Over-sharing internally widens                                         grade models.
+the attack surface. Data sitting in C2/C5 channels can be                                            This work identifies architectural risks with regulatory
+exfiltrated by a compromised agent, logged by accident, or                                        implications; it does not constitute legal guidance, and
+kept around longer than intended. Nothing has left the trusted                                    multiple regulatory frameworks may be implicated. Under
+context yet, but the odds of eventual breach go up. Our proof-                                    a strict reading of HIPAA’s minimum necessary standard,
+of-concept attack (Section VII) demonstrates this risk in                                         inter-agent messages containing protected health information
+practice.                                                                                         could constitute disclosures that may require logging and
+   (3) Actual confidentiality breach: Sensitive data reaches                                      access control. Quebec Law 25 mandates privacy-by-default
+an unauthorized party: an external attacker, an unintended                                        (Section 9.1) and data minimization (Section 5) – our 57.8%
+third-party API, a user who should not have access. This is                                       internal leakage rate suggests potential non-compliance under
+the classic definition of a breach.                                                               this interpretation. GDPR Article 25 (Data Protection by
+   Our benchmark primarily measures (1) and quantifies the                                        Design) requires architectural safeguards that current frame-
+conditions enabling (2). We do not claim that every internal                                      works lack; Articles 13–14 could be implicated when data
+over-sharing constitutes an actual breach (3). However, under                                     subjects are unaware their information crosses agent bound-
+                                                                                                                                                                 15
+                                                                   El Yagoubi et al.: AgentLeak: A Benchmark for Internal-Channel Privacy Leakage in Multi-Agent LLM Systems
+
+
+
+
+TABLE 16. SDK Integration Benchmark: Privacy Leakage Across LLM Families                    D. LIMITATIONS
+(Single Complex Execution per model). Counts represent distinct leaked items per run.
+C1=0 confirms output-only audits would miss these violations. Contrast with Table 15       Our study faces several methodological constraints that
+which reports rates across 4,979 traces                                                    warrant acknowledgment.
+                                                                                              Scenario coverage is broad (four domains, 250 scenarios
+ Model                     Leaks      C2      C3     C4      C1       C5     Time          each) but cannot capture every privacy-sensitive workflow
+ Claude-3.5-Sonnet              7       3       2      1       0        1     126s         out there. Domain experts built scenarios from common
+ GPT-4o                         5       3       0      1       0        1      84s         patterns and regulatory requirements, yet edge cases, emerg-
+ GPT-4o-mini                    7       3       2      1       0        1     199s
+ Llama 3.3 70B                  6       3       1      1       0        1      99s         ing applications, and unusual workflow configurations may
+ Mistral Large                  8       3       3      1       0        1     171s         behave differently. Future benchmark versions should grow
+ Average                      6.6     3.0     1.6    1.0     0.0      1.0     136s         as deployment patterns evolve in practice.
+                                                                                              We tested only English-language scenarios. Multilingual
+                                                                                           deployments could show different leakage profiles: model
+aries. Under the California Consumer Privacy Act/California                                performance varies by language, NER coverage for non-
+Privacy Rights Act (CCPA/CPRA) and PCI-DSS, inter-agent                                    English PII formats has gaps, and cultural expectations
+data flows may constitute “sharing” requiring disclosure, and                              around what counts as “sensitive” differ across communities.
+persistent sensitive data in agent memory could violate storage                            Languages with non-Latin scripts (Chinese, Arabic, Hindi,
+requirements. The precise legal characterization of inter-agent                            etc.) add detection challenges we did not address.
+data flows remains an open question for regulators and legal                                  Detection precision involves trade-offs. Tier 3 has a 7.4%
+scholars.                                                                                  false negative rate, meaning some paraphrased or context-
+   For organizations operating in regulated industries, we                                 embedded disclosures slip through. Our reported rates are
+recommend conducting privacy impact assessments that                                       therefore conservative lower bounds. The judge threshold
+explicitly address internal communication channels, imple-                                 (τ = 0.72) was calibrated on English scenarios; other
+menting comprehensive multi-channel trace logging prior to                                 languages or specialized domains may need re-tuning.
+deployment, establishing data retention policies for internal                                 We tested four major frameworks (LangChain, CrewAI,
+communication logs, and developing incident response proce-                                AutoGPT, MetaGPT), but the ecosystem evolves rapidly.
+dures that account for breaches of internal channels.                                      Newer entrants LangGraph, Semantic Kernel, AgentGPT, plus
+                                                                                           domain-specific platforms may have different vulnerability
+C. SDK INTEGRATION: REAL-WORLD CREWAI SHOWCASE
+                                                                                           profiles. And framework updates change things; periodic re-
+                                                                                           evaluation will be necessary.
+To validate practical applicability, we built a fully-integrated
+                                                                                              Our evaluation uses exclusively the coordinator-worker
+showcase using the AgentLeak SDK with CrewAI. This
+                                                                                           topology with two agents. Real-world deployments with
+experiment shows that hybrid detection (Presidio Named
+                                                                                           hierarchical, peer-to-peer, or larger topologies may exhibit
+Entity Recognition (NER) + LLM-as-Judge) catches leakage
+                                                                                           different leakage profiles; extending AgentLeak to additional
+in production-grade conditions: real task delegation, real tool
+                                                                                           topologies is an important future direction. We used tempera-
+usage.
+                                                                                           ture=0.7; a sensitivity analysis across temperatures (0.0–1.0)
+ For readability, the implementation details of this showcase                              showed less than 3% variation in leakage rates.
+ (application architecture, agent roles, deliberate vulnerability
+                                                                                            Evaluation bias and model-dependent judgment of the
+ design, and benchmark configuration) have been moved to
+                                                                                            LLM-as-Judge. Because 82% of detected leaks are se-
+ Appendix ; this subsection now focuses on findings and
+                                                                                            mantic (Tier 3), our pipeline shares known “LLM judging
+ implications.
+                                                                                            LLM” risks: training-distribution bias, leniency toward self-
+   Results. Table 16 presents results from the multi-model                                  similar paraphrasings, and sensitivity to model version or
+benchmark evaluated across five LLMs (GPT-4o, GPT-4o-                                       prompt phrasing. We mitigate these through: (i) deterministic
+mini, Mistral Large 2411, Llama 3.3 70B Instruct, Claude 3.5                                Tier 1/2 anchors independent of any judge; (ii) threshold
+Sonnet) on the same CrewAI workflow with hybrid detection                                   τ = 0.72 calibrated on a 200-segment held-out set and vali-
+(Presidio NER + LLM-as-Judge).                                                              dated on 240 additional segments; (iii) inter-judge agreement
+   What the numbers show. Every model leaked PII through                                    κ = 0.82–0.87 across Qwen-2.5-7B, Llama-3.1-8B, and
+internal channels (C2–C5); no model family proved immune.                                   GPT-4o-mini; (iv) expert review confirming 94% accuracy
+All models sent sensitive data to external tools (C3) when                                  on 100 sampled leaks. Residual risks remain: calibration is
+the prompt suggested it; the privacy failure was baked into                                 English-only and the default judge yields FNR = 7.4%, so
+the workflow, not the model. Our hybrid detection caught                                    reported rates are conservative lower bounds.
+everything: pattern-matched identifiers and semantically-
+detected vault fields alike. The consistency across model                                   Channel Coverage and Evaluation Scope. AgentLeak
+families confirms the vulnerability is architectural, not model-                            instruments seven privacy-relevant channels (C1–C7). The
+specific.                                                                                   large-scale empirical analysis focuses on C1, C2, and C5
+
+
+16
+El Yagoubi et al.: AgentLeak
+
+
+
+
+(n = 4,979 paired traces); C3 and C6 are evaluated via             do not claim a complete quantitative evaluation of all seven
+targeted sampling (n = 100 per model); C4 and C7                   channels.
+are demonstrated through the SDK integration case study.              The gap, however, is not irreparable. A prototype sanitiza-
+This design quantifies the main internal-channel leakage           tion interceptor reduced internal leakage from 31.5% to 2.4%
+mechanism while preserving a framework extensible to full-         at the cost of a 4.7-point drop in task success, and our SDK
+channel evaluations.                                               integration with CrewAI confirmed that hybrid detection (Pre-
+                                                                   sidio NER combined with LLM Judge) catches every leaked
+E. FUTURE RESEARCH DIRECTIONS                                      item across all five model families in a production-grade
+Our findings open several research directions.                     setting. Closing this gap at scale will require framework-level
+   Privacy-Aware Coordination Protocols. Selective disclo-         changes: message sanitization on inter-agent links, field-level
+sure at the framework level (agents share minimum necessary        memory access controls, and full-channel auditing enabled
+context while protecting sensitive fields) is the critical near-   by default. As multi-agent deployments scale into production,
+term priority, with open questions around formally verifiable      integrating privacy-by-design at the framework level will be
+data-flow policies and dynamic workflow management.                essential to meet evolving regulatory requirements across
+   Differential Privacy and Secure Multi-Party Compu-              jurisdictions. We hope that the AgentLeak benchmark, dataset,
+tation (MPC). Differential privacy on inter-agent messages         and SDK, publicly available under an open-source license,
+and secure multi-party computation could enable coordination       will serve as a foundation for the community to develop and
+without exposing plaintext [38]–[40], though budget selec-         evaluate the next generation of privacy-preserving multi-agent
+tion, composition, and performance overhead remain open            architectures.
+challenges.
+                                                                   ARTIFACT AVAILABILITY
+   Multimodal and Automated Analysis. Extending to
+                                                                   The AgentLeak benchmark is publicly available under MIT
+vision, audio, and human-in-the-loop patterns, combined
+                                                                   license at https://github.com/Privatris/AgentLeak:
+with static/dynamic data flow analysis tools for continuous
+monitoring, would increase both production coverage and            Scenarios: 1,000 JSONL files with vault definitions, allowed
+proactive leakage detection.                                       sets, and ground-truth labels across four domains.
+                                                                   Detection: Three-tier pipeline (Presidio + LLM-as-Judge)
+   Adversarial Robustness. The 80% attack success rate
+                                                                   with calibrated thresholds (τ = 0.72).
+for coordination attacks (F4) motivates defenses specifically
+                                                                   Code & Integrations: Python evaluation scripts, SDK
+targeting inter-agent trust exploitation, absent in single-agent
+                                                                   adapters for LangChain, CrewAI, AutoGPT, MetaGPT with
+settings.
+                                                                   trace hooks.
+                                                                   Reproducibility: Pinned dependencies, fixed seeds (42),
+VIII. CONCLUSION                                                   environment setup guide, and raw trace logs from all 4,979
+This paper introduced AgentLeak, a benchmark for evaluating        executions.
+internal-channel privacy leakage in multi-agent LLM systems.       Requirements: Python 3.10+, model keys, 16 GB Random
+AgentLeak instruments seven privacy-relevant communica-            Access Memory (RAM). Full reproduction: ∼3,000 API calls
+tion pathways, with large-scale quantitative analysis focused      ($400–600).
+on final outputs (C1), inter-agent messages (C2), and shared
+memory (C5). AgentLeak does not merely benchmark whether           APPENDIX. REPRODUCIBILITY DETAILS
+agents leak sensitive data to users; it shows that privacy         Environment. Python 3.10.13; Ubuntu 22.04 or macOS 14;
+risk in multi-agent LLM systems is often hidden inside             CPU-only runs with 16GB RAM minimum. Random seeds
+coordination channels that conventional output-only audits         fixed at 42 for scenario sampling, prompt selection, and tool
+cannot observe. Through 4,979 execution traces spanning five       call ordering. Timeout: 60 seconds wall-clock per run (default
+production models and four sensitive domains (healthcare,          config).
+finance, legal, corporate), the results expose a consistent           Framework versions. LangChain v0.1.x, CrewAI v0.83.x,
+structural weakness: internal channels, namely inter-agent         AutoGPT v0.5.x, MetaGPT v0.8.x. Model endpoints are
+messages (C2) and shared memory (C5), carry 2.1× more              called through OpenRouter with temperature=0.7. The IEEE
+privacy violations than final outputs (57.8% vs 27.2%), with       benchmark script uses max_tokens=512 per call; the default
+inter-agent messages (C2) alone reaching 68.8%. This pattern       configuration permits up to 4,096.
+holds across every model and domain tested, meaning that              Trace formats. Two formats: (1) IEEE benchmark traces
+output-only audits miss 41.7% of actual violations. Safety-        stored as JSON in benchmarks/ieee_repro/results/
+aligned models such as Claude-3.5-Sonnet reduce leakage on         traces/, containing trace_id, scenario_id, timestamp,
+both external and internal channels, but no model eliminates it:   model, vertical, attack_family, input, llm_calls,
+in the evaluated coordinator-worker settings, the vulnerability    channel_messages, results, and metrics. (2) Event-
+is strongly shaped by architectural coordination channels          level JSONL samples in agentleak_data/examples/.
+rather than model-specific behavior. We note that this paper’s        Example trace event.
+large-scale empirical evaluation covers C1, C2, and C5; we
+                                                                                                                               17
+                                                        El Yagoubi et al.: AgentLeak: A Benchmark for Internal-Channel Privacy Leakage in Multi-Agent LLM Systems
+
+
+
+
+{"event_id":"trace_001_e3",                                                      [2] L. Wang et al., “A Survey on Large Language Model Based Autonomous
+ "scenario_id":"scenario_001",                                                       Agents,” Frontiers Comput. Sci., vol. 18, no. 6, pp. 186345, 2024, doi:
+ "timestamp":"2024-12-15T14:22:05.234Z",                                             10.1007/s11704-024-40231-1.
+ "event_type":"inter_agent_message",                                             [3] H. Li et al., “Personal LLM Agents: Insights and Survey about the
+ "source_agent":"primary_agent",                                                     Capability, Efficiency and Security,” arXiv preprint arXiv:2401.05459,
+ "dest_agent":"summarizer_agent",                                                    2025, doi: 10.48550/arXiv.2401.05459.
+ "message_content":"Patient P-2847-XYZ has...",                                  [4] E. Debenedetti et al., “AgentDojo: A Dynamic Environment to Evaluate
+ "vault_leakage":[{"field":"allergies",                                              Attacks and Defenses for LLM Agents,” arXiv preprint arXiv:2406.13352,
+   "channel":"C2","severity":"high"}]}                                               2024, doi: 10.48550/arXiv.2406.13352.
+                                                                                 [5] Y. Shao et al., “PrivacyLens: Evaluating Privacy Norm Awareness of
+   Prompts and configuration. Default runtime configuration                          Language Models in Action,” arXiv preprint arXiv:2409.00138, 2025, doi:
+is in agentleak/config/configs/default.yaml; judge                                   10.48550/arXiv.2409.00138.
+                                                                                 [6] B. Wang et al., “DecodingTrust: A Comprehensive Assessment of Trust-
+prompt templates are in agentleak/config/configs/                                    worthiness in GPT Models,” in Proc. 37th Conf. Neural Inf. Process. Syst.
+prompts/. The IEEE benchmark configuration and trace                                 (NeurIPS), 2023, doi: 10.48550/arXiv.2306.11698.
+capture logic are defined in benchmarks/ieee_repro/                              [7] L. Sun et al., “TrustLLM: Trustworthiness in Large Language Models,”
+                                                                                     arXiv preprint arXiv:2401.05561, 2024, doi: 10.48550/arXiv.2401.05561.
+benchmark.py.                                                                    [8] A. J. Biega et al., “Operationalizing the Legal Principle of Data Mini-
+   Exclusion policy. Runs are excluded if they hit timeout,                          mization for Personalization,” arXiv preprint arXiv:2005.13718, 2020, doi:
+raise framework-level execution errors, or fail schema valida-                       10.48550/arXiv.2005.13718.
+                                                                                 [9] H. Chase, “LangChain,” GitHub, 2023. [Online]. Available: https://github.
+tion. Exclusion rates are reported per protocol; excluded runs                       com/langchain-ai/langchain. [Accessed: Dec. 15, 2025].
+are not used in denominator calculations for leakage metrics.                   [10] J. Moura, “CrewAI: Framework for Orchestrating Role-Playing AI Agents,”
+   Judge robustness examples. False positives include                                GitHub, 2024. [Online]. Available: https://github.com/joaomdmoura/
+                                                                                     crewAI. [Accessed: Dec. 15, 2025].
+structured-but-benign identifiers (e.g., internal ticket IDs
+                                                                                [11] T. B. Richards et al., “AutoGPT: An Autonomous GPT-4 Experiment,”
+matching SSN regex). False negatives include paraphrased                             GitHub, 2023. [Online]. Available: https://github.com/Significant-Gravitas/
+medical facts that omit explicit diagnosis codes but preserve                        AutoGPT. [Accessed: Dec. 15, 2025].
+clinical meaning.                                                               [12] Q. Wu et al., “AutoGen: Enabling Next-Gen LLM Applications via
+                                                                                     Multi-Agent Conversation,” arXiv preprint arXiv:2308.08155, 2023, doi:
+                                                                                     10.48550/arXiv.2308.08155.
+APPENDIX. SDK SHOWCASE IMPLEMENTATION                                           [13] S. Hong et al., “MetaGPT: Meta Programming for A Multi-Agent
+DETAILS                                                                              Collaborative Framework,” arXiv preprint arXiv:2308.00352, 2024, doi:
+Application Architecture and Tests. We built a portfolio                             10.48550/arXiv.2308.00352.
+                                                                                [14] A. Zharmagambetov et al., “AgentDAM: Privacy Leakage Evaluation for
+management system with CrewAI v0.83+ using three agents                              Autonomous Web Agents,” arXiv preprint arXiv:2503.09780, 2025, doi:
+(Senior Research Analyst, Senior Financial Analyst, Invest-                          10.48550/arXiv.2503.09780.
+ment Advisor). Integration tests process sensitive client data                  [15] H. Nissenbaum, “Privacy as Contextual Integrity,” Washington Law
+                                                                                     Rev., vol. 79, no. 1, pp. 119–158, 2004. [Online]. Available: https://
+(IBAN, tax brackets, trade history) with real tool calls to                          digitalcommons.law.uw.edu/wlr/vol79/iss1/10
+market-data APIs and internal calculators.                                      [16] Y. Qiao et al., “Agent Tools Orchestration Leaks More: Dataset, Bench-
+   Vulnerability Design. The application contains inten-                             mark, and Mitigation,” arXiv preprint arXiv:2512.16310, 2025, doi:
+                                                                                     10.48550/arXiv.2512.16310.
+tional flaws: (1) client PII in task prompts for “personaliza-                  [17] T. Green, M. Gubri, H. Puerto, S. Yun, and S. J. Oh, “Leaky Thoughts:
+tion”; (2) full financial profiles passed between agents for                         Large Reasoning Models Are Not Private Thinkers,” in Proc. 2025 Conf.
+context; (3) a compliance check instructing agents to verify                         Empirical Methods Natural Language Process. (EMNLP), Suzhou, China,
+                                                                                     Nov. 2025, pp. 26507–26529, doi: 10.18653/v1/2025.emnlp-main.1347.
+IBAN integrity via the calculator tool.
+                                                                                [18] Lakera AI, “Lakera Guard: AI Security Platform,” 2024. [Online]. Available:
+   Benchmark Configuration. Five LLMs are queried via                                https://www.lakera.ai/. [Accessed: Dec. 15, 2025].
+OpenRouter (GPT-4o, GPT-4o-mini, Mistral Large 2411,                            [19] Meta AI, “Prompt Guard: A Prompt Injection Detection Model,” Hugging
+Llama 3.3 70B Instruct, Claude 3.5 Sonnet) on the same                               Face, 2024. [Online]. Available: https : / / huggingface . co / meta-llama /
+                                                                                     Prompt-Guard-86M. [Accessed: Dec. 15, 2025].
+workflow with HYBRID detection (Presidio NER + LLM-                             [20] T. Rebedea et al., “NeMo Guardrails: A Toolkit for Controllable and
+as-Judge semantics).                                                                 Safe LLM Applications with Programmable Rails,” arXiv preprint
+                                                                                     arXiv:2310.10501, 2023, doi: 10.48550/arXiv.2310.10501.
+                                                                                [21] H. Inan et al., “Llama Guard: LLM-based Input-Output Safeguard for
+ACKNOWLEDGMENT                                                                       Human-AI Conversations,” arXiv preprint arXiv:2312.06674, 2023, doi:
+AI-assisted editing disclosure: The authors used ChatGPT                             10.48550/arXiv.2312.06674.
+(OpenAI, GPT-4) and Claude 3.5 Sonnet (Anthropic) to assist                     [22] Y. Bai et al., “Constitutional AI: Harmlessness from AI Feedback,” arXiv
+                                                                                     preprint arXiv:2212.08073, 2022, doi: 10.48550/arXiv.2212.08073.
+with grammar and style edits across the manuscript (Abstract,                   [23] E. Bagdasarian et al., “AirGapAgent: Protecting Privacy-Conscious
+Introduction, Related Work, Problem Definition, Benchmark                            Conversational Agents,” arXiv preprint arXiv:2405.05175, 2024, doi:
+Design, Attack Taxonomy, Evaluation, Discussion, and Con-                            10.48550/arXiv.2405.05175.
+                                                                                [24] U.S. Dept. Health Human Services, “Health Insurance Portability and
+clusion). These systems were used only for language polishing                        Accountability Act of 1996 (HIPAA),” Public Law 104-191, Aug. 21, 1996.
+(clarity, grammar, and phrasing) and did not generate new                       [25] P. Voigt and A. von dem Bussche, The EU General Data Protection
+technical content, results, or claims.                                               Regulation (GDPR): A Practical Guide, 1st ed. Cham, Switzerland:
+                                                                                     Springer, 2017, doi: 10.1007/978-3-319-57959-7.
+                                                                                [26] Gouvernement du Québec, “Act respecting the protection of personal
+REFERENCES                                                                           information in the private sector (Law 25),” RLRQ, c. P-39.1, 2021.
+ [1] Z. Xi et al., “The Rise and Potential of Large Language Model              [27] D. Faraglia, “Faker: A Python package that generates fake data for
+     Based Agents: A Survey,” arXiv preprint arXiv:2309.07864, 2023, doi:            you,” GitHub, 2024. [Online]. Available: https://github.com/joke2k/faker.
+     10.48550/arXiv.2309.07864.                                                      [Accessed: Feb. 11, 2026].
+
+18
+El Yagoubi et al.: AgentLeak
+
+
+
+
+[28] J. R. Landis and G. G. Koch, “The Measurement of Observer Agreement
+     for Categorical Data,” Biometrics, vol. 33, no. 1, pp. 159–174, Mar. 1977,
+     doi: 10.2307/2529310.
+[29] N. Carlini et al., “Extracting Training Data from Large Language Mod-
+     els,” in Proc. 30th USENIX Security Symp., 2021, pp. 2633–2650, doi:
+     10.48550/arXiv.2012.07805. [Online]. Available: https://www.usenix.org/
+     conference/usenixsecurity21/presentation/carlini-extracting
+[30] N. Lukas et al., “Analyzing Leakage of Personally Identifiable Information
+     in Language Models,” in Proc. 44th IEEE Symp. Security Privacy (SP),
+     2023, pp. 346–363, doi: 10.1109/SP46215.2023.10179321.
+[31] E. Perez et al., “Red Teaming Language Models with Language Models,”
+     arXiv preprint arXiv:2202.03286, 2022, doi: 10.48550/arXiv.2202.03286.
+[32] X. Gu et al., “Agent Security Bench (ASB): Formalizing and Bench-
+     marking Attacks and Defenses in LLM-based Agents,” arXiv preprint
+     arXiv:2410.02644, 2025, doi: 10.48550/arXiv.2410.02644.
+[33] Y. Liu et al., “Prompt Injection Attack against LLM-Integrated
+     Applications,” arXiv preprint arXiv:2306.05499, 2024, doi:
+     10.48550/arXiv.2306.05499.
+[34] K. Greshake et al., “Not What You’ve Signed Up For: Compromising Real-
+     World LLM-Integrated Applications with Indirect Prompt Injection,” arXiv
+     preprint arXiv:2302.12173, 2023, doi: 10.48550/arXiv.2302.12173.
+[35] S. Schulhoff et al., “Ignore This Title and HackAPrompt: Exposing
+     Systemic Vulnerabilities of LLMs through a Global Scale Prompt
+     Hacking Competition,” arXiv preprint arXiv:2311.16119, 2024, doi:
+     10.48550/arXiv.2311.16119.
+[36] A. Zou et al., “Universal and Transferable Adversarial Attacks on
+     Aligned Language Models,” arXiv preprint arXiv:2307.15043, 2023, doi:
+     10.48550/arXiv.2307.15043.
+[37] Z. Chen et al., “AgentPoison: Red-Teaming LLM Agents via Poison-
+     ing Memory or Knowledge Bases,” in Proc. 38th Conf. Neural Inf.
+     Process. Syst. (NeurIPS), 2024, arXiv preprint arXiv:2407.12784, doi:
+     10.48550/arXiv.2407.12784.
+[38] D. Rathee et al., “MPC-Minimized Secure LLM Inference,” arXiv preprint
+     arXiv:2408.03561, 2024, doi: 10.48550/arXiv.2408.03561.
+[39] M. Fatima, “PrivacyMAS: A Privacy-Preserving Multi-Agent System
+     Framework,” in Workshop Scaling Environments Agents, 2025. [Online].
+     Available: https://openreview.net/forum?id=AfHTLlQvIk
+[40] J. Luo et al., “SecP-Tuning: Efficient Privacy-Preserving Prompt Tuning
+     for Large Language Models via MPC,” in Proc. 14th Int. Conf. Learning
+     Representations (ICLR), 2026. [Online]. Available: https://openreview.net/
+     forum?id=iJNM7KY8FD
+                               FAOUZI EL YAGOUBI is a Ph.D. candidate
+                               in Computer Engineering at Polytechnique Mon-
+                               tréal, Canada. He holds Master’s degrees from
+                               the University of Tours and École Centrale de
+                               Lyon, France. His research focuses on privacy and
+                               security in multi-agent LLM systems and privacy-
+                               preserving architectures for autonomous AI.
+
+
+
+                               GODWIN BADU-MARFO is a Postdoctoral Re-
+                               searcher in Computer Engineering at Polytechnique
+                               Montréal, Canada. He received his Ph.D. from
+                               Concordia University, Montréal. His research fo-
+                               cuses on privacy-preserving AI, secure multi-agent
+                               architectures, and benchmark-driven evaluation of
+                               model safety.
+
+
+
+                               RANWA AL MALLAH is an Associate Profes-
+                               sor in cybersecurity at Polytechnique Montréal,
+                               Canada. She received her Ph.D. in Computer En-
+                               gineering from Polytechnique Montréal in 2018.
+                               Her research focuses on secure and resilient AI for
+                               cyber-physical systems and critical infrastructure.
+                               Her work is published in top-ranked peer-reviewed
+                               venues.
+
+
+
+
+                                                                                     19
+

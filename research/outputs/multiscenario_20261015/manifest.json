@@ -1,0 +1,58 @@
+{
+  "calls_per_prefix": 4,
+  "canonical_branches": 480,
+  "canonical_policies": [
+    "baseline",
+    "information_guard",
+    "action_guard",
+    "adaptive_controller"
+  ],
+  "max_tokens": 1500,
+  "model": "openai/gpt-4.1-mini",
+  "new_calls_per_branch": 4,
+  "objectives": [
+    "cooperative",
+    "coalition"
+  ],
+  "prefixes": 120,
+  "scenarios": [
+    "procurement",
+    "review_trading",
+    "resource_allocation",
+    "typed_shared_artifact"
+  ],
+  "scheduled_actor_decisions": 2520,
+  "secondary_branches": 30,
+  "secondary_policy": {
+    "typed_shared_artifact": "unsafe_content_selector"
+  },
+  "splits": {
+    "discovery": [
+      6001,
+      6002,
+      6003,
+      6004,
+      6005
+    ],
+    "heldout": [
+      6101,
+      6102,
+      6103,
+      6104,
+      6105,
+      6106,
+      6107,
+      6108,
+      6109,
+      6110
+    ]
+  },
+  "status": "PREPARED_NO_LIVE_CALLS",
+  "temperature": 0.7,
+  "utility_scales": {
+    "procurement": 100.0,
+    "resource_allocation": 320.0,
+    "review_trading": 1.0,
+    "typed_shared_artifact": 24.0
+  }
+}

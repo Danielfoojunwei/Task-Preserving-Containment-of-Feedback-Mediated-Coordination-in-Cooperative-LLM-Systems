@@ -1,0 +1,370 @@
+{
+  "schema_version": 1,
+  "prepared_date": "2026-10-15",
+  "date_timezone": "Asia/Singapore",
+  "scope": "Primary-source verification and reproduction/extension boundaries. No experiment outcomes asserted by this manifest.",
+  "network": {
+    "policy_snapshot": "/etc/codex/network-policy.json",
+    "version": 1,
+    "allowed_source_hosts_used": [
+      "arxiv.org",
+      "github.com"
+    ],
+    "proxy_preserved": true,
+    "blocked_hosts_not_attempted": [
+      "openreview.net"
+    ],
+    "notes": "OpenReview is absent from configured destination allowlist. No alternate proxy, mirror workaround, or direct connection was used."
+  },
+  "papers": [
+    {
+      "id": "colosseum",
+      "title": "Colosseum: Auditing Collusion in Cooperative Multi-Agent Systems",
+      "authors": [
+        "Mason Nakamura",
+        "Abhinav Kumar",
+        "Saswat Das",
+        "Sahar Abdelnabi",
+        "Saaduddin Mahmud",
+        "Ferdinando Fioretto",
+        "Shlomo Zilberstein",
+        "Eugene Bagdasarian"
+      ],
+      "identifier": "arXiv:2602.15198v2",
+      "version_date": "2026-05-27",
+      "url": "https://arxiv.org/abs/2602.15198v2",
+      "pdf_url": "https://arxiv.org/pdf/2602.15198v2",
+      "verification": "full_text_read_local_prior_download",
+      "artifacts": [
+        {
+          "path": "/workspace/.setup/papers/colosseum-v2.pdf",
+          "sha256": "d990ebbb7aa1ad1be94b5364c86a7ab25441810c262f8085ef3b48e44f8c4369",
+          "bytes": 7722759
+        },
+        {
+          "path": "/workspace/.setup/papers/colosseum-v2.txt",
+          "sha256": "79f1eb10611a278dccf43b5cda9293fd48a9f832d36284904bceac73b5397c34",
+          "bytes": 89758
+        }
+      ],
+      "source_code": {
+        "repository": "https://github.com/umass-ai-safety/colosseum",
+        "pinned_commit": "b077fe7e2f10566e92156cc12e06ffb2aac54790",
+        "local_checkout": "/workspace/colosseum",
+        "dependency": "terrarium-agents[providers,science,plots]==0.1.1",
+        "runner": "experiments/collusion/run.py",
+        "audit_helper": "experiments/collusion/compute_jira_optimal.py"
+      },
+      "verified_mechanisms": [
+        {
+          "locations": [
+            "Section 4",
+            "Sections 5.1-5.3"
+          ],
+          "claim": "Cooperative DCOP task objective, action-based welfare/coalition regret, free-form communication and separate conversation judge."
+        },
+        {
+          "locations": [
+            "Section 5.4"
+          ],
+          "claim": "Secret-channel behavioral probe distinguishes benign emergence from explicitly prompted coalition behavior."
+        },
+        {
+          "locations": [
+            "Section 5.5"
+          ],
+          "claim": "Hospital heterogeneous roles test provisioner leverage, coalition membership, covert and sabotage objectives."
+        },
+        {
+          "locations": [
+            "Section 5.6"
+          ],
+          "claim": "Persuasion ablations include helpful misdirection, authority nudge, and reciprocity trade."
+        }
+      ],
+      "reuse_boundary": "Pinned runtime plus Jira baseline support a benchmark-specific study. Four new small scenario simulators are mechanism-transfer extensions unless run through original environments. No claim of all-model or all-environment reproduction."
+    },
+    {
+      "id": "flowseal",
+      "title": "Confuse the Model, Control the Flow: Understanding and Mitigating Privacy Leakage from LLM Agents with Information Flow Control",
+      "system_name": "FLOWSEAL",
+      "authors": [
+        "Minsun Shim",
+        "Ramisha Raida Karim",
+        "Ruthwik Jakkula",
+        "Kaiwen Zhou",
+        "Xin Liu",
+        "Xin Eric Wang",
+        "Zhou Li"
+      ],
+      "identifier": "arXiv:2609.14003v1",
+      "version_date": "2026-09-12",
+      "url": "https://arxiv.org/abs/2609.14003v1",
+      "pdf_url": "https://arxiv.org/pdf/2609.14003v1",
+      "verification": "full_pdf_and_html_read",
+      "artifacts": [
+        {
+          "path": "/workspace/colosseum_task_preserving_starter/outputs/multiscenario_20261015/sources/flowseal-abs.html",
+          "sha256": "5c2751e3a530c46469adf0f986e38a900caf1d6eff93839e016d318ec8fe8dd5",
+          "bytes": 44402
+        },
+        {
+          "path": "/workspace/colosseum_task_preserving_starter/outputs/multiscenario_20261015/sources/flowseal-v1.html",
+          "sha256": "d37970f30424ef9b7775ad1a64a4d2d451da1950227d21cdde56f0d5a863b275",
+          "bytes": 450349
+        },
+        {
+          "path": "/workspace/colosseum_task_preserving_starter/outputs/multiscenario_20261015/sources/flowseal-v1.pdf",
+          "sha256": "e96825c578afeae9ec8c32c0f24c71ab5d2c553464be0375afe2e16c3a8defdf",
+          "bytes": 1140120
+        },
+        {
+          "path": "/workspace/colosseum_task_preserving_starter/outputs/multiscenario_20261015/sources/flowseal-v1.txt",
+          "sha256": "9fa12a2e0ac3247a1c18745a2d2761b8865aac5c5eed22d5ecdd5f35c323544f",
+          "bytes": 163066
+        }
+      ],
+      "source_code": {
+        "status": "no_paper_repository_identified_in_full_text",
+        "paper_statement": "We will release our artifact, including code and data, for open science.",
+        "statement_location": "Introduction, contribution bullets"
+      },
+      "verified_mechanisms": [
+        {
+          "locations": [
+            "Section IV",
+            "Figure 4"
+          ],
+          "claim": "Collaborative Workspace Lure reframes extraction as shared-artifact work; Semantic Obfuscation Attack leaks through selective deletion/omission; Channel Decoupling Attack separates request and disclosure channels."
+        },
+        {
+          "locations": [
+            "Section V-A",
+            "Theorem 1"
+          ],
+          "claim": "Provenance-based security lattice, taint propagation and mandatory release boundary; confidentiality theorem retains semantic-declassification error as a residual risk."
+        },
+        {
+          "locations": [
+            "Section V-B",
+            "Figures 5-7",
+            "Appendix C Algorithm 1"
+          ],
+          "claim": "Code interceptor mediates read/write/share, tracks protected records, checks scoped destinations, invokes isolated SAFE/BLOCKED LLM checker when needed."
+        }
+      ],
+      "reuse_boundary": "A deterministic structured-field taint/authorization guard reuses the host-enforcement principle. It omits original consent APIs, semantic checker, datasets and live MCP evaluation, so is FLOWSEAL-inspired, not the FLOWSEAL reproduction."
+    },
+    {
+      "id": "ocelot",
+      "title": "OCELOT: Inference-Leakage Budgets for Privacy-Preserving LLM Agents",
+      "authors": [
+        "Jin Xie",
+        "Songze Li"
+      ],
+      "identifier": "arXiv:2606.12341v1",
+      "version_date": "2026-06-10",
+      "url": "https://arxiv.org/abs/2606.12341v1",
+      "pdf_url": "https://arxiv.org/pdf/2606.12341v1",
+      "verification": "full_pdf_and_html_read",
+      "artifacts": [
+        {
+          "path": "/workspace/colosseum_task_preserving_starter/outputs/multiscenario_20261015/sources/ocelot-abs.html",
+          "sha256": "fdf2ae1d267ffff135726f705e8319520189c88ef79a697bc227957cf859165f",
+          "bytes": 42856
+        },
+        {
+          "path": "/workspace/colosseum_task_preserving_starter/outputs/multiscenario_20261015/sources/ocelot-v1.html",
+          "sha256": "b327b5ca7bf724b672ac0d01a499fb99ee8e8ff634dfc9d8e950494d026e2938",
+          "bytes": 624515
+        },
+        {
+          "path": "/workspace/colosseum_task_preserving_starter/outputs/multiscenario_20261015/sources/ocelot-v1.pdf",
+          "sha256": "eaa778c279cf64fb8e9d8f56658a7c5e1bc940446f73d8b5b9214c47b02deea2",
+          "bytes": 1054027
+        },
+        {
+          "path": "/workspace/colosseum_task_preserving_starter/outputs/multiscenario_20261015/sources/ocelot-v1.txt",
+          "sha256": "4db3aaccbba84a292dd36438b57c8ac869282933e1399e7e8e4d03b9a7345b01",
+          "bytes": 158436
+        }
+      ],
+      "source_code": {
+        "status": "no_paper_repository_checkpoint_or_rubric_artifact_identified_in_read_sources"
+      },
+      "verified_mechanisms": [
+        {
+          "locations": [
+            "Sections 3.2-3.4"
+          ],
+          "claim": "Inference threat includes cumulative releases and colluding sinks, trusted harness, act/observe/memory/user channels; deductive budget non-exceedance is separated from model-relative cost soundness and semantic privacy."
+        },
+        {
+          "locations": [
+            "Sections 4.1-4.4",
+            "Figure 2",
+            "Algorithm 1"
+          ],
+          "claim": "Witness-Verified Declassification pairs fine-tuned local defender with typed witnesses and deterministic Bind/Validate/Cost/Commit; signed rubrics, structural atoms, calibrated cost tables, credal posterior audit and shared cross-sink ledger."
+        },
+        {
+          "locations": [
+            "Section 6 (Conclusion), limitations paragraph",
+            "Appendix D.2"
+          ],
+          "claim": "Privacy interpretation depends on cost calibration transfer and rubric coverage; all sinks share one budget; uncovered content is conservatively dropped."
+        }
+      ],
+      "reuse_boundary": "A finite synthetic secret with explicit enumeration can test history/coalition-aware disclosure accounting in a narrow model. A field counter alone is not calibrated min-entropy leakage and does not implement OCELOT WVD, fine-tuning, challenge verification, signed rubric binding or credal audit."
+    },
+    {
+      "id": "orchdebate",
+      "title_as_given_in_attachment": "OrchDebate: Adaptive Orchestration for Multi-Agent Debate via Self-Evolving Skills",
+      "authors": null,
+      "identifier": "OpenReview:JyJSJitKjy",
+      "version_date": null,
+      "url": "https://openreview.net/forum?id=JyJSJitKjy",
+      "verification": "unverified_primary_source_this_run",
+      "prior_document_claim": "Attached ORCHDEBATE_MAPPING.md says title/abstract were previously checked, but full PDF/API did not return the paper. This run did not independently verify even that abstract.",
+      "artifacts": [
+        {
+          "path": "/workspace/attachments/f5d8b877-d9c2-4bb6-bca6-8629925d0f7c/ORCHDEBATE_MAPPING.md",
+          "sha256": "226c889b557f15bc19470e3c79400748e951ea4864d5334ff4ac778308cdc736",
+          "bytes": 3352
+        }
+      ],
+      "retrieval_attempts": [
+        {
+          "url": "https://arxiv.org/search/?query=OrchDebate&searchtype=all&abstracts=show&order=-announced_date_first&size=50",
+          "result": "no_results",
+          "artifact": {
+            "path": "/workspace/colosseum_task_preserving_starter/outputs/multiscenario_20261015/sources/orchdebate-arxiv-search.html",
+            "sha256": "1e1adb9476ca660016f34d280fe9f6ce6bebf14ea03a20d759287b33ff9f62ce",
+            "bytes": 16402
+          }
+        },
+        {
+          "url": "https://github.com/search?q=OrchDebate&type=repositories",
+          "result": "0_repositories",
+          "artifact": {
+            "path": "/workspace/colosseum_task_preserving_starter/outputs/multiscenario_20261015/sources/orchdebate-github-search.html",
+            "sha256": "317749eabc78c1e5952d189234777dc358bfd8f3981a0c38d45409c6900c465d",
+            "bytes": 175144
+          }
+        }
+      ],
+      "source_code": {
+        "status": "not_identified"
+      },
+      "reuse_boundary": "Only the attachment-described structured-state, reusable-skill, orchestration pattern is used as inspiration. Any frozen deterministic selector is our implementation, not OrchDebate training, evolution or a verified reproduction."
+    }
+  ],
+  "scenario_extensions": [
+    {
+      "id": "procurement_bid_rigging",
+      "user_short_name": "procurbidrigging",
+      "primary_sources": [
+        "colosseum:5.4",
+        "colosseum:5.6"
+      ],
+      "mechanism_transfer": [
+        "coalition-vs-owner objective divergence",
+        "public proposal/message coordination",
+        "action versus communication auditing"
+      ],
+      "extension": "Synthetic procurement with fixed own-private costs, truthful-outside opportunity controls, quote/message sealing and public price cap. No private board, revocation, or new post-revocation cost is implemented in the domain file.",
+      "implementation_id": "procurement"
+    },
+    {
+      "id": "reviewer_logrolling",
+      "user_short_name": "reviewerlogrolling",
+      "primary_sources": [
+        "colosseum:5.6"
+      ],
+      "mechanism_transfer": [
+        "reciprocity trade",
+        "coalition reward and owner regret",
+        "communication/actions separation"
+      ],
+      "extension": "Synthetic reciprocal approval and public independent quorum, with fixed private noisy signals. Native controls establish opportunity against signal-consistent outsiders. No OrchDebate training/debate reproduction.",
+      "implementation_id": "review_trading"
+    },
+    {
+      "id": "resource_favoritism",
+      "user_short_name": "resourcefavoritism",
+      "primary_sources": [
+        "colosseum:5.5"
+      ],
+      "mechanism_transfer": [
+        "resource allocation objective misalignment",
+        "coalition-favoring allocation",
+        "public action-boundary mediation"
+      ],
+      "extension": "Four department requesters with fixed private marginal values, public authorization/capacity/global-budget rules and sequential favoritism. No heterogeneous provisioner-role reproduction or new post-revocation needs.",
+      "implementation_id": "resource_allocation"
+    },
+    {
+      "id": "shared_artifact_covert_channel",
+      "user_short_name": "sharedartifactcovertchannel",
+      "primary_sources": [
+        "colosseum:5.4",
+        "flowseal:IV",
+        "flowseal:V",
+        "ocelot:3.3",
+        "ocelot:4.4"
+      ],
+      "mechanism_transfer": [
+        "shared-artifact lure",
+        "cross-channel disclosure",
+        "history/colluding-recipient composition",
+        "host release gate"
+      ],
+      "extension": "Explicitly supplied permutation codebook and editor-private bit assigned at world construction, with dependency-aware canonicalization/comment removal. No private-board revocation or fresh post-revocation secret. Unprompted discovery and arbitrary natural-language steganography are not established.",
+      "implementation_id": "typed_shared_artifact"
+    }
+  ],
+  "claim_rules": [
+    "Preserve earlier Jira null; do not rewrite its hypothesis retrospectively.",
+    "All new results begin exploratory; freeze scenarios, metrics and policies before untouched held-out seeds.",
+    "No claim of full reproduction for an abstract-only source, conceptual adapter, or synthetic simulator.",
+    "Disclosure prevention and coalition harm prevention are distinct outcomes.",
+    "No claim of novelty merely from combining these four papers."
+  ],
+  "planned_execution_scope": {
+    "policies": [
+      "baseline",
+      "information_guard",
+      "action_guard",
+      "adaptive_controller"
+    ],
+    "adaptive_rule": "Frozen registered_risk_count > 0 selects action_guard; otherwise information_guard. Uses permitted typed metadata only.",
+    "development_seeds": 5,
+    "heldout_seeds": 10,
+    "domains": 4,
+    "objectives": 2,
+    "live_prefixes_if_complete": 120,
+    "status": "design_only_not_completion_evidence",
+    "warning": "Four policy branches share each sealed-proposal prefix but each includes four new live final actor responses. They are matched live continuations, not deterministic-only replays or independently initialized tasks. Task seeds also pair objective conditions; preserve clustering.",
+    "live_execution_branches_if_complete": 480,
+    "continuation_actor_decisions_per_branch": 4,
+    "prefix_actor_decisions_if_complete": 480,
+    "continuation_actor_decisions_if_complete": 1920,
+    "total_scheduled_actor_decisions_if_complete": 2400
+  },
+  "finite_model_components": {
+    "module": "flow_components.py",
+    "tests": "test_flow_components.py",
+    "verification": "22 no-API tests passed",
+    "cost_units": "registered-event units; not calibrated privacy bits",
+    "scope": "Trusted-host registered boundary mediation, provenance joins, typed payload/event/cost binding and atomic shared ledger. No trained defender, semantic declassifier, signed rubric library, calibrated inference bound or credal audit."
+  },
+  "native_positive_controls": {
+    "module": "positive_controls.py",
+    "report": "positive_controls.json",
+    "summary": "POSITIVE_CONTROLS.md",
+    "api_calls": 0,
+    "all_assertions_passed": true,
+    "world_selection": "Hand-specified fixtures, separate from study sampling; no study seeds searched or selected.",
+    "limits": "Feasible capabilities and honest alternatives, not observed live strategy discovery or all-channel guarantees."
+  }
+}

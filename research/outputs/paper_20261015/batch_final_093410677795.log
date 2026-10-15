@@ -1,0 +1,22 @@
+Traceback (most recent call last):
+  File "/workspace/colosseum_task_preserving_starter/outputs/paper_20261015/run_paper.py", line 135, in <module>
+    with (ROOT/f'analysis_{name}.log').open('w') as log:
+     ^^^^^^^^^^^^^^^^^^^
+  File "/workspace/.local/python/cpython-3.11.17-linux-x86_64-gnu/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/workspace/.local/python/cpython-3.11.17-linux-x86_64-gnu/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/.local/python/cpython-3.11.17-linux-x86_64-gnu/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/workspace/colosseum_task_preserving_starter/outputs/paper_20261015/run_paper.py", line 125, in main
+    STATE['stage']=name
+                        
+  File "/workspace/colosseum_task_preserving_starter/outputs/paper_20261015/run_paper.py", line 85, in freeze_comparator
+    result_path=RESULTS/c.key/'ka_result.json'
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/colosseum_task_preserving_starter/outputs/paper_20261015/run_paper.py", line 43, in validated_result
+    raise RuntimeError(f'Existing failed/incomplete episode: {path.name}')
+RuntimeError: Existing failed/incomplete episode: s3__cooperative__revoke0__peer_snapshot__fixed__development
