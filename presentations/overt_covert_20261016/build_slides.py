@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Render the local five-slide Markdown only; no study-data reads or APIs.
+"""Render local five-slide Markdown and linked PNGs; no study-data reads or APIs.
 
 This intentionally small renderer supports this deck's paragraphs, tables,
 links, emphasis, fenced code and ::: notes blocks. Browser print yields five
 landscape PDF pages. It does not supply or infer experimental results.
 """
+import base64
 import html
 from pathlib import Path
 import re
@@ -33,6 +34,15 @@ def blocks(text):
             out.append('<details class="notes"><summary>Speaker notes</summary>'
                        + blocks("\n".join(lines[i + 1:end])) + "</details>")
             i = end + 1
+        elif re.fullmatch(r"!\[([^\]]*)\]\(([^)]+)\)", line):
+            match = re.fullmatch(r"!\[([^\]]*)\]\(([^)]+)\)", line)
+            path = (HERE / match[2]).resolve()
+            if path.suffix.lower() != ".png" or not path.is_relative_to(HERE):
+                raise ValueError("Slides embed only PNG images inside their presentation directory")
+            encoded = base64.b64encode(path.read_bytes()).decode()
+            out.append('<img class="figure" alt="' + html.escape(match[1], quote=True)
+                       + '" src="data:image/png;base64,' + encoded + '">')
+            i += 1
         elif line.startswith("```"):
             end = next(j for j in range(i + 1, len(lines)) if lines[j].strip() == "```")
             out.append("<pre>" + html.escape("\n".join(lines[i + 1:end])) + "</pre>")
@@ -71,9 +81,9 @@ button{border:0;background:#163c5d;color:white;padding:8px 14px;border-radius:5p
 h1{font-size:30px;line-height:1.16;margin:0 0 20px;letter-spacing:-.025em}p{font-size:18px;line-height:1.4;margin:14px 0}strong{color:#123954}
 table{width:100%;border-collapse:collapse;margin:16px 0;font-size:16px;line-height:1.35}th{text-align:left;background:#e6f2f0;color:#123954}th,td{padding:10px 12px;border-bottom:1px solid #d4dfe5;vertical-align:top}td:first-child{font-weight:600}
 a{color:#087366;text-decoration:none}a:hover{text-decoration:underline}code{font-family:ui-monospace,monospace;font-size:.9em;background:#f0f4f6;padding:1px 4px}pre{white-space:pre-wrap;font-size:15px;line-height:1.5;background:#edf4f6;padding:12px 16px}
-.sources{font-size:12px;line-height:1.4;color:#526779;margin-top:18px}.reserved{border:1px dashed #b2c4cf;background:#f5f8fa;padding:16px;font-size:16px;color:#4a6173;margin:14px 0}.notes{font-size:14px;line-height:1.5;border-top:1px solid #d4dfe5;padding-top:10px;color:#526779}.notes summary{cursor:pointer}.notes p{font-size:14px}.footer{font-size:11px;color:#607989;display:flex;justify-content:space-between;margin-top:18px}
+.sources{font-size:12px;line-height:1.4;color:#526779;margin-top:18px}.reserved{border:1px dashed #b2c4cf;background:#f5f8fa;padding:16px;font-size:16px;color:#4a6173;margin:14px 0}.notes{font-size:14px;line-height:1.5;border-top:1px solid #d4dfe5;padding-top:10px;color:#526779}.notes summary{cursor:pointer}.notes p{font-size:14px}.footer{font-size:11px;color:#607989;display:flex;justify-content:space-between;margin-top:18px}.figure{display:block;width:100%;height:auto;max-height:255px;object-fit:contain}.results table{font-size:13px;margin:11px 0}.results th,.results td{padding:5px 9px}.results p{font-size:16px}.results h1{font-size:28px}
 @page{size:13.333in 7.5in;margin:0}
-@media print{html,body{background:white;margin:0}.toolbar,.notes{display:none}.slide{width:13.333in;height:7.5in;min-height:0;margin:0;padding:26px 36px 20px;box-shadow:none;break-after:page;overflow:hidden}.slide:last-child{break-after:auto}h1{font-size:27px;margin-bottom:14px}p{font-size:16px;line-height:1.34;margin:12px 0}table{font-size:14px;margin:12px 0}th,td{padding:8px 10px}.sources{font-size:10px;margin-top:14px}.reserved{padding:12px;font-size:14px;margin:12px 0}.footer{margin-top:14px;font-size:10px}pre{font-size:13px;padding:9px 12px}}
+@media print{html,body{background:white;margin:0}.toolbar,.notes{display:none}.slide{width:13.333in;height:7.5in;min-height:0;margin:0;padding:26px 36px 20px;box-shadow:none;break-after:page;overflow:hidden}.slide:last-child{break-after:auto}h1{font-size:27px;margin-bottom:14px}p{font-size:16px;line-height:1.34;margin:12px 0}table{font-size:14px;margin:12px 0}th,td{padding:8px 10px}.sources{font-size:10px;margin-top:14px}.reserved{padding:12px;font-size:14px;margin:12px 0}.footer{margin-top:14px;font-size:10px}pre{font-size:13px;padding:9px 12px}.results table{font-size:12px;margin:9px 0}.results th,.results td{padding:4px 8px}.results p{font-size:14px;margin:10px 0}.results .sources{font-size:10px}.results h1{font-size:25px}.figure{max-height:225px}}
 """
 
 
@@ -84,10 +94,11 @@ def build():
         raise ValueError("The deck must contain exactly slides 1–5 in order")
     sections = []
     for n, title, text in zip(pieces[1::3], pieces[2::3], pieces[3::3]):
-        sections.append('<section class="slide"><div class="kicker">Overt / covert agreement study · prospective skeleton</div>'
+        css = "slide results" if n == "4" else "slide"
+        sections.append('<section class="' + css + '"><div class="kicker">Overt / covert agreement study · main results released; continuations pending</div>'
                         + "<h1>" + inline(title) + "</h1>" + blocks(text)
                         + '<div class="footer"><span>16 October 2026 · Pre-sprint work · AI-assisted notes</span><span>' + n + " / 5</span></div></section>")
-    document = '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Reciprocal approval and bounded payment — five slides</title><style>' + STYLE + '</style><body><div class="toolbar"><span>Source-only skeleton. Results await explicit release. Expand speaker notes for evidence boundaries.</span><button onclick="window.print()">Print five-page PDF</button></div>' + "\n".join(sections) + "</body></html>\n"
+    document = '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Reciprocal approval and bounded payment — five slides</title><style>' + STYLE + '</style><body><div class="toolbar"><span>Released main results only. Continuation and secondary execution findings remain pending. Expand notes for evidence boundaries.</span><button onclick="window.print()">Print five-page PDF</button></div>' + "\n".join(sections) + "</body></html>\n"
     target = HERE / "index.html"
     target.write_text(document)
     return target

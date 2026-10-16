@@ -1,14 +1,14 @@
 # Reciprocal approval, accepted concealment and bounded payment
 
 Exactly five slides · 16 October 2026 · AI-assisted research notes.
-**Prospective skeleton: current-study results have not been opened.**
+**Released main results; secondary execution and live continuation results remain pending.**
 All work predates the 23–25 October Apart sprint and must be disclosed as prior work.
 
 ## Slide 1 — The gap is an evidence chain, not a new privacy principle
 
 **When do reciprocal reviewers agree to harm, conceal that agreement, and retain its financial benefit?**
 
-| Established controlled research | What this study still needs to demonstrate |
+| Established controlled research | Distinct evidence this study measures |
 |---|---|
 | SALT: reciprocal verification; memory, feedback and reward ablations | Agent-originated prohibited terms where lawful review remains feasible |
 | Voluntary Collusion: record access × stated disclosure consequence | Accepted concealment linked to a live auditor and actual score deductions |
@@ -51,7 +51,7 @@ Sources: [frozen protocol](../../research/outputs/overt_covert_relaunch_20261016
 
 ## Slide 3 — Fixed units, separate evidence layers and explicit uncertainty
 
-**Planned main design:** 20 matched blocks × 8 factorial conditions × 4 rounds = 160 worlds. Four actor controls and 48 scripted monitor challenges bring the maximum to **6,608 calls**; this is a plan, not a completion claim.
+**Completed main:** 20 matched blocks × 8 conditions × 4 rounds = 160 worlds, plus four actor controls and 48 scripted monitor challenges. **6,608 unique calls; US$25.8435684 provider-reported cost.** Bound raw reconstruction and the independent primary check pass.
 
 | Primary endpoint or contrast | Frozen interpretation |
 |---|---|
@@ -61,56 +61,56 @@ Sources: [frozen protocol](../../research/outputs/overt_covert_relaunch_20261016
 
 **Evidence:** specific prohibited reciprocal proposal → actual delivery → other-actor acceptance → resolved terms. Concealment needs separately accepted hiding terms or an invented code. P1 and P2 can both be true; neither proves execution.
 
-All 80 notes-on worlds receive two independent assistant-context reviews of all four pre-action prefixes; disagreements receive a third review. Seal before numerical joining. Null labels remain unknown; affected label tests are withheld. Exact matched-block tests use **Holm4**; bootstrap intervals are descriptive.
+All 80 notes-on worlds received two independent assistant-context reviews of all four pre-action prefixes; disagreements received a third review. Labels were sealed before numerical joining. Nulls remain unknown. Exact matched-block tests use **Holm4**; bootstrap intervals are descriptive.
 
 ::: notes
 Assigned-pact and lawful controls test the harness, not independent emergence; scripted challenges do not calibrate population detector error. Positive labels require literal/source checks. Prior authored reports may reveal outcomes or treatment despite metadata redaction. Reviewers share model limitations and are not independent human ground truth. Actors are separately instantiated GPT-4.1 contexts; operational auditor and research annotator are GPT-4.1 mini. This is one model family, short horizons and synthetic engineered incentives. Local freezes are not external public preregistration. Malformed, refusing and negative cases remain in denominators; rounds and calls are not independent replicates. Unclear-label placeholders preserve the four-test family. The factorial does not make an interaction a primary exact test.
 :::
 
-Sources: [frozen rubric and review combination](../../research/outputs/overt_covert_relaunch_20261016/EVIDENCE_RUBRIC.md) · [frozen analysis plan](../../research/outputs/overt_covert_relaunch_20261016/ANALYSIS_PLAN.md).
+Sources: [frozen rubric](../../research/outputs/overt_covert_relaunch_20261016/EVIDENCE_RUBRIC.md) · [analysis plan](../../research/outputs/overt_covert_relaunch_20261016/ANALYSIS_PLAN.md) · [bound raw audit](../../research/outputs/overt_covert_relaunch_20261016/independent/final/INDEPENDENT_VERIFICATION_ALL.json) · [independent primary check](../../research/outputs/overt_covert_relaunch_20261016/independent/primary/INDEPENDENT_PRIMARY_VERIFICATION.json).
 
-## Slide 4 — Reserved: actual results after review sealing and numerical release
+## Slide 4 — No confirmed concealment; withholding peer text increased retained gain
 
-**No current-study result values or significance claims are included in this skeleton.**
+**P1: 0 confirmed / 80 reviewed, with 1 unclear** (full audit, fine 0). No endogenous covert agreement is established. The assigned-covert control is host supplied.
 
-| Frozen contrast | Mean Δ / identification bounds | Exact p | Holm4 p | Interpretation |
-|---|---|---|---|---|
-| Fine effect on P1 | Pending release | Pending | Pending | Pending |
-| Fine effect on P2 | Pending release | Pending | Pending | Pending |
-| Auditor-view effect on M | Pending release | Pending | Pending | Pending |
-| Peer-note effect on M | Pending release | Pending | Pending | Pending |
+| Primary contrast | Mean Δ | Descriptive 95% interval | Exact p | Holm4 p |
+|---|---:|---|---:|---:|
+| Fine 12 − 0 on accepted concealment P1 | 0 | [0, 0] | 1 | 1 |
+| Fine 12 − 0 on disclosed harmful pact P2 | −.1000 | [−.3000, .1000] | .625 | 1 |
+| Full − public audit on M; notes on, fine 12 | 0 | [0, 0] | 1 | 1 |
+| Notes on − off on M; public audit, fine 12 | **−.2653** | [−.4021, −.1360] | **.00390625** | **.015625** |
 
-> Reserved figure: four primary contrasts with descriptive intervals; show withheld tests and unresolved-label bounds explicitly.
+All arms below have **20 worlds / 80 rounds**. P1 T/U = true / unknown; P2 = true out of 20. M averages rounds 2–4; owner loss totals all four rounds. Notes-off text labels are structurally N/A.
 
-> Reserved eight-arm decomposition: P1/P2 true–false–unknown; pre/post-fine benefit; owner loss; audit validity and fines; unsupported attempts; receipt coverage; sorting.
-
-**Interpretation check:** lower post-fine gain may reflect fees with unchanged payment harm. Private notes are not accepted concealment; accepted concealment is not successful evasion.
-
-::: notes
-Fill only after the coordinator releases the sealed review and independent raw/numerical checks. Preserve original reviews, third-review resolutions, source hashes and actual blinding/exposure limitations. Report complete planned denominators, actual call/cost totals and infrastructure status. Do not substitute an automatic judge or auditor verdict for a missing delivered acceptance. Outcomes and examples must not change primary labels. Compare audit error only at a matching review unit, with invalid judgments separate.
-:::
-
-Source contract: [frozen endpoint, unknown-label and decomposition rules](../../research/outputs/overt_covert_relaunch_20261016/ANALYSIS_PLAN.md).
-
-## Slide 5 — Reserved: what changes behavior, what contains payment, and why
-
-**Unified finding: pending the complete evidence chain. No witness or favorable continuation has been selected.**
-
-Prospective separate continuation: all 20 precommitted notes-on/public-audit/fine-12 source states at round 2; two fresh cases per branch. No selection by agreement, concealment, profit or task score.
-
-| Branch | Future peer notes | Actor interaction context | Payment rule |
-|---|---|---|---|
-| Unchanged | Delivered | Retained | Baseline |
-| Future notes off | Withheld | Retained | Baseline |
-| Prior context removed | Withheld | Removed bundle; own cumulative score retained | Baseline |
-| Disclosed receipt gate | Delivered | Retained | `min(claim, approval, receipt)` |
-
-> Reserved comparison/witness: matched owner harm, pre/post-fine gain, valid payments and sorting; literal proposal → delivered acceptance → public account → actual actions → monitor → payments.
-
-**Boundaries:** context removal does not isolate private memory. The auditor retains old public history. A disclosed gate changes enforcement and knowledge together. Its arithmetic guarantee bounds excess on this payment path; it does not ensure full reimbursement, perfect sorting or the end of agreement.
+| Notes | Audit | Fine | P1 T/U | P2 | Mean M | Owner loss |
+|---|---|---:|---|---:|---:|---:|
+| on | public | 0 | 0 / 0 | 3 | 0.0523 | 75 |
+| on | public | 12 | 0 / 0 | 1 | 0.0000 | 18.75 |
+| on | full | 0 | 0 / 1 | 1 | 0.0688 | 57 |
+| on | full | 12 | 0 / 0 | 0 | 0.0000 | 0 |
+| off | public | 0 | N/A | N/A | 0.2794 | 409.5 |
+| off | public | 12 | N/A | N/A | 0.2653 | 424.5 |
+| off | full | 0 | N/A | N/A | 0.2998 | 369 |
+| off | full | 12 | N/A | N/A | 0.1573 | 244.5 |
 
 ::: notes
-These are separately frozen descriptive continuations, conditional on the launch/release and budget requirements, not a completed experiment or an added primary family. If unrun or incomplete, say so and make no complete-cohort defense claim. Inherited terms are not fresh formation. Compare all sources before selecting witnesses. Distinguish active agreement, executed common-account concealment, valid operational evasion, bilateral post-fine profit and owner harm. Report nulls, partial compliance and disagreements. No general root cause, universal defense, cheapest restriction or cross-provider prevalence follows. Correct immutable receipts and complete payment mediation are assumptions. All results and code predate the sprint; team authors must verify these AI-assisted notes and supply their own submission prose, affiliations and required ethical/dual-use appendix.
+Only the peer-text contrast passes Holm4. The fine comparison's P1 labels are all clear zeros in both relevant arms; the single unclear label is in another arm and remains in the full cohort's identification bounds of 0 to 1 out of 80. P2 is 1/20 with fine 12 versus 3/20 with fine 0 under delivered notes and public audit. The full-view contrast's zero difference is not proof that auditor access never matters. The factorial is complete, but no interaction is an exact tested primary. All numerical totals are synthetic. Parallel harmful behavior in notes-off worlds is not a delivered text pact or established tacit collusion. Fine incidence and all-round totals do not replace the frozen M endpoint.
 :::
 
-Sources: [prospective continuation protocol](../../research/outputs/overt_covert_continuations_20261016/PROTOCOL.md) · [secondary execution boundaries](../../research/outputs/overt_covert_release_20261016/SECONDARY_EXECUTION_REVIEW.md).
+Sources: [released analysis](../../research/outputs/overt_covert_relaunch_20261016/ANALYSIS.json) · [four-test figure](../../research/outputs/overt_covert_release_20261016/figures/primary_effects.png) · [incidence figure](../../research/outputs/overt_covert_release_20261016/figures/formation_incidence.png) · [sealed reviews](../../research/outputs/overt_covert_relaunch_20261016/manual_reviews/SEALED_PRIMARY_REVIEWS.json).
+
+## Slide 5 — Peer text reduced gain; receipt checks bound a separate outcome
+
+**Under report-only audit and a real fine, delivered peer text reduced retained mutual benefit. Accepted concealment remains unconfirmed.** This is a narrow treatment result, not a general theory of why agents cooperate or conceal.
+
+![Delivered versus withheld peer text under public audit and fine 12](main_note_delivery.png)
+
+**Bounded payment check:** replaying the same recorded actions with `min(claim, approval, receipt)` yields zero excess and preserves their valid component. This is an offline calculation, not evidence of adaptive behavior or guaranteed full reimbursement. Actual receipt coverage was slightly below 100% in two arms; sorting was 265–278 correct actions out of 320 per arm.
+
+> **Continuation / secondary witnesses pending.** All 20 precommitted round-2 source states enter four separately frozen branches: unchanged, future notes withheld, prior context removed with future notes withheld, and a disclosed receipt gate. No continuation result or executed-covert witness is asserted here.
+
+::: notes
+The supported contrast concerns post-fine normalized mutual benefit, while the owner-loss comparison in this figure is descriptive over all four rounds. Fines go to an external regulator and do not reimburse the owner. Communication may support restraint or rejection as well as harmful bargaining; the treatment effect does not identify a unique cognitive mechanism. Full-note auditor access and its truthful announcement change together. Context removal is an interaction-history bundle, retains the own-score scalar and leaves the auditor's old public history intact; it is not an isolated private-memory test. The disclosed gate changes knowledge and enforcement together, whereas same-action replay isolates the arithmetic rule. Correct immutable receipts and complete payment mediation are assumptions. Do not treat host-assigned concealment as emergence or inherited terms as new formation. Add continuation outcomes and literal execution witnesses only after their separate complete-cohort checks and release; distinguish active agreement, concealment execution, valid operational evasion and post-fine retained benefit. No universal defense, cheapest intervention or cross-provider prevalence follows. Team authors must verify the notes and supply their own submission prose and required ethics/dual-use appendix. All work predates the sprint.
+:::
+
+Sources: [recorded-action replay](../../research/outputs/overt_covert_release_20261016/evidence_replay.html) · [main harm, benefit and fines](../../research/outputs/overt_covert_release_20261016/figures/harm_and_benefit.png) · [prospective continuation protocol](../../research/outputs/overt_covert_continuations_20261016/PROTOCOL.md) · [secondary execution boundaries](../../research/outputs/overt_covert_release_20261016/SECONDARY_EXECUTION_REVIEW.md).
