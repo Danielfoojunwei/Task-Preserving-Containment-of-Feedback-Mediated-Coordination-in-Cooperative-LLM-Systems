@@ -1,0 +1,7 @@
+# Completed all-source continuation cohort
+
+All20 prospectively selected main histories were branched into four conditions at their exact round-2 states; no source was selected by agreement or outcome. The cohort was frozen at07:33UTC and committed before its first call. All1,600 requests,80 jobs and160 fresh rounds completed. Raw verification and pre/post-audit source bindings PASS; additional API costUS$7.5000316. The verifier separately reconstructed400 original source calls.
+
+[Protocol](PROTOCOL.md) · [Freeze](FREEZE.json) · [Complete descriptive analysis](ANALYSIS.json) · [Raw audit](independent/final/INDEPENDENT_VERIFICATION.json) · [Source bindings](independent/final/SOURCE_BINDINGS.json) · [Integrated report](../overt_covert_release_20261016/REPORT.md).
+
+Unchanged, future-notes-off and disclosed-gate branches each had zero excess payments. Removing the prior actor interaction-context bundle produced231 gross excess units and173.25 net owner loss across14 of20 sources. Full receipt coverage remained in every branch, while sorting differed. The reset removed notes, private memory, own histories and numerical feedback together; it does not isolate private memory. One reset-branch auditor output was invalid/unknown and applied no fine. Comparisons are descriptive, with no new p-value family. The gate-versus-unchanged contrast has a zero-loss floor; prior harmful-cohort live defense and the pointwise gate certificate are separate evidence. This is not a cohort of20 established covert coalitions.

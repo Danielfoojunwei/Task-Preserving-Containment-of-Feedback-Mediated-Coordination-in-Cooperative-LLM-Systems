@@ -2,6 +2,7 @@
 from copy import deepcopy
 import importlib.util
 import json
+from os.path import relpath
 from pathlib import Path
 import tempfile
 import unittest
@@ -175,7 +176,10 @@ class FullSyntheticSources(unittest.TestCase):
         for n in range(1,81):
             review_id=f"world_{n:03}";_,_,review=self.completed_review(review_id)
             dump(self.release/"secondary_reviews"/s.assignment(review_id)/(review_id+".json"),review)
-        result=s.merge(self.sources,self.release,witness_ids=["world_001"])
+        # CLI users can supply a relative alternate review directory.
+        result=s.merge(self.sources,self.release,
+            review_directory=Path(relpath(self.release/"secondary_reviews")),
+            witness_ids=["world_001"])
         self.assertEqual((result["reviewed_worlds"],result["reviewed_rounds"]),(80,320))
         self.assertFalse(result["primary_labels_changed"])
         covert=result["summary"]["classifications"][s.TIERS[1]]

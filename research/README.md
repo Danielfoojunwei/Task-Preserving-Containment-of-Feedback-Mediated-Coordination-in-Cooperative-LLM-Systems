@@ -1,5 +1,17 @@
 # Research implementation and frozen evidence
 
+## Completed consequential-oversight extension — 16 October 2026
+
+The consequential-oversight extension is complete: **6,608 main/control calls + 1,600 continuation calls**, using GPT-4.1 actors and GPT-4.1 mini auditors/annotators. Raw audits, archived source bindings and independent primary reconstruction pass. The new extension accounted for **US$33.4256496**, including the separately retained transport halt and neutral diagnostic. These are API dollars, not simulated payment units.
+
+The measured result is a counterexample to blanket communication blocking: under public-report monitoring and fines, withholding peer notes increased normalized retained bilateral benefit over rounds 2–4 (20 matched blocks; exact p=0.00390625; Holm across four tests=0.015625). The other three fixed tests did not reject. Whole-round review confirmed **5 overt harmful-agreement worlds / 80 messaging worlds, 12 executed overt rounds / 320**; accepted agent-originated concealment was **0 confirmed, 1 unclear**. A host-instructed hidden positive control is kept separate from endogenous formation.
+
+All 20 prospectively selected round-2 histories were continued into four branches. Stopping future notes while retaining context preserved zero excess payments. Removing the prior interaction-context bundle produced excess in **14/20 sources**, with **173.25** total net owner-loss units; this is a descriptive matched continuation result, not an isolated private-memory finding. The disclosed gate and unchanged branches both had zero loss, so this cohort adds no measured live gate benefit. Earlier harmful-cohort defense and the pointwise receipt-cap certificate remain separate evidence.
+
+The connected insight is that **future messages, retained interaction context, agreement evidence and payment authority are different intervention targets**. Language monitors can penalize lawful bargains, and absence of a detected pact does not establish payment safety. No independent covert-formation success, action-carried code, field-first general theorem or deployed incident is claimed. All studies predate the 23–25 October sprint.
+
+[Integrated report, source-linked findings and limits](outputs/overt_covert_release_20261016/REPORT.md) · [Five-slide explanation](../presentations/overt_covert_20261016/SLIDES.md)
+
 This directory imports the complete local research overlay and its studies. `IMPORT_MANIFEST.json` records source-byte hashes and the eight pilot-result links relocated to work after cloning. Venvs, caches, runtime locks and PID files are excluded. The original development README is retained unchanged in [BUILD_README.md](BUILD_README.md); its early “no live results” statements are historical.
 
 Current findings and limits are in the [contribution ledger](../docs/RESEARCH_CONTRIBUTIONS.md), [main manuscript](outputs/controlplane_20261015/PAPER_CONTROLPLANE.md), [earlier extension](outputs/multiscenario_20261015/PAPER_EXTENSION.md) and [corrected Jira report](outputs/revision_20261015/REVISED_EXPERIMENT_REPORT.md). Original nulls, malformed responses, failed compatibility requests and prospective source freezes are retained.

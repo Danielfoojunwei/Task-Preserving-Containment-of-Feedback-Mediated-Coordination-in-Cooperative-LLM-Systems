@@ -1,10 +1,31 @@
 # Apart AI Collusion Research Sprint — alignment and readiness
 
-Updated 15 October 2026 using the Overview, detailed Resources, Guidelines and FAQ pasted by the user. Direct website retrieval was blocked; the supplied text is the source of the organizer requirements below. These are AI-assisted review notes, not the team's submission report.
+Updated 16 October 2026 using the Overview, detailed Resources, Guidelines and FAQ pasted by the user. Direct website retrieval was blocked; the supplied text is the source of the organizer requirements below. These are AI-assisted review notes, not the team's submission report.
 
-**Research positioning: aligned with Track 3, Q3.1. Submission: not yet ready.**
+**Current research positioning: Track 3, Q3.4, adaptation to monitoring. Submission: not yet ready.**
 
-## One primary research question
+The current [prospectively frozen study](../research/outputs/overt_covert_relaunch_20261016/PROTOCOL.md)
+asks whether consequential oversight changes agent-originated agreements,
+accepted concealment and harmful payment in a repeated non-market peer-review
+task. It crosses actual peer-note delivery, actual auditor access and a realized
+simulator fine, with truthful notices. This is anchored in Q3.4; Q2.1 provides
+the non-market setting and Q2.3 provides the evidence standard. The study and its all-source continuations are complete. The fixed communication
+contrast rejected after Holm correction; the concealment and public-disclosure
+contrasts did not. See the [integrated results](../research/outputs/overt_covert_release_20261016/REPORT.md). The
+[source review and contribution boundary](../research/outputs/overt_covert_mechanisms_20261016/BACKGROUND_AND_NOVELTY.md)
+distinguishes this extension from existing monitoring and secret-alliance assays.
+
+The completed all-source continuations test future communication, prior interaction
+context and trusted receipt enforcement. Their comparisons are descriptive and
+concern the specified bundles in this workflow. They do not establish an action-only carrier,
+a uniquely isolated memory mechanism, or the globally cheapest restriction.
+
+The earlier carrier and metadata work remains relevant to Q3.1 and is preserved
+below as historical positioning. It is not a substitute for evidence of an
+independently negotiated covert agreement. All work to date precedes the
+23–25 October event and must be disclosed as prior work.
+
+## Earlier carrier-study question
 
 Track 3, Collusion Carriers and Countermeasures, Q3.1 asks: “Beyond colluding directly via text, can actions, tools or side channels be the conduit for collusion?”
 

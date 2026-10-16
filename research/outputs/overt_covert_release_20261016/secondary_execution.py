@@ -344,7 +344,7 @@ def summarize_worlds(worlds):
 
 def merge(sources,release_root,review_directory=None,witness_ids=()):
     release_root=Path(release_root).resolve()
-    review_directory=Path(review_directory) if review_directory else release_root/"secondary_reviews"
+    review_directory=Path(review_directory).resolve() if review_directory else release_root/"secondary_reviews"
     expected={review_directory/assignment(f"world_{n:03}")/f"world_{n:03}.json" for n in range(1,81)}
     actual=set(review_directory.glob("*/world_*.json"))
     if actual!=expected:raise ValueError("all eighty assigned per-world reviews are required; no missing, duplicate or extra IDs")

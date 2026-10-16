@@ -1,10 +1,22 @@
 # Research findings and contribution ledger
 
+## Completed consequential-oversight extension — 16 October 2026
+
+The consequential-oversight extension is complete: **6,608 main/control calls + 1,600 continuation calls**, using GPT-4.1 actors and GPT-4.1 mini auditors/annotators. Raw audits, archived source bindings and independent primary reconstruction pass. The new extension accounted for **US$33.4256496**, including the separately retained transport halt and neutral diagnostic. These are API dollars, not simulated payment units.
+
+The measured result is a counterexample to blanket communication blocking: under public-report monitoring and fines, withholding peer notes increased normalized retained bilateral benefit over rounds 2–4 (20 matched blocks; exact p=0.00390625; Holm across four tests=0.015625). The other three fixed tests did not reject. Whole-round review confirmed **5 overt harmful-agreement worlds / 80 messaging worlds, 12 executed overt rounds / 320**; accepted agent-originated concealment was **0 confirmed, 1 unclear**. A host-instructed hidden positive control is kept separate from endogenous formation.
+
+All 20 prospectively selected round-2 histories were continued into four branches. Stopping future notes while retaining context preserved zero excess payments. Removing the prior interaction-context bundle produced excess in **14/20 sources**, with **173.25** total net owner-loss units; this is a descriptive matched continuation result, not an isolated private-memory finding. The disclosed gate and unchanged branches both had zero loss, so this cohort adds no measured live gate benefit. Earlier harmful-cohort defense and the pointwise receipt-cap certificate remain separate evidence.
+
+The connected insight is that **future messages, retained interaction context, agreement evidence and payment authority are different intervention targets**. Language monitors can penalize lawful bargains, and absence of a detected pact does not establish payment safety. No independent covert-formation success, action-carried code, field-first general theorem or deployed incident is claimed. All studies predate the 23–25 October sprint.
+
+[Integrated report, source-linked findings and limits](../research/outputs/overt_covert_release_20261016/REPORT.md) · [Five-slide explanation](../presentations/overt_covert_20261016/SLIDES.md)
+
 Prepared 15 October and updated 16 October 2026 from completed studies and their interpretation audits. These are AI-assisted synthesis/review notes, not the team's submission report. “Our contribution” means original measurements, comparisons and artifacts from this project. It does not mean first-ever discovery of each mechanism. The retained targeted prior-art review found direct precedents for implicit channels, XOR composition, noninterference and coalition auditing; publication-level novelty remains unestablished.
 
-## Central finding after held-out validation
+## Separate historical finding after held-out metadata validation
 
-The presentation now centers one empirical result: **actual information and the security announcement independently affect receiver behavior**. Twenty fresh worlds and 1,320 new calls confirmed joint-metadata decoding against four ablations (all Holm-adjusted p<.004). The crossed announcement test showed 0/80 bets with an informative view described as uninformative, and 23/80 bets with a target-independent view described as informative. A behavioral success alone therefore did not identify whether the channel was closed. This is a measured synthetic result, not a new XOR theorem or a general collusion detector.
+The earlier metadata presentation centers one empirical result: **actual information and the security announcement independently affect receiver behavior**. Twenty fresh worlds and 1,320 new calls confirmed joint-metadata decoding against four ablations (all Holm-adjusted p<.004). The crossed announcement test showed 0/80 bets with an informative view described as uninformative, and 23/80 bets with a target-independent view described as informative. A behavioral success alone therefore did not identify whether the channel was closed. This is a measured synthetic result, not a new XOR theorem or a general collusion detector.
 
 See the [unified finding, exact results, error diagnostics and limitations](UNIFIED_RESEARCH_FINDING.md). Earlier findings below remain in the record as separate results; they are not one shared causal mechanism. The validation protocol was frozen before its own calls, after the earlier outcomes were known.
 

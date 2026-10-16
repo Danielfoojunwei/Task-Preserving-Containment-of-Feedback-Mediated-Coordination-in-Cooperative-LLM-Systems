@@ -1,5 +1,7 @@
 # How reciprocal review produced overt pacts, and what remains unknown about concealment
 
+**Current completed extension:** the original infrastructure halt below was retained; the separate relaunch and all-source continuations are now complete. See the [integrated16October working report](../overt_covert_release_20261016/REPORT.md) for8,208 completed main/control/continuation calls, the corrected communication-blocking reversal, zero confirmed endogenous concealment with one unresolved case, and the context-reset result. The earlier observations and identifying limits below remain historical evidence; they are not rewritten as prospective predictions.
+
 16 October 2026, Singapore. Integrated research interpretation of completed
 evidence at commit `5d9be963`, followed by the status and purpose of a separate
 prospective study. This document does not change a frozen protocol or label.
@@ -17,6 +19,16 @@ That finding is narrower than a general root cause of collusion. We can explain
 the economic opportunity exactly, show literal agreement and execution, and
 identify where an enforcement rule cuts the consequence. Explaining why a model
 formed or concealed a pact still requires the relevant randomized comparison.
+
+![Previously released evidence: review behavior, continued loss after new notes stop, and continued unsupported actions under the receipt cap](figures/prior_mechanism_evidence.png)
+
+Own maximum claims were already universal in the fresh supplement; peer review
+behavior differed. After saved histories, removing future text left loss
+unchanged, while trusted receipt enforcement bounded payment despite continued
+unsupported actions. Counts are nested in eight worlds per arm, not independent
+action samples. The panels are descriptive, with no new significance claim.
+[Source hashes and checks](figures/PRIOR_MECHANISM_MANIFEST.json) accompany the
+[reproducible figure builder](build_mechanism_figures.py).
 
 ## One mechanism connects the observations
 

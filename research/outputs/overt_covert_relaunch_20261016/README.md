@@ -21,8 +21,8 @@ all 20 selected-by-assignment source worlds, independent of their results.
 The [separate continuation adapter](../overt_covert_continuations_20261016/PROTOCOL.md)
 was frozen at 07:33:00 UTC and committed before its first call, after the complete
 main archive, independent source verification, sealed reviews and a passing
-full-cohort budget check. Its 1,600-call execution is a separate cohort. See the
-[integrated release](../overt_covert_release_20261016/) for its eventual status and
+full-cohort budget check. Its1,600 fresh calls and independent source-bound audit are complete. See the
+[integrated release](../overt_covert_release_20261016/README.md) for results and
 the distinction between main primary tests and descriptive continuations.
 
 The preparation history below remains available to explain the earlier
