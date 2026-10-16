@@ -1,3 +1,34 @@
+# Consequential-oversight study — main experiment complete
+
+The 160-world main experiment, four actor controls and 48 fixed monitor challenges
+completed on 16 October 2026: **6,608 calls, US$25.8435684**. The frozen raw verifier,
+pre/post-audit source inventory and independently implemented primary reconstruction
+passed. All 80 messaging worlds received two independent text reviews; two required
+a third. Reviews were sealed before numerical release (SHA256
+`59839c48267f3f2c786ae2090fe827711d1b572f8f42b9a7bed295765a21995b`).
+
+The four fixed comparisons are in [ANALYSIS.json](ANALYSIS.json). Accepted
+agent-originated concealment was not confirmed: 79 worlds were negative and one
+remained unclear. Under public-report monitoring and fines, delivered peer notes
+reduced retained joint benefit over rounds 2–4 versus withheld notes
+(difference −0.2653472; exact p=0.00390625; Holm across four tests=0.015625).
+The other three tests did not reject. Successful covert execution is a separate
+secondary question; suspicious wording, matching payments and monitor flags do
+not establish it.
+
+The [prospective continuation commitment](CONTINUATION_COMMITMENT.md) covers
+all 20 selected-by-assignment source worlds, independent of their results.
+The [separate continuation adapter](../overt_covert_continuations_20261016/PROTOCOL.md)
+was frozen at 07:33:00 UTC and committed before its first call, after the complete
+main archive, independent source verification, sealed reviews and a passing
+full-cohort budget check. Its 1,600-call execution is a separate cohort. See the
+[integrated release](../overt_covert_release_20261016/) for its eventual status and
+the distinction between main primary tests and descriptive continuations.
+
+The preparation history below remains available to explain the earlier
+infrastructure halt and administrative relaunch. The frozen protocol, source
+hashes and scientific endpoints are unchanged.
+
 # Prepared administrative relaunch
 
 This folder was prepared offline after the original mechanism study suffered
