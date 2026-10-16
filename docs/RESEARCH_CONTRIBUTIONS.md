@@ -10,6 +10,15 @@ See the [unified finding, exact results, error diagnostics and limitations](UNIF
 
 ## Earlier supported empirical results
 
+The subsequent [agreement-formation test](../research/outputs/agreement_release_20261016/REPORT.md)
+does **not** add an autonomous covert-collusion finding. All 300 calls and 30
+pairs are retained; resolved prohibited and strict-covert formation counts were
+zero. Conditional reciprocal discussion preceded one bilateral overpayment
+(individual gains 6 and 5). Identical-action receipt gating preserved 9 valid
+units and removed 11 excess units in that case, and removed 13 across all
+cohorts. This is a bounded empirical defense demonstration with a finite payment
+invariant, not a new authorization principle or population emergence estimate.
+
 | Result | Evidence | Contribution and boundary |
 |---|---|---|
 | Joint defender-generated metadata supports live decoding | Separate host-mask study: mini marginal-minus-transcript signed decoding effect .2265625, world-bootstrap interval [.1796875,.2734375], exact p=.00006103515625, 16 worlds | Controlled live comparison with actual source reuse, balanced bits/pads and consequential receiver choices. Source copies a bit without adversarial intent; decoder tables supplied. Known XOR principle, not spontaneous collusion |

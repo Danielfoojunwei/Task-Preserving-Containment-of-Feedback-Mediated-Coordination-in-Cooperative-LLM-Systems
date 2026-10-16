@@ -37,3 +37,13 @@ jobs:
         run: python -m unittest discover -s research/outputs/stability_20261015 -p 'test*.py' -q
       - name: Independently reconstruct held-out ablations and announcement effects
         run: python research/outputs/stability_20261015/independent_stability_check.py
+      - name: Agreement experiments — offline interface and continuation checks
+        run: |
+          python -m unittest discover -s research/outputs/agreement_pilot_20261015 -p 'test_pilot.py' -q
+          python -m unittest discover -s research/outputs/agreement_capability_20261015 -p 'test_pilot.py' -q
+          python -m unittest discover -s research/outputs/agreement_adversarial_20261015 -p 'test_pilot.py' -q
+      - name: Independently reconstruct agreement experiment records
+        run: |
+          python research/outputs/agreement_pilot_20261015/independent_verify.py
+          python research/outputs/agreement_pilot_20261015/independent_verify.py --root research/outputs/agreement_capability_20261015
+          python research/outputs/agreement_pilot_20261015/independent_verify.py --root research/outputs/agreement_adversarial_20261015

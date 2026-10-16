@@ -26,6 +26,14 @@ The completed 1,320-call validation separates actual metadata information from i
 
 ## Main missing research result
 
+The subsequent [300-call autonomous-agreement check](../research/outputs/agreement_release_20261016/REPORT.md)
+did not establish a resolved covert pact. It preserved the original and
+capability-disclosure nulls and an explicitly permitted-adversarial control.
+One conditional reciprocal exchange produced bilateral overpayment, stopped by
+receipt-bound settlement replay. Do not describe this as successful spontaneous
+collusion or as the native action-carrier comparison below. Its complete prior
+work and negative findings must be disclosed.
+
 The Resources' suggested Q3.1 comparison measures native coalition advantage with private text, action-only visibility and the same actions hidden/canonicalized. Our prior work does not yet complete this. Use explicit coalition incentives, cooperative controls, shared executed actions across the central visible/hidden comparison and honest task-utility measurements.
 
 ## Report outline for the team to write

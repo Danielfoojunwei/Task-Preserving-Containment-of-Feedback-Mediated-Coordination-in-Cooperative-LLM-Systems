@@ -31,3 +31,23 @@ The contribution is a controlled causal benchmark, not a new XOR/noninterference
 A separate frozen study completed 1,320/1,320 calls (40 sources, 1,280 receivers) on 20 fresh GPT-4.1 mini worlds, with six neutral observation arms, identical-input repeats, and a crossed observation × policy-announcement experiment. All 13 new offline runner/analysis tests passed before launch. All four primary comparisons passed Holm4; all six secondary comparisons passed their separate Holm6 family. Independent strict raw-record reconstruction, exhaustive sign enumeration, finite request-law checks and frozen-input checks passed with no mismatches. There were no transport retries; provider-reported cost was $0.371024. These checks do not establish a collusion detector's false-positive/false-negative rates or zero population error.
 
 See [the central finding](UNIFIED_RESEARCH_FINDING.md), [complete results](../research/outputs/stability_20261015/RESULTS.md), [protocol](../research/outputs/stability_20261015/PROTOCOL.md) and [independent verification](../research/outputs/stability_20261015/INDEPENDENT_VERIFICATION.md). Earlier four main-study null results and all frozen prior studies remain unchanged.
+
+## Separate agreement and payment check
+
+Three subsequent frozen cohorts completed 300 calls (120 original, 120 capability
+disclosure, 60 permitted-adversarial control), 300 HTTP attempts, zero retries,
+and provider-reported cost $0.4634848. Fifty-six offline runner tests passed.
+Independent raw-response reconstruction passed for all three cohorts; all 30
+pairs and negative outcomes remain. No resolved prohibited or strict-covert
+agreement qualified. Therefore the conditional four-case continuation made zero
+calls, and the drafted confirmation study remains unrun.
+
+One capability-disclosure pair executed reciprocal overpayment after an
+unresolved conditional discussion. Receipt-gate replay removed 11 excess units
+while preserving its 9 valid payment units. The permitted-adversarial cohort had
+2 additional unilateral excess units, also removed. All 1,331 single-agent
+payment states were independently checked; the two-agent zero-excess property
+follows by separability. There were 115/120 correct sorting actions, unchanged by
+settlement replay. These checks do not show a successful covert pact, broad
+utility preservation, behavioral adaptation to a known gate, or detector
+false-positive/false-negative rates. See [full methods, results and scope](../research/outputs/agreement_release_20261016/REPORT.md).

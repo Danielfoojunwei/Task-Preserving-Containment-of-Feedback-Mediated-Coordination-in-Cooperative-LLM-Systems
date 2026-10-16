@@ -126,6 +126,18 @@ must preserve that provenance.
 
 ## Scope and evidence
 
+### Subsequent autonomous-agreement check
+
+A separate 300-call, 30-pair reimbursement study explicitly tested the missing
+agreement claim. No pair qualified as a resolved prohibited or strictly covert
+pact under its frozen transcript rubric. One conditional-reciprocity exchange
+was followed by bilateral overpayment: 20 paid against 9 verified units. A
+receipt-bound replay paid all 9 valid units and removed 11 excess units. Across
+all three cohorts it removed 13 observed excess units; independent finite
+enumeration verified the payment invariant. This concerns settlement authority,
+not closure of the metadata channel above, and does not demonstrate agreement
+formation. See [complete results and the retained negative cohorts](../research/outputs/agreement_release_20261016/REPORT.md).
+
 Sources copy a bit neutrally; decoder/routing tables are supplied; the host
 intentionally constructs a one-bit channel; utility is a simple public-copy
 task; only one model family is used. The findings do not establish autonomous
