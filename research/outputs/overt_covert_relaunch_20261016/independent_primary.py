@@ -10,6 +10,7 @@ import argparse
 from collections import Counter, defaultdict
 from fractions import Fraction
 import hashlib
+import importlib.util
 import json
 import math
 from pathlib import Path
@@ -58,6 +59,22 @@ def load(path):
 
 def sha(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def equivalent_verified_reports(canonical_path, regenerated_path):
+    """Permit portable re-audits differing only in top-level time/root metadata."""
+    archived, fresh = load(canonical_path), load(regenerated_path)
+    for report in (archived, fresh):
+        if report.get("passed") is not True or report.get("phase") != "all":
+            raise ValueError("Both canonical and regenerated raw reports must pass all phases")
+    substantive = lambda report: {key: value for key, value in report.items()
+                                  if key not in ("generated_at", "root")}
+    if substantive(archived) != substantive(fresh):
+        raise ValueError("Regenerated raw report differs substantively from its bound canonical audit")
+    return {"canonical_raw_report_sha256": sha(canonical_path),
+            "verified_input_sha256": sha(regenerated_path),
+            "substantive_report_equal": True,
+            "allowed_top_level_differences": ["generated_at", "root"]}
 
 
 def rational(record):
@@ -446,7 +463,20 @@ def main(argv=None):
     output = args.output or root / "independent/primary/INDEPENDENT_PRIMARY_VERIFICATION.json"
     if output.exists():
         raise FileExistsError("Refusing to overwrite an independent primary check")
+    # Reuse only the supplemental byte-binding guard, never the analysis math.
+    # This import and all actual source reads remain behind explicit release.
+    binding_source = root.parent / "overt_covert_release_20261016/source_bindings.py"
+    binding_spec = importlib.util.spec_from_file_location("primary_source_bindings", binding_source)
+    binding_module = importlib.util.module_from_spec(binding_spec)
+    binding_spec.loader.exec_module(binding_module)
+    canonical_raw = root / "independent/final/INDEPENDENT_VERIFICATION_ALL.json"
+    bindings = binding_module.SourceBindings(root, canonical_raw)
+    regenerated_provenance = equivalent_verified_reports(canonical_raw, raw)
     result = jsonable(verify(root, raw, reviews, analysis))
+    bindings.verify_unchanged()
+    result["source_bindings"] = bindings.provenance()
+    result["verified_report_equivalence"] = regenerated_provenance
+    result["source_hashes"]["source_binding_validator"] = sha(binding_source)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(result, indent=2, ensure_ascii=False, allow_nan=False) + "\n")
     print(json.dumps({"passed": result["passed"], "failures": result["failures"],

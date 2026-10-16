@@ -26,6 +26,44 @@ def synthetic_blocks():
     return metrics, labels
 
 
+class PortableRegeneratedRawReport(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        folder = Path(self.temp.name)
+        self.canonical = folder / "archived/INDEPENDENT_VERIFICATION_ALL.json"
+        self.fresh = folder / "fresh-temp/INDEPENDENT_VERIFICATION_ALL.json"
+        self.canonical.parent.mkdir()
+        self.fresh.parent.mkdir()
+        self.report = {"passed": True, "phase": "all", "generated_at": "earlier",
+                       "root": "/original/study", "calls": [{"relative": "round/claim_A", "cost": 0.01}],
+                       "rounds": [{"phase": "validation", "outcome": {"scores": {"A": 1}}}],
+                       "verifier_sha256": "a" * 64}
+        self.canonical.write_text(json.dumps(self.report))
+
+    def test_fresh_temp_report_allows_only_top_level_time_and_root(self):
+        fresh = deepcopy(self.report)
+        fresh.update(generated_at="later", root="/temporary/portable/study")
+        self.fresh.write_text(json.dumps(fresh))
+        evidence = v.equivalent_verified_reports(self.canonical, self.fresh)
+        self.assertTrue(evidence["substantive_report_equal"])
+        self.assertNotEqual(evidence["canonical_raw_report_sha256"], evidence["verified_input_sha256"])
+
+    def test_changed_nested_monetary_outcome_is_rejected(self):
+        fresh = deepcopy(self.report)
+        fresh["rounds"][0]["outcome"]["scores"]["A"] = 2
+        self.fresh.write_text(json.dumps(fresh))
+        with self.assertRaises(ValueError):
+            v.equivalent_verified_reports(self.canonical, self.fresh)
+
+    def test_failed_or_partial_regenerated_report_rejected(self):
+        for change in ({"passed": False}, {"phase": "controls"}):
+            fresh = {**self.report, **change}
+            self.fresh.write_text(json.dumps(fresh))
+            with self.assertRaises(ValueError):
+                v.equivalent_verified_reports(self.canonical, self.fresh)
+
+
 class ExactSignDistribution(unittest.TestCase):
     def test_all_twenty_zero_differences_keep_full_assignment_denominator(self):
         result = v.permutation_distribution([0] * 20)
