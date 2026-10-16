@@ -10,6 +10,19 @@ Do not run these tools or dispatch these reviews until the coordinator has
 sealed all primary reviews and explicitly released numerical outcomes. The CLI
 requires `--release`. Importing the module reads no data and makes no API calls.
 
+The final frozen raw audit must run through the supplemental inventory wrapper.
+Its `SOURCE_SNAPSHOT_BEFORE_AUDIT.json` captures every semantic file under
+`calls/` and `runs/` before the audit. `SOURCE_BINDINGS.json` is released only
+after the audit passes and the exact inventory remains unchanged. Only the
+declared runtime lock basenames `.call.lock`, `.budget.lock` and
+`.scheduler.lock` are excluded. The helper verifies the persisted pre-audit
+snapshot, canonical inventory digest, passing report SHA, frozen verifier SHA,
+freeze SHA and chronology. Every source read is checked against that inventory,
+and the full inventory is checked again before export and merge. Newly hashing
+mutually consistent action/state files is insufficient: coordinated changes to
+a later report and its end-state copy are rejected against the audited bytes.
+These local source bindings are provenance, not external timestamp attestation.
+
 ## Fixed coverage and reviewer identities
 
 | Review IDs | Required reviewer ID | Worlds | Rounds |
@@ -36,6 +49,12 @@ Packets go to `secondary_packets/world_NNN.json`. Templates go to
 under `secondary_reviews/REVIEWER_ID/world_NNN.json`. Set `review_complete` to
 `true` only after reviewing all four rounds. Existing files are never overwritten
 by packet export or final analysis generation.
+
+The source inventory defaults to `SOURCE_BINDINGS.json` beside the raw report;
+`--source-bindings` can select its explicit path within the same study. Missing
+or mismatched inventory bindings stop the export. The frozen raw verifier
+already reparses saved action fields and public reports from provider wire;
+the supplemental binding preserves those exact verified source bytes afterward.
 
 Packets contain delivered-note provenance, whole-round cumulative public reports,
 actual parsed fields and validity, the operational audit and its exact view,

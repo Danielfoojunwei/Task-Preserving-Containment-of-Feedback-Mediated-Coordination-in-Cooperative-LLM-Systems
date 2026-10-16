@@ -11,6 +11,7 @@ from fractions import Fraction
 import hashlib
 import html
 import io
+import importlib.util
 import json
 import math
 import os
@@ -18,6 +19,9 @@ from pathlib import Path
 from urllib.parse import quote
 
 HERE = Path(__file__).resolve().parent
+_binding_spec=importlib.util.spec_from_file_location("replay_source_bindings",HERE/"source_bindings.py")
+_binding_module=importlib.util.module_from_spec(_binding_spec);_binding_spec.loader.exec_module(_binding_module)
+SourceBindings=_binding_module.SourceBindings
 OUTPUTS = HERE.parent
 LABELS = ("ever_agent_originated_concealment_accepted", "ever_publicly_disclosed_accepted_harmful_pact")
 CONDITIONS = tuple(f"notes_{n}__audit_{v}__fine_{f}" for n in ("on", "off")
@@ -50,10 +54,21 @@ class Inputs:
     def __init__(self, output):
         self.output = Path(output).resolve()
         self.hashes = {}
+        self.audit_bindings = []
+
+    def bind(self,root,raw_report):
+        binding=SourceBindings(root,raw_report)
+        self.audit_bindings.append(binding)
+        for path,expected in binding.pinned.items():
+            self.hashes[os.path.relpath(path,self.output)]=expected
 
     def read(self, path):
         path = Path(path).resolve()
         blob = path.read_bytes()
+        for binding in self.audit_bindings:binding.check(path,blob)
+        previous=self.hashes.get(os.path.relpath(path,self.output))
+        if previous is not None and previous!=hashlib.sha256(blob).hexdigest():
+            raise ValueError("replay source artifact changed during release build")
         self.hashes[os.path.relpath(path, self.output)] = hashlib.sha256(blob).hexdigest()
         return json.loads(blob)
 
@@ -64,6 +79,11 @@ class Inputs:
             self.read(path)
         return {"path": relative, "sha256": self.hashes[relative],
                 "href": quote(relative, safe="/._-")}
+
+    def verify_unchanged(self):
+        for binding in self.audit_bindings:binding.verify_unchanged()
+        for relative,expected in self.hashes.items():
+            if digest((self.output/relative).resolve())!=expected:raise ValueError("replay source artifact changed before release")
 
 
 def within(root, relative):
@@ -136,6 +156,7 @@ def collect(main_root, reviews_path, verification_path, output, continuation_roo
             continuation_verification=None):
     main_root, output = Path(main_root).resolve(), Path(output).resolve()
     inputs = Inputs(output)
+    inputs.bind(main_root,verification_path)
     analysis = inputs.read(main_root / "ANALYSIS.json")
     verification = inputs.read(verification_path)
     if (analysis.get("inference_eligible") is not True or analysis["primary"].get("primary_complete") is not True
@@ -187,6 +208,7 @@ def collect(main_root, reviews_path, verification_path, output, continuation_roo
         continuation_root = Path(continuation_root).resolve()
         if continuation_verification is None:
             raise ValueError("continuation raw verification path is required")
+        inputs.bind(continuation_root,continuation_verification)
         continuation = inputs.read(continuation_root / "ANALYSIS.json")
         raw = inputs.read(continuation_verification)
         if (continuation.get("complete") is not True or continuation.get("source_worlds") != 20
@@ -201,6 +223,7 @@ def collect(main_root, reviews_path, verification_path, output, continuation_roo
                     directory = continuation_root / "runs" / "continuations" / source["source_session_id"] / branch / "rounds" / str(n)
                     records.append(replay_record(inputs, directory, source["source_session_id"], n,
                         "continuation", branch, by_id.get(source["source_session_id"])))
+    inputs.verify_unchanged()
     return {"analysis": analysis, "reviews": reviews, "continuation": continuation,
             "records": records, "inputs": inputs}
 
@@ -565,12 +588,15 @@ def build(main_root, reviews_path, verification_path, output=HERE, continuation_
     (output / "evidence_replay.html").write_text(replay_html(data["records"],pngs,data["analysis"]))
     generated = [figures/(name+ext) for name in names for ext in (".png",".svg")]+[output/name for name in tables]+[output/"evidence_replay.html"]
     manifest = {"builder_sha256":digest(__file__), "round_records":len(data["records"]),
+        "source_binding_validator_sha256":digest(HERE/"source_bindings.py"),
+        "pre_audit_source_bindings":[binding.provenance() for binding in data["inputs"].audit_bindings],
         "main_round_records":sum(r["cohort"]=="main" for r in data["records"]),
         "continuation_round_records":sum(r["cohort"]=="continuation" for r in data["records"]),
         "source_sha256":dict(sorted(data["inputs"].hashes.items())),
         "outputs_sha256":{os.path.relpath(p,output):digest(p) for p in sorted(generated)},
         "scope":"Released main analysis and sealed reviews; optional complete continuations kept separate. No API requests. Receipt toggle is an offline fixed-action calculation.",
         "validation":"Every replay's actual payment, fine, owner loss and score recomputed; literal consensus evidence and source hashes checked; same-action gate component preserved."}
+    data["inputs"].verify_unchanged()
     (output/"BUILD_MANIFEST.json").write_text(json.dumps(manifest,indent=2,sort_keys=True)+"\n")
     return manifest
 

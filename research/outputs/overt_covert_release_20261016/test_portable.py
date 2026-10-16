@@ -8,6 +8,7 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 import zipfile
+from test_source_bindings import synthetic_manifest
 
 HERE=Path(__file__).resolve().parent
 def module(name,file):
@@ -77,6 +78,7 @@ class Fixture(unittest.TestCase):
         self.json(parent/"FREEZE.json",{"sha256":{"helper.py":p.sha(parent/"helper.py")}})
         self.json(self.main/"FREEZE.json",{"sha256":{"../required_parent/FREEZE.json":p.sha(parent/"FREEZE.json"),
             "independent_verify.py":p.sha(self.main/"independent_verify.py"),"analyze.py":p.sha(self.main/"analyze.py")}})
+        synthetic_manifest(self.main,self.raw)
         self.archive=Path(self.tmp.name)/"evidence.zip"
 
     def tearDown(self):self.tmp.cleanup()
@@ -95,6 +97,7 @@ class Fixture(unittest.TestCase):
         self.json(folder/"continuations_completion.json",{"complete":True})
         raw=folder/"independent/final/INDEPENDENT_VERIFICATION.json"
         self.json(raw,{"passed":True,"phase":"all","root":"/old/continuation","generated_at":"old","outcome":9})
+        synthetic_manifest(folder,raw)
         self.json(folder/"ANALYSIS.json",{"complete":True,"outcome":9,"independent_verification_sha256":p.sha(raw)})
 
     def add_primary(self,fresh_pass=True):
@@ -187,6 +190,7 @@ class Fixture(unittest.TestCase):
         self.assertIn("OPENROUTER_API_KEY",report["credential_variable_names_removed"])
         self.assertTrue(report["network_blocked"])
         self.assertFalse(report["runners_launched"])
+        self.assertEqual(len(report["archived_source_bindings"]),1)
         self.assertTrue(report["runtime"]["exact_runtime_match"])
         self.assertFalse(report["runtime"]["numeric_comparisons_relaxed"])
         self.assertEqual(json.loads((Path(report["output_dir"])/"OFFLINE_RUNTIME_CHECK.json").read_text()),report["runtime"])
@@ -225,6 +229,17 @@ class Fixture(unittest.TestCase):
     def test_outputs_inside_bundle_refused(self):
         self.package();bundle=self.extract()
         with self.assertRaises(ValueError):v.reproduce(bundle,bundle/"new_outputs")
+
+    def test_packaging_rejects_changed_source_after_passing_audit(self):
+        (self.main/"calls/synthetic_call.json").write_text('{"post_audit_change":true}')
+        with self.assertRaisesRegex(ValueError,"pre-audit source inventory"):self.package()
+        self.assertFalse(self.archive.exists())
+
+    def test_offline_check_rejects_missing_archived_source_binding(self):
+        self.package();bundle=self.extract()
+        path=bundle/"SOURCE_MANIFEST.json";manifest=json.loads(path.read_text());manifest.pop("main_source_bindings")
+        path.write_text(json.dumps(manifest))
+        with self.assertRaisesRegex(ValueError,"pre-audit source bindings"):v.verify_manifest(bundle)
 
 
 class ComparisonAndPaths(unittest.TestCase):

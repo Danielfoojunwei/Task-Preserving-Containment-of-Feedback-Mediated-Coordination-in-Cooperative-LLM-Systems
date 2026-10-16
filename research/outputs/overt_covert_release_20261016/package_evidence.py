@@ -6,6 +6,7 @@ Actual packaging requires --release. Tests supply synthetic temporary roots.
 """
 import argparse
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -14,6 +15,9 @@ import tempfile
 import zipfile
 
 HERE=Path(__file__).resolve().parent
+_binding_spec=importlib.util.spec_from_file_location("package_source_bindings",HERE/"source_bindings.py")
+_binding_module=importlib.util.module_from_spec(_binding_spec);_binding_spec.loader.exec_module(_binding_module)
+SourceBindings=_binding_module.SourceBindings
 ROOT=HERE.parents[2]
 PREFIX="overt-covert-evidence-20261016"
 REL=Path("research/outputs")
@@ -85,6 +89,18 @@ not guaranteed. Python 3.11, Python 3.13 and other implementations are rejected
 even with that override. Independent exact-test verification under another
 runtime is a separate, bounded check, not exact reproduction of frozen bootstrap
 JSON. No numerical tolerance is introduced by this helper.
+
+Each completed cohort also includes `SOURCE_BINDINGS.json` and its persisted
+`SOURCE_SNAPSHOT_BEFORE_AUDIT.json`. The wrapper captured every calls/runs byte
+before the passing frozen raw audit and required the exact inventory to remain
+unchanged afterward. Packaging and offline verification check this inventory,
+its raw report, frozen verifier and freeze hashes. Only the three declared
+runtime lock basenames `.call.lock`, `.budget.lock` and `.scheduler.lock` are
+excluded from that semantic source inventory. Unknown extra files remain bound.
+The secondary review and
+replay builders require the same binding, so a later coordinated edit to an
+action report and its end-state copy cannot silently become evidence. These
+local snapshots provide provenance, not external timestamp attestation.
 
 The main verifier writes **INDEPENDENT_VERIFICATION_ALL.json**. The continuation
 verifier writes **INDEPENDENT_VERIFICATION.json**. The archived continuation plan
@@ -224,6 +240,7 @@ def build(destination,root=ROOT,prefix=PREFIX,*,main_reviews=None,main_verificat
             or analysis.get("inference_eligible") is not True):
         raise ValueError("complete released main analysis and full passing raw audit required")
     if analysis["review_release"]["sha256"]!=sha(reviews):raise ValueError("main analysis review seal changed")
+    source_bindings=[SourceBindings(main,verification)]
     files,references,trees=collect(root)
     if any(destination==tree or destination.is_relative_to(tree) for tree in trees):
         raise ValueError("archive destination must be outside included evidence trees")
@@ -250,7 +267,12 @@ def build(destination,root=ROOT,prefix=PREFIX,*,main_reviews=None,main_verificat
         if read(continuation/"ANALYSIS.json")["independent_verification_sha256"]!=sha(continuation_report):
             raise ValueError("continuation analysis provenance does not match archived raw audit")
         if continuation_report.resolve() not in files:raise ValueError("continuation report not included")
+        source_bindings.append(SourceBindings(continuation,continuation_report))
+    for binding in source_bindings:
+        if any(binding.root/name not in files for name in binding.manifest["artifacts"]):
+            raise ValueError("an audited source artifact would be excluded from the portable package")
     generated={"verify_offline.py":(HERE/"verify_offline.py").read_bytes(),
+        "source_bindings.py":(HERE/"source_bindings.py").read_bytes(),
         "README_REPRODUCE.md":README.encode(),"requirements-offline.txt":b"jsonschema==4.26.0\n"}
     destination.parent.mkdir(parents=True,exist_ok=True)
     temporary=tempfile.NamedTemporaryFile(prefix=destination.name+".",suffix=".partial",dir=destination.parent,delete=False)
@@ -271,13 +293,16 @@ def build(destination,root=ROOT,prefix=PREFIX,*,main_reviews=None,main_verificat
             again,again_refs,_=collect(root)
             if again!=files or again_refs!=references or any(signature(p)!=s for p,s in signatures.items()):
                 raise ValueError("evidence changed before archive completion")
+            for binding in source_bindings:binding.verify_unchanged()
             manifest={"manifest_version":1,"files":entries,"generated_files":helpers,"freeze_references":references,
                 "main_study":(REL/MAIN).as_posix(),"main_reviews":repository_relative(root,reviews),
                 "main_verification":repository_relative(root,verification),
+                "main_source_bindings":repository_relative(root,source_bindings[0].path),
                 "main_primary_verification":repository_relative(root,primary) if primary_present else None,
                 "continuation_study":(REL/CONTINUATION).as_posix() if continuation.is_dir() else None,
                 "continuation_complete":complete,
                 "continuation_verification":repository_relative(root,continuation_report) if complete else None,
+                "continuation_source_bindings":repository_relative(root,source_bindings[1].path) if complete else None,
                 "scope":"Full new evidence trees, available updated central documentation/CI/presentation files, and recursively pinned dependencies. Halted/diagnostic and incomplete continuation records are retained without interpreting them as completed experiments. Complete prior baseline evidence is a separate archive; historical links can point outside this focused bundle.",
                 "excluded":"Credential/environment/key files, caches, locks, Git metadata and nested archives.",
                 "temporal_limit":"Recorded bytes and local source mtimes are not external attestation.","api_calls":0}

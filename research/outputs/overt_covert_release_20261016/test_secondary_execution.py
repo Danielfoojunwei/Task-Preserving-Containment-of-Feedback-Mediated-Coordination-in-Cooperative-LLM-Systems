@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from test_source_bindings import synthetic_manifest
 
 HERE=Path(__file__).resolve().parent
 spec=importlib.util.spec_from_file_location("synthetic_secondary_review",HERE/"secondary_execution.py")
@@ -143,6 +144,7 @@ class FullSyntheticSources(unittest.TestCase):
             "execution_outcomes_opened":False,"worlds":worlds})
         cls.raw=cls.main/"raw.json";dump(cls.raw,{"passed":True,"phase":"all","inventory":{"verified_calls":6608},"rounds":raw_rounds})
         dump(cls.main/"ANALYSIS.json",{"inference_eligible":True,"review_release":{"sha256":s.sha(cls.primary)}})
+        cls.bindings=synthetic_manifest(cls.main,cls.raw)
 
     @classmethod
     def tearDownClass(cls):cls.tmp.cleanup()
@@ -218,8 +220,42 @@ class FullSyntheticSources(unittest.TestCase):
         original=path.read_bytes()
         try:
             changed=json.loads(original);changed["payments"]["A"]=0;dump(path,changed)
-            with self.assertRaisesRegex(ValueError,"independently verified source"):
+            with self.assertRaisesRegex(ValueError,"pre-audit source inventory"):
                 self.sources.world_packet("world_001")
+        finally:path.write_bytes(original)
+
+    def test_coupled_final_report_and_end_state_tamper_rejected(self):
+        world=self.sources.worlds["world_001"]
+        directory=self.main/"runs/validation"/world["session_id"]/"rounds/4"
+        action=directory/"actions/claim_A.json";end=directory/"end_state.json"
+        originals={p:p.read_bytes() for p in (action,end)}
+        try:
+            changed=json.loads(originals[action]);changed["public_report"]="Injected public disclosure";dump(action,changed)
+            changed=json.loads(originals[end]);changed["public_reports"][-4]["text"]="Injected public disclosure";dump(end,changed)
+            with self.assertRaisesRegex(ValueError,"pre-audit source inventory"):self.sources.world_packet("world_001")
+            with self.assertRaisesRegex(ValueError,"pre-audit source inventory"):self.sources.verify_unchanged()
+        finally:
+            for path,blob in originals.items():path.write_bytes(blob)
+
+    def test_coupled_report_validity_tamper_rejected(self):
+        world=self.sources.worlds["world_001"]
+        directory=self.main/"runs/validation"/world["session_id"]/"rounds/4"
+        action=directory/"actions/review_B.json";end=directory/"end_state.json"
+        originals={p:p.read_bytes() for p in (action,end)}
+        try:
+            changed=json.loads(originals[action]);changed["public_report_valid"]=False;dump(action,changed)
+            changed=json.loads(originals[end]);changed["public_reports"][-1]["report_valid"]=False;dump(end,changed)
+            with self.assertRaisesRegex(ValueError,"pre-audit source inventory"):self.sources.world_packet("world_001")
+        finally:
+            for path,blob in originals.items():path.write_bytes(blob)
+
+    def test_amount_validity_tamper_rejected(self):
+        world=self.sources.worlds["world_001"]
+        path=self.main/"runs/validation"/world["session_id"]/"rounds/4/actions/claim_A.json"
+        original=path.read_bytes()
+        try:
+            changed=json.loads(original);changed["amount_valid"]=False;dump(path,changed)
+            with self.assertRaisesRegex(ValueError,"pre-audit source inventory"):self.sources.world_packet("world_001")
         finally:path.write_bytes(original)
 
     def test_partial_coverage_cannot_select_only_good_witnesses(self):

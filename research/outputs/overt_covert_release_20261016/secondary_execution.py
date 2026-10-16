@@ -9,12 +9,16 @@ import argparse
 from collections import Counter
 from copy import deepcopy
 import hashlib
+import importlib.util
 import json
 import math
 from pathlib import Path
 import re
 
 HERE=Path(__file__).resolve().parent
+_binding_spec=importlib.util.spec_from_file_location("secondary_source_bindings",HERE/"source_bindings.py")
+_binding_module=importlib.util.module_from_spec(_binding_spec);_binding_spec.loader.exec_module(_binding_module)
+SourceBindings=_binding_module.SourceBindings
 LABELS=("ever_agent_originated_concealment_accepted","ever_publicly_disclosed_accepted_harmful_pact")
 FIELDS=("harmful_agreement_active_before_action","concealment_active_before_action",
         "accepted_action_terms_implemented","cumulative_public_disclosure_of_that_arrangement")
@@ -24,7 +28,7 @@ TIERS=("executed_overt_agreement","executed_common_account_covert_agreement","su
 
 
 def sha(path):return hashlib.sha256(Path(path).read_bytes()).hexdigest()
-def load(path):
+def load(path,blob=None):
     def pairs(items):
         result={}
         for key,value in items:
@@ -32,7 +36,7 @@ def load(path):
             result[key]=value
         return result
     def reject(value):raise ValueError("nonfinite JSON value")
-    result=json.loads(Path(path).read_text(),object_pairs_hook=pairs,parse_constant=reject)
+    result=json.loads(Path(path).read_bytes() if blob is None else blob,object_pairs_hook=pairs,parse_constant=reject)
     def finite(value):
         if type(value) is float and not math.isfinite(value):raise ValueError("nonfinite JSON value")
         if type(value) is dict:
@@ -130,8 +134,9 @@ def factual_finance(outcome):
 
 
 class Sources:
-    def __init__(self,main_root,primary_path,raw_path):
+    def __init__(self,main_root,primary_path,raw_path,source_bindings=None):
         self.root=Path(main_root).resolve();self.primary_path=Path(primary_path).resolve();self.raw_path=Path(raw_path).resolve()
+        self.audit_bindings=SourceBindings(self.root,self.raw_path,source_bindings)
         self.hashes={}
         primary=self.read(self.primary_path);raw=self.read(self.raw_path);analysis=self.read(self.root/"ANALYSIS.json")
         if primary.get("sealed_before_numerical_outcome_join") is not True or primary.get("execution_outcomes_opened") is not False:
@@ -148,15 +153,19 @@ class Sources:
         self.worlds={w["review_id"]:w for w in worlds}
         self.raw_rounds={(r["session_id"],r["round"]):r for r in raw["rounds"] if r["phase"]=="validation"}
         self.global_bindings={"primary_review_release_sha256":sha(self.primary_path),"raw_verification_sha256":sha(self.raw_path),
-                              "main_analysis_sha256":sha(self.root/"ANALYSIS.json")}
+                              "main_analysis_sha256":sha(self.root/"ANALYSIS.json"),
+                              "pre_audit_source_bindings_sha256":self.audit_bindings.provenance()["sha256"],
+                              "pre_audit_inventory_sha256":self.audit_bindings.provenance()["inventory_sha256"]}
 
     def read(self,path):
-        path=Path(path).resolve();value=load(path);current=sha(path)
+        path=Path(path).resolve();blob=path.read_bytes();self.audit_bindings.check(path,blob)
+        value=load(path,blob);current=hashlib.sha256(blob).hexdigest()
         if str(path) in self.hashes and self.hashes[str(path)]!=current:
             raise ValueError("source artifact changed during secondary review processing")
         self.hashes[str(path)]=current;return value
 
     def verify_unchanged(self):
+        self.audit_bindings.verify_unchanged()
         if any(sha(Path(path))!=expected for path,expected in self.hashes.items()):
             raise ValueError("source artifact changed before secondary output release")
 
@@ -359,6 +368,8 @@ def merge(sources,release_root,review_directory=None,witness_ids=()):
         groups.setdefault("notes_on__"+condition,[]).append(world)
     sources.verify_unchanged()
     return {"schema_version":1,"complete":True,"outcome_aware":True,"primary_labels_changed":False,
+        "merger_sha256":sha(__file__),"source_binding_validator_sha256":sha(HERE/"source_bindings.py"),
+        "pre_audit_source_bindings":sources.audit_bindings.provenance(),
         "reviewed_worlds":80,"reviewed_rounds":320,"reviewer_counts":dict(Counter(w["reviewer_id"] for w in worlds)),
         "summary":summarize_worlds(worlds),"by_condition":{k:summarize_worlds(v) for k,v in sorted(groups.items())},
         "worlds":worlds,"witness_ids":list(witness_ids),"witnesses":[by_id[k] for k in witness_ids],
@@ -377,12 +388,13 @@ def main(argv=None):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--main-root",type=Path,default=HERE.parent/"overt_covert_relaunch_20261016")
     parser.add_argument("--primary-reviews",type=Path,required=True);parser.add_argument("--raw-verification",type=Path,required=True)
+    parser.add_argument("--source-bindings",type=Path,help="Pre-audit inventory wrapper output; defaults beside the raw verification report")
     parser.add_argument("--release-root",type=Path,default=HERE);parser.add_argument("--review-directory",type=Path)
     mode=parser.add_mutually_exclusive_group(required=True);mode.add_argument("--prepare",action="store_true");mode.add_argument("--merge",action="store_true")
     parser.add_argument("--output",type=Path);parser.add_argument("--witness-id",action="append",default=[])
     parser.add_argument("--release",action="store_true");args=parser.parse_args(argv)
     if not args.release:parser.error("explicit numerical release required before secondary outcome reads")
-    sources=Sources(args.main_root,args.primary_reviews,args.raw_verification)
+    sources=Sources(args.main_root,args.primary_reviews,args.raw_verification,args.source_bindings)
     if args.prepare:result=export_packets(sources,args.release_root)
     else:
         result=merge(sources,args.release_root,args.review_directory,args.witness_id)

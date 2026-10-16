@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from test_source_bindings import synthetic_manifest
 
 HERE=Path(__file__).resolve().parent
 spec=importlib.util.spec_from_file_location("blind_release_builder_tests",HERE/"build_release.py")
@@ -147,6 +148,31 @@ class OutputSafety(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             with self.assertRaises(ValueError):b.within(Path(tmp),"../outside.json")
 
+    def test_replay_inputs_reject_coupled_postaudit_report_edits(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)/"main";directory=root/"runs/r4";directory.mkdir(parents=True)
+            action=directory/"claim_A.json";end=directory/"end_state.json"
+            action.write_text('{"public_report":"original","public_report_valid":true}')
+            end.write_text('{"public_reports":[{"text":"original","report_valid":true}]}')
+            raw=root/"raw.json";raw.write_text('{"passed":true,"phase":"all"}')
+            synthetic_manifest(root,raw)
+            inputs=b.Inputs(Path(tmp)/"release");inputs.bind(root,raw)
+            action.write_text('{"public_report":"injected","public_report_valid":false}')
+            end.write_text('{"public_reports":[{"text":"injected","report_valid":false}]}')
+            with self.assertRaisesRegex(ValueError,"pre-audit source inventory"):inputs.read(end)
+            with self.assertRaisesRegex(ValueError,"pre-audit source inventory"):inputs.verify_unchanged()
+
+    def test_replay_inputs_bind_continuation_artifacts_independently(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            inputs=b.Inputs(Path(tmp)/"release")
+            for name in ("main","continuation"):
+                root=Path(tmp)/name;(root/"runs").mkdir(parents=True)
+                (root/"runs/state.json").write_text('{"synthetic_only":true}')
+                raw=root/"raw.json";raw.write_text('{"passed":true,"phase":"all"}')
+                synthetic_manifest(root,raw);inputs.bind(root,raw)
+            path=Path(tmp)/"continuation/runs/state.json";path.write_text('{"synthetic_only":false}')
+            with self.assertRaisesRegex(ValueError,"pre-audit source inventory"):inputs.read(path)
+
     def test_all_four_round_vs_primary_rounds2to4_columns_distinct(self):
         with tempfile.TemporaryDirectory() as tmp:
             b.write_tables({"analysis":synthetic_analysis(),"continuation":None},Path(tmp))
@@ -209,9 +235,10 @@ class OutputSafety(unittest.TestCase):
             (root/"ANALYSIS.json").write_text(json.dumps(analysis))
             verification=root/"verification.json";verification.write_text(json.dumps({"passed":True,"phase":"all",
                 "inventory":{"verified_calls":6608}}))
+            synthetic_manifest(root,verification)
             data=b.collect(root,reviews,verification,out)
             self.assertEqual(len(data["records"]),640)
-            self.assertEqual(len(data["inputs"].hashes),3283)
+            self.assertEqual(len(data["inputs"].hashes),3287)
             analysis["summary"][b.CONDITIONS[0]]["net_owner_loss"]=0
             (root/"ANALYSIS.json").write_text(json.dumps(analysis))
             with self.assertRaisesRegex(ValueError,"plotted summary differs"):

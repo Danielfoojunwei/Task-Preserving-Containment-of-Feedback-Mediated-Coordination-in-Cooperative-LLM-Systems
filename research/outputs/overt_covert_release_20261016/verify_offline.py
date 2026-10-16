@@ -8,6 +8,7 @@ network sockets blocked, and bytecode writes disabled. No runner is launched.
 import argparse
 from copy import deepcopy
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path, PurePosixPath
@@ -16,6 +17,9 @@ import sys
 import tempfile
 
 REPRODUCTION_PYTHON=(3,12,14)
+_binding_spec=importlib.util.spec_from_file_location("offline_source_bindings",Path(__file__).with_name("source_bindings.py"))
+_binding_module=importlib.util.module_from_spec(_binding_spec);_binding_spec.loader.exec_module(_binding_module)
+SourceBindings=_binding_module.SourceBindings
 
 
 NETWORK_GUARD = '''"""Force all reproduction child processes to remain offline."""
@@ -65,6 +69,14 @@ def verify_manifest(root):
     for ref in manifest["freeze_references"]:
         path=checked_path(root,ref["source_path"])
         if sha(path)!=ref["sha256"]:raise ValueError("frozen dependency bytes changed")
+    if not manifest.get("main_source_bindings"):
+        raise ValueError("archived pre-audit source bindings are required")
+    bindings=[SourceBindings(root/manifest["main_study"],checked_path(root,manifest["main_verification"]),
+        checked_path(root,manifest["main_source_bindings"]))]
+    if manifest.get("continuation_complete"):
+        bindings.append(SourceBindings(root/manifest["continuation_study"],checked_path(root,manifest["continuation_verification"]),
+            checked_path(root,manifest["continuation_source_bindings"])))
+    manifest["validated_source_bindings"]=[binding.provenance() for binding in bindings]
     return manifest
 
 
@@ -220,6 +232,7 @@ def reproduce(bundle, output=None, skip_unit_tests=False, allow_other_python_3_1
     planned=command_plan(bundle,output,manifest,skip_unit_tests)
     passed=len(steps)==len(planned) and all(s["returncode"]==0 for s in steps)
     report={"passed":passed,"runtime":runtime,"steps":steps,"comparisons":comparisons,"independent_primary_checks":primary_checks,"output_dir":str(output),
+        "archived_source_bindings":manifest["validated_source_bindings"],
         "source_files_verified":len(manifest["files"]),"unit_tests_skipped":skip_unit_tests,
         "credential_variable_names_removed":removed,"network_blocked":True,"runners_launched":False,
         "scope":"Full raw-audit and numerical-analysis reproduction. Only declared path/time/provenance exceptions are excluded after substantive raw-report equality. No API credentials or network required."}
