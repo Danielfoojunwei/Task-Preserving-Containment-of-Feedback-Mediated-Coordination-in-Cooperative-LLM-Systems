@@ -75,6 +75,14 @@ verifier writes **INDEPENDENT_VERIFICATION.json**. The archived continuation pla
 continues to use its pinned archived main report; the helper first establishes
 that the freshly reconstructed main report is substantively identical.
 
+If the archived post-freeze independent primary check is present, its recorded
+source hashes must match the included verifier, plan, raw audit, sealed reviews
+and analysis. The helper then runs that separate checker on the freshly
+reconstructed raw audit and analysis and requires PASS. This independently
+rechecks the primary metrics, exact tests, correction and unresolved-label policy;
+it does not import the frozen analyzer. Its new provenance hashes and timestamp
+need not equal the archived check, and are validated against the new inputs.
+
 Only generated timestamps and top-level machine root paths are excluded when
 comparing raw reports. The main analysis may differ in its review-file absolute
 path. Continuation analysis provenance hashes can differ because the raw report
@@ -205,6 +213,16 @@ def build(destination,root=ROOT,prefix=PREFIX,*,main_reviews=None,main_verificat
         raise ValueError("archive destination must be outside included evidence trees")
     if verification.resolve() not in files or reviews.resolve() not in files:
         raise ValueError("main verification and review seal must be within packaged evidence")
+    primary=main/"independent/primary/INDEPENDENT_PRIMARY_VERIFICATION.json"
+    primary_present=primary.is_file()
+    if primary_present:
+        result=read(primary)
+        if result.get("passed") is not True or result.get("failures")!=[]:
+            raise ValueError("archived independent primary check must pass")
+        expected={"verifier":main/"independent_primary.py","plan":main/"plan.json",
+            "raw_audit":verification,"sealed_reviews":reviews,"analysis":main/"ANALYSIS.json"}
+        if result.get("source_hashes")!={k:sha(path) for k,path in expected.items()}:
+            raise ValueError("independent primary source hashes do not bind included inputs")
     continuation=root/REL/CONTINUATION;complete=False
     completion=continuation/"continuations_completion.json"
     if completion.is_file():complete=read(completion).get("complete") is True
@@ -240,6 +258,7 @@ def build(destination,root=ROOT,prefix=PREFIX,*,main_reviews=None,main_verificat
             manifest={"manifest_version":1,"files":entries,"generated_files":helpers,"freeze_references":references,
                 "main_study":(REL/MAIN).as_posix(),"main_reviews":repository_relative(root,reviews),
                 "main_verification":repository_relative(root,verification),
+                "main_primary_verification":repository_relative(root,primary) if primary_present else None,
                 "continuation_study":(REL/CONTINUATION).as_posix() if continuation.is_dir() else None,
                 "continuation_complete":complete,
                 "continuation_verification":repository_relative(root,continuation_report) if complete else None,

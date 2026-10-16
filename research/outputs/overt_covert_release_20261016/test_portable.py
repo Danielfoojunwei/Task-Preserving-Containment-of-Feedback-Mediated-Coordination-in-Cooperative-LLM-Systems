@@ -46,6 +46,14 @@ q=argparse.ArgumentParser();q.add_argument('--verification',type=Path);q.add_arg
 d=json.loads(Path(__file__).with_name('ANALYSIS.json').read_text());d['independent_verification_sha256']=hashlib.sha256(a.verification.read_bytes()).hexdigest()
 a.output.write_text(json.dumps(d))
 '''
+PRIMARY_SCRIPT='''import argparse,json,hashlib
+from pathlib import Path
+q=argparse.ArgumentParser();q.add_argument('--root',type=Path);q.add_argument('--verified-rounds',type=Path);q.add_argument('--sealed-reviews',type=Path);q.add_argument('--analysis',type=Path);q.add_argument('--output',type=Path);q.add_argument('--release',action='store_true');a=q.parse_args();assert a.release
+def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
+d={'passed':True,'failures':[],'generated_at':'fresh','source_hashes':{'verifier':sha(Path(__file__)),'plan':sha(a.root/'plan.json'),'raw_audit':sha(a.verified_rounds),'sealed_reviews':sha(a.sealed_reviews),'analysis':sha(a.analysis)}}
+a.output.parent.mkdir(parents=True);a.output.write_text(json.dumps(d))
+raise SystemExit(0 if d['passed'] else 1)
+'''
 
 
 class Fixture(unittest.TestCase):
@@ -87,6 +95,16 @@ class Fixture(unittest.TestCase):
         raw=folder/"independent/final/INDEPENDENT_VERIFICATION.json"
         self.json(raw,{"passed":True,"phase":"all","root":"/old/continuation","generated_at":"old","outcome":9})
         self.json(folder/"ANALYSIS.json",{"complete":True,"outcome":9,"independent_verification_sha256":p.sha(raw)})
+
+    def add_primary(self,fresh_pass=True):
+        source=PRIMARY_SCRIPT if fresh_pass else PRIMARY_SCRIPT.replace("'passed':True","'passed':False")
+        self.write(self.main/"independent_primary.py",source)
+        self.json(self.main/"plan.json",{"synthetic_only":True})
+        report={"passed":True,"failures":[],"generated_at":"old","source_hashes":{
+            "verifier":p.sha(self.main/"independent_primary.py"),"plan":p.sha(self.main/"plan.json"),
+            "raw_audit":p.sha(self.raw),"sealed_reviews":p.sha(self.reviews),"analysis":p.sha(self.main/"ANALYSIS.json")}}
+        path=self.main/"independent/primary/INDEPENDENT_PRIMARY_VERIFICATION.json"
+        self.json(path,report);return path
 
     def test_recursive_freeze_closure_copies_required_parent_not_entire_old_cohort(self):
         unrelated=self.root/p.REL/"required_parent/unrelated_private_research.json"
@@ -173,6 +191,29 @@ class Fixture(unittest.TestCase):
         self.assertEqual([c["kind"] for c in report["comparisons"]],
                          ["main_raw","main_analysis","continuation_raw","continuation_analysis"])
         self.assertEqual(report["comparisons"][-1]["ignored_fields"],["independent_verification_sha256"])
+
+    def test_optional_independent_primary_runs_on_fresh_raw_and_analysis(self):
+        self.add_primary();self.package();bundle=self.extract()
+        report=v.reproduce(bundle,Path(self.tmp.name)/"reproduction",skip_unit_tests=True)
+        self.assertTrue(report["passed"])
+        self.assertEqual([s["name"] for s in report["steps"]],["main_raw","main_analysis","main_primary"])
+        checks=report["independent_primary_checks"]
+        self.assertEqual([c["scope"] for c in checks],["archived","freshly reproduced"])
+        self.assertTrue(all(c["passed"] for c in checks))
+        self.assertNotEqual(checks[0]["source_hashes"]["raw_audit"],checks[1]["source_hashes"]["raw_audit"])
+
+    def test_primary_source_hash_mismatch_refuses_package(self):
+        path=self.add_primary();d=json.loads(path.read_text());d["source_hashes"]["analysis"]="0"*64
+        self.json(path,d)
+        with self.assertRaisesRegex(ValueError,"primary source hashes"):self.package()
+        self.assertFalse(self.archive.exists())
+
+    def test_new_primary_failure_makes_offline_reproduction_fail(self):
+        self.add_primary(fresh_pass=False);self.package();bundle=self.extract()
+        report=v.reproduce(bundle,Path(self.tmp.name)/"reproduction",skip_unit_tests=True)
+        self.assertFalse(report["passed"])
+        self.assertEqual(report["steps"][-1]["name"],"main_primary")
+        self.assertEqual(report["steps"][-1]["returncode"],1)
 
     def test_outputs_inside_bundle_refused(self):
         self.package();bundle=self.extract()

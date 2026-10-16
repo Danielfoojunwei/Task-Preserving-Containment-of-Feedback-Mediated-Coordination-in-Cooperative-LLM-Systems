@@ -103,6 +103,12 @@ def command_plan(bundle, output, manifest, skip_unit_tests=False):
     steps.extend([
         ("main_raw",[python,str(main/"independent_verify.py"),"--root",str(main),"--phase","all","--release","--output-dir",str(output/"main_raw")]),
         ("main_analysis",[python,str(main/"analyze.py"),"--root",str(main),"--sealed-reviews",str(reviews),"--release","--output",str(output/"main_analysis.json")])])
+    if manifest.get("main_primary_verification"):
+        primary=checked_path(bundle,manifest["main_study"]+"/independent_primary.py")
+        steps.append(("main_primary",[python,str(primary),"--root",str(main),
+            "--verified-rounds",str(output/"main_raw"/"INDEPENDENT_VERIFICATION_ALL.json"),
+            "--sealed-reviews",str(reviews),"--analysis",str(output/"main_analysis.json"),
+            "--output",str(output/"main_primary"/"INDEPENDENT_PRIMARY_VERIFICATION.json"),"--release"]))
     if manifest.get("continuation_complete"):
         continuation=checked_path(bundle,manifest["continuation_study"]+"/independent_verify.py").parent
         if not skip_unit_tests:
@@ -127,6 +133,17 @@ def child_environment(output):
     return env,sorted(removed)
 
 
+def validate_primary_check(report_path,verifier_path,plan_path,raw_path,reviews_path,analysis_path):
+    report=read(report_path)
+    expected={"verifier":sha(verifier_path),"plan":sha(plan_path),"raw_audit":sha(raw_path),
+        "sealed_reviews":sha(reviews_path),"analysis":sha(analysis_path)}
+    if report.get("passed") is not True or report.get("failures")!=[]:
+        raise ValueError("independent primary verification did not pass")
+    if report.get("source_hashes")!=expected:
+        raise ValueError("independent primary verification input hashes differ")
+    return {"passed":True,"report_sha256":sha(report_path),"source_hashes":expected}
+
+
 def reproduce(bundle, output=None, skip_unit_tests=False):
     bundle=Path(bundle).resolve()
     output=Path(output or tempfile.mkdtemp(prefix="overt-covert-offline-")).resolve()
@@ -135,9 +152,15 @@ def reproduce(bundle, output=None, skip_unit_tests=False):
     output.mkdir(parents=True,exist_ok=True)
     manifest=verify_manifest(bundle)
     env,removed=child_environment(output)
-    comparisons=[];steps=[]
+    comparisons=[];steps=[];primary_checks=[]
     archived_main_raw=checked_path(bundle,manifest["main_verification"])
     archived_main_analysis=checked_path(bundle,manifest["main_study"]+"/ANALYSIS.json")
+    if manifest.get("main_primary_verification"):
+        primary_checks.append({"scope":"archived",**validate_primary_check(
+            checked_path(bundle,manifest["main_primary_verification"]),
+            checked_path(bundle,manifest["main_study"]+"/independent_primary.py"),
+            checked_path(bundle,manifest["main_study"]+"/plan.json"),archived_main_raw,
+            checked_path(bundle,manifest["main_reviews"]),archived_main_analysis)})
     for name,command in command_plan(bundle,output,manifest,skip_unit_tests):
         result=subprocess.run(command,cwd=bundle,env=env,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
         log=output/(name+".log");log.write_text(result.stdout)
@@ -150,6 +173,13 @@ def reproduce(bundle, output=None, skip_unit_tests=False):
             comparisons.append(compare_json(archived_main_raw,produced,"main_raw"))
         elif name=="main_analysis":
             comparisons.append(compare_json(archived_main_analysis,output/"main_analysis.json","main_analysis"))
+        elif name=="main_primary":
+            primary_checks.append({"scope":"freshly reproduced",**validate_primary_check(
+                output/"main_primary"/"INDEPENDENT_PRIMARY_VERIFICATION.json",
+                checked_path(bundle,manifest["main_study"]+"/independent_primary.py"),
+                checked_path(bundle,manifest["main_study"]+"/plan.json"),
+                output/"main_raw"/"INDEPENDENT_VERIFICATION_ALL.json",
+                checked_path(bundle,manifest["main_reviews"]),output/"main_analysis.json")})
         elif name=="continuation_raw":
             archived=checked_path(bundle,manifest["continuation_verification"])
             produced=output/"continuation_raw"/"INDEPENDENT_VERIFICATION.json"
@@ -164,7 +194,7 @@ def reproduce(bundle, output=None, skip_unit_tests=False):
             comparisons.append(compare_json(archived,fresh,"continuation_analysis"))
     planned=command_plan(bundle,output,manifest,skip_unit_tests)
     passed=len(steps)==len(planned) and all(s["returncode"]==0 for s in steps)
-    report={"passed":passed,"steps":steps,"comparisons":comparisons,"output_dir":str(output),
+    report={"passed":passed,"steps":steps,"comparisons":comparisons,"independent_primary_checks":primary_checks,"output_dir":str(output),
         "source_files_verified":len(manifest["files"]),"unit_tests_skipped":skip_unit_tests,
         "credential_variable_names_removed":removed,"network_blocked":True,"runners_launched":False,
         "scope":"Full raw-audit and numerical-analysis reproduction. Only declared path/time/provenance exceptions are excluded after substantive raw-report equality. No API credentials or network required."}

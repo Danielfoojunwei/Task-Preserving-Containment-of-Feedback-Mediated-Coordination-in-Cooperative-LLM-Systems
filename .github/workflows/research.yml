@@ -76,6 +76,9 @@ jobs:
       - name: Independently reconstruct completed consequential-oversight experiment
         if: ${{ hashFiles('research/outputs/overt_covert_relaunch_20261016/validation_completion.json') != '' }}
         run: python research/outputs/overt_covert_relaunch_20261016/independent_verify.py --phase all --release --output-dir "$RUNNER_TEMP/overt-covert-main-audit"
+      - name: Independently check sealed-review joins and the four exact primary contrasts
+        if: ${{ hashFiles('research/outputs/overt_covert_relaunch_20261016/ANALYSIS.json') != '' }}
+        run: python research/outputs/overt_covert_relaunch_20261016/independent_primary.py --verified-rounds "$RUNNER_TEMP/overt-covert-main-audit/INDEPENDENT_VERIFICATION_ALL.json" --release --output "$RUNNER_TEMP/overt-covert-primary-check.json"
       - name: Independently reconstruct completed all-source continuations
         if: ${{ hashFiles('research/outputs/overt_covert_continuations_20261016/continuations_completion.json') != '' }}
         run: python research/outputs/overt_covert_continuations_20261016/independent_verify.py --release --output-dir "$RUNNER_TEMP/overt-covert-continuation-audit"
