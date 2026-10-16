@@ -94,11 +94,11 @@ def build():
         raise ValueError("The deck must contain exactly slides 1–5 in order")
     sections = []
     for n, title, text in zip(pieces[1::3], pieces[2::3], pieces[3::3]):
-        css = "slide results" if n == "4" else "slide"
-        sections.append('<section class="' + css + '"><div class="kicker">Overt / covert agreement study · main results released; continuations pending</div>'
+        css = "slide results" if n in ("3", "4", "5") else "slide"
+        sections.append('<section class="' + css + '"><div class="kicker">Overt / covert agreement study · completed main, execution review and continuations</div>'
                         + "<h1>" + inline(title) + "</h1>" + blocks(text)
                         + '<div class="footer"><span>16 October 2026 · Pre-sprint work · AI-assisted notes</span><span>' + n + " / 5</span></div></section>")
-    document = '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Reciprocal approval and bounded payment — five slides</title><style>' + STYLE + '</style><body><div class="toolbar"><span>Released main results only. Continuation and secondary execution findings remain pending. Expand notes for evidence boundaries.</span><button onclick="window.print()">Print five-page PDF</button></div>' + "\n".join(sections) + "</body></html>\n"
+    document = '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Reciprocal approval and bounded payment — five slides</title><style>' + STYLE + '</style><body><div class="toolbar"><span>Complete release. Primary tests, secondary execution judgments and descriptive continuations remain separate. Expand notes for evidence boundaries.</span><button onclick="window.print()">Print five-page PDF</button></div>' + "\n".join(sections) + "</body></html>\n"
     target = HERE / "index.html"
     target.write_text(document)
     return target
