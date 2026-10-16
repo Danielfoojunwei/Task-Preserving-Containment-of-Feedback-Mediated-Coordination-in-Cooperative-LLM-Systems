@@ -22,6 +22,24 @@ both. The existing full synthetic reproduction now checks all six pins in both
 archived and reproduced reports. The earlier full-suite receipt is retained;
 these additional guard regressions are a separate check.
 
+The next actual export exposed a performance defect before ZIP creation. The
+audited-artifact inclusion guard repeatedly searched the sorted list of roughly
+63,000 files for roughly 62,000 artifacts. The coordinator stopped only that
+owned exporter after more than three minutes at full CPU; no source or model
+process changed.
+
+`build()` now caches `file_set = set(files)` immediately after collection. Raw
+audit, review seal, continuation report and every audited-artifact membership
+check use that exact set. The sorted list still determines archive order, and
+the second collection/list equality and source-signature checks remain intact.
+This removes quadratic membership work without changing an evidence guard.
+
+Two additional structural regressions passed: a list subclass rejects every
+linear membership request while a full synthetic main/continuation package
+still succeeds in sorted order; omitting one audited source still fails before
+archive creation. The affected suites now pass **34 portable + 13 source-binding
+tests (47 total)**. These counts supplement the retained earlier receipts.
+
 This corrects an offline integration contract. No frozen experimental code,
 audit report, analysis, label, scientific outcome or report PDF changed, and no
 model/API call was made. A fresh actual package and complete offline

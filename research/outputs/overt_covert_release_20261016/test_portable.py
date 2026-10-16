@@ -58,6 +58,12 @@ raise SystemExit(0 if d['passed'] else 1)
 '''
 
 
+class NoLinearMembershipList(list):
+    """Archive order/equality remain lists; inclusion checks must use a set."""
+    def __contains__(self,item):
+        raise AssertionError("linear file-list membership is forbidden")
+
+
 class Fixture(unittest.TestCase):
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory();self.root=Path(self.tmp.name)/"repo";self.root.mkdir()
@@ -288,6 +294,36 @@ class Fixture(unittest.TestCase):
         path=bundle/"SOURCE_MANIFEST.json";manifest=json.loads(path.read_text());manifest.pop("main_source_bindings")
         path.write_text(json.dumps(manifest))
         with self.assertRaisesRegex(ValueError,"pre-audit source bindings"):v.verify_manifest(bundle)
+
+    def test_all_packaging_inclusion_checks_use_cached_set(self):
+        self.add_primary();self.add_continuation()
+        original_collect=p.collect
+        def instrumented_collect(root):
+            files,references,trees=original_collect(root)
+            return NoLinearMembershipList(files),references,trees
+        with patch.object(p,"collect",side_effect=instrumented_collect) as collection:
+            self.package()
+        self.assertEqual(collection.call_count,2)
+        bundle=self.extract();manifest=v.verify_manifest(bundle)
+        self.assertTrue(manifest["continuation_complete"])
+        archived_sources=[]
+        with zipfile.ZipFile(self.archive) as archive:
+            for name in archive.namelist():
+                relative=name.removeprefix(p.PREFIX+"/")
+                if relative in manifest["files"]:archived_sources.append(relative)
+        self.assertEqual(archived_sources,sorted(manifest["files"]))
+
+    def test_cached_set_still_rejects_missing_audited_artifact(self):
+        missing=self.main/"calls/synthetic_call.json"
+        original_collect=p.collect
+        def omitted_artifact_collect(root):
+            files,references,trees=original_collect(root)
+            return NoLinearMembershipList(path for path in files if path!=missing),references,trees
+        with patch.object(p,"collect",side_effect=omitted_artifact_collect):
+            with self.assertRaisesRegex(ValueError,"audited source artifact would be excluded"):
+                self.package()
+        self.assertFalse(self.archive.exists())
+        self.assertEqual(list(self.archive.parent.glob("*.partial")),[])
 
 
 class ComparisonAndPaths(unittest.TestCase):

@@ -243,9 +243,10 @@ def build(destination,root=ROOT,prefix=PREFIX,*,main_reviews=None,main_verificat
     if analysis["review_release"]["sha256"]!=sha(reviews):raise ValueError("main analysis review seal changed")
     source_bindings=[SourceBindings(main,verification)]
     files,references,trees=collect(root)
+    file_set=set(files)
     if any(destination==tree or destination.is_relative_to(tree) for tree in trees):
         raise ValueError("archive destination must be outside included evidence trees")
-    if verification.resolve() not in files or reviews.resolve() not in files:
+    if verification.resolve() not in file_set or reviews.resolve() not in file_set:
         raise ValueError("main verification and review seal must be within packaged evidence")
     primary=main/"independent/primary/INDEPENDENT_PRIMARY_VERIFICATION.json"
     primary_present=primary.is_file()
@@ -268,10 +269,10 @@ def build(destination,root=ROOT,prefix=PREFIX,*,main_reviews=None,main_verificat
             raise ValueError("completed continuation needs released analysis and passing raw audit")
         if read(continuation/"ANALYSIS.json")["independent_verification_sha256"]!=sha(continuation_report):
             raise ValueError("continuation analysis provenance does not match archived raw audit")
-        if continuation_report.resolve() not in files:raise ValueError("continuation report not included")
+        if continuation_report.resolve() not in file_set:raise ValueError("continuation report not included")
         source_bindings.append(SourceBindings(continuation,continuation_report))
     for binding in source_bindings:
-        if any(binding.root/name not in files for name in binding.manifest["artifacts"]):
+        if any(binding.root/name not in file_set for name in binding.manifest["artifacts"]):
             raise ValueError("an audited source artifact would be excluded from the portable package")
     generated={"verify_offline.py":(HERE/"verify_offline.py").read_bytes(),
         "source_bindings.py":(HERE/"source_bindings.py").read_bytes(),
