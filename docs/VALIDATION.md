@@ -1,5 +1,15 @@
 # Live research validation — 15 October 2026
 
+Latest separate cohort, 16 October: the [agreement/defense report](../research/outputs/reciprocity_release_20261016/REPORT.md)
+records **3,996 unique API calls**, $15.7122648 provider-reported cost and no
+transport failures. GPT-4.1 actors and GPT-4.1 mini annotators were used. All
+105 new offline tests, 44 core tests and three independent raw-wire audits pass.
+All five primary contrasts remain unsupported after multiplicity correction.
+Seven overt pacts are source-verified; live receipt gating contained payment
+harm despite continued unsupported proposals. These counts do not replace the
+historical suites below. New source hashes and earlier imported bytes remain
+unchanged; the new studies were run under Python 3.12.14.
+
 The later two-model control-plane extension has its own [validation report](CONTROLPLANE_VALIDATION.md) and [evidence bundle](../outputs/bundles/task-preserving-research-20261015-controlplane.zip). The counts below describe the earlier expanded/joint suites only.
 
 Both new live suites and their independent audits are complete. Task actors used `openai/gpt-4.1-mini`, temperature 0.7, max output 1,500 tokens. No additional model was substituted.

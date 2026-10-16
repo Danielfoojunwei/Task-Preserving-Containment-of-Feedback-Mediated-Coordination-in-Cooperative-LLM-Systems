@@ -26,6 +26,18 @@ The completed 1,320-call validation separates actual metadata information from i
 
 ## Main missing research result
 
+The [16 October follow-up](../research/outputs/reciprocity_release_20261016/REPORT.md)
+now demonstrates seven agent-originated **overt** reciprocal overapproval pacts
+under explicit negotiation scaffolding. It does not establish covert formation.
+In fresh matched continuations of all eight directed histories, blocking future
+notes leaves 115.5 owner-loss units unchanged in every source world; a disclosed
+live receipt cap eliminates excess and pays all valid receipts while unsupported
+proposals persist. None of the five primary contrasts passes its correction, so do not
+claim a proven general formation cause. Sorting remains imperfect. This is
+additional pre-sprint work dated 16 October, and the native action-only carrier
+comparison below remains missing. The new [five-slide breakdown](../presentations/reciprocity_20261016/SLIDES.md)
+keeps formation, carrier dependence and execution containment separate.
+
 The subsequent [300-call autonomous-agreement check](../research/outputs/agreement_release_20261016/REPORT.md)
 did not establish a resolved covert pact. It preserved the original and
 capability-disclosure nulls and an explicitly permitted-adversarial control.

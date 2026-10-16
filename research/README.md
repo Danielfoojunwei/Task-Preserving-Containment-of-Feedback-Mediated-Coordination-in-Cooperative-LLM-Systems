@@ -4,6 +4,15 @@ This directory imports the complete local research overlay and its studies. `IMP
 
 Current findings and limits are in the [contribution ledger](../docs/RESEARCH_CONTRIBUTIONS.md), [main manuscript](outputs/controlplane_20261015/PAPER_CONTROLPLANE.md), [earlier extension](outputs/multiscenario_20261015/PAPER_EXTENSION.md) and [corrected Jira report](outputs/revision_20261015/REVISED_EXPERIMENT_REPORT.md). Original nulls, malformed responses, failed compatibility requests and prospective source freezes are retained.
 
+The [16 October agreement/defense report](outputs/reciprocity_release_20261016/REPORT.md)
+covers 3,996 new unique calls. Seven explicitly negotiating pairs originated
+overt prohibited terms; blocking future notes did not change financial harm in
+eight continued source worlds. Live receipt enforcement contained all excess
+while unsupported proposals continued. Five primary causal contrasts remain
+unsupported after multiplicity correction. New studies ran on Python 3.12.14;
+their 105 offline tests and three independent raw-record audits pass. See the
+release README for standalone offline verification and packaging commands.
+
 Use Python 3.11. Core software checks require the project's `test` extra. Saved analysis additionally uses NumPy 2.2.6 and jsonschema 4.26.0; plots use Matplotlib 3.10.8. No credential is needed for the checks below.
 
 ```bash

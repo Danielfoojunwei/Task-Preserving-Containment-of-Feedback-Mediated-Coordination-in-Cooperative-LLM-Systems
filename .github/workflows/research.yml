@@ -42,8 +42,27 @@ jobs:
           python -m unittest discover -s research/outputs/agreement_pilot_20261015 -p 'test_pilot.py' -q
           python -m unittest discover -s research/outputs/agreement_capability_20261015 -p 'test_pilot.py' -q
           python -m unittest discover -s research/outputs/agreement_adversarial_20261015 -p 'test_pilot.py' -q
+      - name: Restore hash-checked historical archive metadata
+        # Git drops mtimes. Restore the released ZIP's local metadata only after
+        # checking unchanged bytes; this is not external temporal attestation.
+        run: python scripts/restore_agreement_archive_mtimes.py
       - name: Independently reconstruct agreement experiment records
         run: |
-          python research/outputs/agreement_pilot_20261015/independent_verify.py
-          python research/outputs/agreement_pilot_20261015/independent_verify.py --root research/outputs/agreement_capability_20261015
-          python research/outputs/agreement_pilot_20261015/independent_verify.py --root research/outputs/agreement_adversarial_20261015
+          python research/outputs/agreement_pilot_20261015/independent_verify.py --output-dir "$RUNNER_TEMP/agreement-original-audit"
+          python research/outputs/agreement_pilot_20261015/independent_verify.py --root research/outputs/agreement_capability_20261015 --output-dir "$RUNNER_TEMP/agreement-capability-audit"
+          python research/outputs/agreement_pilot_20261015/independent_verify.py --root research/outputs/agreement_adversarial_20261015 --output-dir "$RUNNER_TEMP/agreement-adversarial-audit"
+      - name: Repeated reciprocity — offline interface, inference, and independent-verifier tests
+        run: python -m unittest discover -s research/outputs/reciprocity_causal_20261016 -p 'test*.py' -q
+      - name: Negotiation supplement — offline interface, inference, and independent-verifier tests
+        run: python -m unittest discover -s research/outputs/negotiation_causal_20261016 -p 'test*.py' -q
+      - name: Adaptive defense — offline source-state and enforcement checks
+        run: python -m unittest discover -s research/outputs/negotiation_defense_20261016 -p 'test*.py' -q
+      - name: Independently reconstruct completed repeated-reciprocity records
+        if: ${{ hashFiles('research/outputs/reciprocity_causal_20261016/validation_completion.json') != '' }}
+        run: python research/outputs/reciprocity_causal_20261016/independent_verify.py --phase all --output-dir "$RUNNER_TEMP/reciprocity-causal-audit"
+      - name: Independently reconstruct completed supplement and joint inference
+        if: ${{ hashFiles('research/outputs/negotiation_causal_20261016/validation_completion.json') != '' }}
+        run: python research/outputs/negotiation_causal_20261016/independent_verify.py --release --parent-verification "$RUNNER_TEMP/reciprocity-causal-audit/INDEPENDENT_VERIFICATION_ALL.json" --output-dir "$RUNNER_TEMP/negotiation-causal-audit"
+      - name: Independently reconstruct adaptive defense branches
+        if: ${{ hashFiles('research/outputs/negotiation_defense_20261016/continuation_completion.json') != '' }}
+        run: python research/outputs/negotiation_defense_20261016/independent_verify.py --release --output-dir "$RUNNER_TEMP/negotiation-defense-audit"

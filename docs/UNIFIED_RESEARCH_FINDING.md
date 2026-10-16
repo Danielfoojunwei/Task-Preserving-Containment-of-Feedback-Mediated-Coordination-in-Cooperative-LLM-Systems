@@ -5,6 +5,17 @@ These are AI-assisted research and presentation notes, not the team's final
 submission prose. The contribution is the measured result below; the software
 and audit trail support that result.
 
+The separate [16 October agreement and defense follow-up](../research/outputs/reciprocity_release_20261016/REPORT.md)
+retains this metadata result without merging its causal claims. In 3,996 new
+calls, seven explicitly negotiating pairs originated overt reciprocal
+overapproval pacts. With past state retained, blocking future notes left owner
+loss unchanged in all eight continued worlds; enforced receipt limits contained
+payment harm while unsupported proposals persisted. None of five new primary
+contrasts passed multiplicity correction, and covert formation remains
+unestablished. The shared practical issue is separating what agents can learn,
+what they agree to do, and what the execution mediator permits; the follow-up
+does not turn those separate experiments into one proved general mechanism.
+
 ## One finding, with two linked pieces of evidence
 
 **In this controlled live-agent interface, jointly informative metadata supported
