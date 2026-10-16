@@ -1,0 +1,202 @@
+"""Synthetic-only packaging/offline tests; never read actual study outputs."""
+import importlib.util
+import json
+import os
+from pathlib import Path
+import tempfile
+import unittest
+from unittest.mock import patch
+import zipfile
+
+HERE=Path(__file__).resolve().parent
+def module(name,file):
+    spec=importlib.util.spec_from_file_location(name,HERE/file)
+    value=importlib.util.module_from_spec(spec);spec.loader.exec_module(value);return value
+p=module("synthetic_package_tools","package_evidence.py")
+v=module("synthetic_offline_tools","verify_offline.py")
+
+
+MAIN_RAW_SCRIPT='''import argparse,json,socket
+from pathlib import Path
+q=argparse.ArgumentParser();q.add_argument('--root',type=Path);q.add_argument('--phase');q.add_argument('--release',action='store_true');q.add_argument('--output-dir',type=Path);a=q.parse_args()
+assert a.release
+try:socket.getaddrinfo('invalid.example',443)
+except RuntimeError:blocked=True
+else:raise AssertionError('network guard not installed')
+d=json.loads((a.root/'independent/final/INDEPENDENT_VERIFICATION_ALL.json').read_text())
+d.update(root=str(a.root),generated_at='fresh',network_guard_observed=blocked)
+a.output_dir.mkdir(parents=True);(a.output_dir/'INDEPENDENT_VERIFICATION_ALL.json').write_text(json.dumps(d))
+'''
+MAIN_ANALYSIS_SCRIPT='''import argparse,json,os
+from pathlib import Path
+q=argparse.ArgumentParser();q.add_argument('--root',type=Path);q.add_argument('--sealed-reviews');q.add_argument('--release',action='store_true');q.add_argument('--output',type=Path);a=q.parse_args()
+assert a.release and not os.getenv('OPENROUTER_API_KEY')
+d=json.loads((a.root/'ANALYSIS.json').read_text());d['review_release']['path']=a.sealed_reviews
+a.output.write_text(json.dumps(d))
+'''
+CONT_RAW_SCRIPT='''import argparse,json
+from pathlib import Path
+q=argparse.ArgumentParser();q.add_argument('--root',type=Path);q.add_argument('--release',action='store_true');q.add_argument('--output-dir',type=Path);a=q.parse_args();assert a.release
+d=json.loads((a.root/'independent/final/INDEPENDENT_VERIFICATION.json').read_text());d.update(root=str(a.root),generated_at='fresh')
+a.output_dir.mkdir(parents=True);(a.output_dir/'INDEPENDENT_VERIFICATION.json').write_text(json.dumps(d))
+'''
+CONT_ANALYSIS_SCRIPT='''import argparse,json,hashlib
+from pathlib import Path
+q=argparse.ArgumentParser();q.add_argument('--verification',type=Path);q.add_argument('--release',action='store_true');q.add_argument('--output',type=Path);a=q.parse_args();assert a.release
+d=json.loads(Path(__file__).with_name('ANALYSIS.json').read_text());d['independent_verification_sha256']=hashlib.sha256(a.verification.read_bytes()).hexdigest()
+a.output.write_text(json.dumps(d))
+'''
+
+
+class Fixture(unittest.TestCase):
+    def setUp(self):
+        self.tmp=tempfile.TemporaryDirectory();self.root=Path(self.tmp.name)/"repo";self.root.mkdir()
+        for name in p.TREES:
+            folder=self.root/p.REL/name;folder.mkdir(parents=True);(folder/"README.md").write_text("Synthetic fixture only\n")
+        self.main=self.root/p.REL/p.MAIN
+        self.write(self.main/"independent_verify.py",MAIN_RAW_SCRIPT)
+        self.write(self.main/"analyze.py",MAIN_ANALYSIS_SCRIPT)
+        self.write(self.main/"test_dummy.py","import unittest\nclass Dummy(unittest.TestCase):\n def test_offline(self): self.assertTrue(True)\n")
+        self.reviews=self.main/"manual_reviews/SEALED_PRIMARY_REVIEWS.json"
+        self.json(self.reviews,{"worlds":[],"synthetic_only":True})
+        self.raw=self.main/"independent/final/INDEPENDENT_VERIFICATION_ALL.json"
+        self.json(self.raw,{"passed":True,"phase":"all","root":"/historical/workspace","generated_at":"old",
+            "network_guard_observed":True,"inventory":{"verified_calls":6608},"calls":[],"outcome":17})
+        self.json(self.main/"ANALYSIS.json",{"inference_eligible":True,"review_release":{"sha256":p.sha(self.reviews),"path":"/historical/reviews.json"},"observed":17})
+        parent=self.root/p.REL/"required_parent";parent.mkdir()
+        (parent/"helper.py").write_text("# pinned parent helper\n")
+        self.json(parent/"FREEZE.json",{"sha256":{"helper.py":p.sha(parent/"helper.py")}})
+        self.json(self.main/"FREEZE.json",{"sha256":{"../required_parent/FREEZE.json":p.sha(parent/"FREEZE.json"),
+            "independent_verify.py":p.sha(self.main/"independent_verify.py"),"analyze.py":p.sha(self.main/"analyze.py")}})
+        self.archive=Path(self.tmp.name)/"evidence.zip"
+
+    def tearDown(self):self.tmp.cleanup()
+    def write(self,path,text):path.parent.mkdir(parents=True,exist_ok=True);path.write_text(text)
+    def json(self,path,obj):self.write(path,json.dumps(obj))
+    def package(self):return p.build(self.archive,self.root)
+    def extract(self):
+        folder=Path(self.tmp.name)/"extracted"
+        with zipfile.ZipFile(self.archive) as z:z.extractall(folder)
+        return folder/p.PREFIX
+
+    def add_continuation(self):
+        folder=self.root/p.REL/p.CONTINUATION;folder.mkdir()
+        self.write(folder/"independent_verify.py",CONT_RAW_SCRIPT)
+        self.write(folder/"analyze.py",CONT_ANALYSIS_SCRIPT)
+        self.json(folder/"continuations_completion.json",{"complete":True})
+        raw=folder/"independent/final/INDEPENDENT_VERIFICATION.json"
+        self.json(raw,{"passed":True,"phase":"all","root":"/old/continuation","generated_at":"old","outcome":9})
+        self.json(folder/"ANALYSIS.json",{"complete":True,"outcome":9,"independent_verification_sha256":p.sha(raw)})
+
+    def test_recursive_freeze_closure_copies_required_parent_not_entire_old_cohort(self):
+        unrelated=self.root/p.REL/"required_parent/unrelated_private_research.json"
+        unrelated.write_text('{"unused":true}')
+        files,refs,_=p.collect(self.root)
+        self.assertIn(self.root/p.REL/"required_parent/helper.py",files)
+        self.assertNotIn(unrelated,files)
+        self.assertEqual(len(refs),4)
+
+    def test_excludes_environment_keys_caches_locks_archives_and_git(self):
+        for name in (".env","test.key","notes.zip","x.lock","__pycache__/x.pyc",".git/config"):
+            self.write(self.main/name,"excluded synthetic file")
+        self.package();bundle=self.extract();manifest=v.verify_manifest(bundle)
+        names=list(manifest["files"])
+        self.assertFalse(any(x.endswith((".env",".key",".zip",".lock",".pyc",".git/config")) for x in names))
+
+    def test_optional_docs_ci_and_future_presentation_copied_when_present(self):
+        for name in p.OPTIONAL_FILES:self.write(self.root/name,"Synthetic updated documentation\n")
+        presentation=self.root/"presentations/overt_covert_20261016"
+        self.write(presentation/"SLIDES.md","Synthetic slide notes\n")
+        self.write(presentation/"index.html","<p>Synthetic slides</p>")
+        self.write(presentation/"nested.zip","Excluded nested archive")
+        self.package();bundle=self.extract();manifest=v.verify_manifest(bundle)
+        for name in p.OPTIONAL_FILES:self.assertIn(name,manifest["files"])
+        self.assertIn("presentations/overt_covert_20261016/SLIDES.md",manifest["files"])
+        self.assertIn("presentations/overt_covert_20261016/index.html",manifest["files"])
+        self.assertNotIn("presentations/overt_covert_20261016/nested.zip",manifest["files"])
+        text=(bundle/"README_REPRODUCE.md").read_text()
+        self.assertIn("reciprocity-evidence-20261016-final.zip",text)
+        self.assertIn("not silently included",text)
+
+    def test_missing_optional_documents_and_presentation_are_allowed(self):
+        files,_,_=p.collect(self.root)
+        self.assertTrue(files)
+        self.assertFalse(any(self.root/name in files for name in p.OPTIONAL_FILES))
+
+    def test_frozen_parent_changes_prevent_archive_creation(self):
+        (self.root/p.REL/"required_parent/helper.py").write_text("# modified\n")
+        with self.assertRaisesRegex(ValueError,"frozen dependency bytes changed"):self.package()
+        self.assertFalse(self.archive.exists())
+
+    def test_symlink_parent_reference_not_silently_dereferenced(self):
+        parent=self.root/p.REL/"required_parent"
+        target=parent/"helper.py";target.unlink();target.symlink_to(parent/"FREEZE.json")
+        with self.assertRaisesRegex(ValueError,"symlink"):self.package()
+
+    def test_key_shaped_literal_aborts_without_archive_or_partial(self):
+        self.write(self.main/"unfrozen_log.txt","sk-or-v1-"+"a"*64)
+        with self.assertRaisesRegex(ValueError,"credential-shaped"):self.package()
+        self.assertFalse(self.archive.exists())
+        self.assertEqual(list(self.archive.parent.glob("*.partial")),[])
+
+    def test_archive_overwrite_refused(self):
+        self.package()
+        with self.assertRaises(FileExistsError):self.package()
+
+    def test_manifest_detects_changed_extracted_bytes(self):
+        self.package();bundle=self.extract()
+        (bundle/p.REL/"required_parent/helper.py").write_text("# tampered")
+        with self.assertRaisesRegex(ValueError,"byte verification failed"):v.verify_manifest(bundle)
+
+    def test_actual_main_suffix_and_no_runner_commands(self):
+        self.package();bundle=self.extract();manifest=v.verify_manifest(bundle)
+        commands=v.command_plan(bundle,Path(self.tmp.name)/"output",manifest)
+        raw=next(c for n,c in commands if n=="main_raw")
+        self.assertIn("--phase",raw);self.assertIn("all",raw)
+        self.assertTrue(manifest["main_verification"].endswith("INDEPENDENT_VERIFICATION_ALL.json"))
+        self.assertFalse(any("run_study.py" in argument for _,c in commands for argument in c))
+
+    def test_full_synthetic_reproduction_blocks_network_and_removes_key(self):
+        self.package();bundle=self.extract()
+        with patch.dict(os.environ,{"OPENROUTER_API_KEY":"unit-only-key-material"}):
+            report=v.reproduce(bundle,Path(self.tmp.name)/"reproduction")
+        self.assertTrue(report["passed"])
+        self.assertEqual([c["kind"] for c in report["comparisons"]],["main_raw","main_analysis"])
+        self.assertIn("OPENROUTER_API_KEY",report["credential_variable_names_removed"])
+        self.assertTrue(report["network_blocked"])
+        self.assertFalse(report["runners_launched"])
+
+    def test_completed_continuation_reproduces_after_raw_provenance_comparison(self):
+        self.add_continuation();self.package();bundle=self.extract()
+        report=v.reproduce(bundle,Path(self.tmp.name)/"reproduction",skip_unit_tests=True)
+        self.assertTrue(report["passed"])
+        self.assertEqual([c["kind"] for c in report["comparisons"]],
+                         ["main_raw","main_analysis","continuation_raw","continuation_analysis"])
+        self.assertEqual(report["comparisons"][-1]["ignored_fields"],["independent_verification_sha256"])
+
+    def test_outputs_inside_bundle_refused(self):
+        self.package();bundle=self.extract()
+        with self.assertRaises(ValueError):v.reproduce(bundle,bundle/"new_outputs")
+
+
+class ComparisonAndPaths(unittest.TestCase):
+    def test_only_declared_raw_path_timestamp_fields_ignored(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            a,bpath=Path(tmp)/"a.json",Path(tmp)/"b.json"
+            a.write_text(json.dumps({"root":"/old","generated_at":"old","scores":[1,2],"calls":["id"]}))
+            bpath.write_text(json.dumps({"root":"/new","generated_at":"new","scores":[1,2],"calls":["id"]}))
+            self.assertTrue(v.compare_json(a,bpath,"main_raw")["substantive_equal"])
+            d=json.loads(bpath.read_text());d["scores"]=[1,3];bpath.write_text(json.dumps(d))
+            with self.assertRaises(ValueError):v.compare_json(a,bpath,"main_raw")
+
+    def test_absolute_and_traversal_manifest_paths_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            for name in ("/etc/passwd","../outside.json"):
+                with self.assertRaises(ValueError):v.checked_path(Path(tmp),name)
+
+    def test_commands_require_release_before_any_actual_reads(self):
+        with self.assertRaises(SystemExit):p.main(["--out","/does-not-exist.zip"])
+        with self.assertRaises(SystemExit):v.main(["--bundle-root","/does-not-exist"])
+
+
+if __name__=="__main__":unittest.main()
