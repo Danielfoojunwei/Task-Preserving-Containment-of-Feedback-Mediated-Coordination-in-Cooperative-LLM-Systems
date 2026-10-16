@@ -10,17 +10,18 @@ permissions:
 jobs:
   offline:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     env:
       OPENROUTER_API_KEY: ''
       PYTHONDONTWRITEBYTECODE: '1'
+      MPLCONFIGDIR: ${{ runner.temp }}/matplotlib
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - name: Install offline test and analysis dependencies
-        run: python -m pip install -e 'research[test]' numpy==2.2.6 scipy==1.17.0 jsonschema==4.26.0
+        run: python -m pip install -e 'research[test]' numpy==2.2.6 scipy==1.17.0 jsonschema==4.26.0 matplotlib==3.10.8
       - name: Verify imported source and evidence bytes
         run: python scripts/verify_research_snapshot.py
       - name: Core overlay tests
@@ -66,3 +67,15 @@ jobs:
       - name: Independently reconstruct adaptive defense branches
         if: ${{ hashFiles('research/outputs/negotiation_defense_20261016/continuation_completion.json') != '' }}
         run: python research/outputs/negotiation_defense_20261016/independent_verify.py --release --output-dir "$RUNNER_TEMP/negotiation-defense-audit"
+      - name: Overt and covert agreement — frozen runner, inference, verifier and review-seal checks
+        run: python -m unittest discover -s research/outputs/overt_covert_relaunch_20261016 -p 'test*.py' -q
+      - name: All-source context and settlement continuation checks
+        run: python -m unittest discover -s research/outputs/overt_covert_continuations_20261016 -p 'test*.py' -q
+      - name: Evidence display arithmetic, provenance and synthetic replay checks
+        run: python -m unittest discover -s research/outputs/overt_covert_release_20261016 -p 'test*.py' -q
+      - name: Independently reconstruct completed consequential-oversight experiment
+        if: ${{ hashFiles('research/outputs/overt_covert_relaunch_20261016/validation_completion.json') != '' }}
+        run: python research/outputs/overt_covert_relaunch_20261016/independent_verify.py --phase all --release --output-dir "$RUNNER_TEMP/overt-covert-main-audit"
+      - name: Independently reconstruct completed all-source continuations
+        if: ${{ hashFiles('research/outputs/overt_covert_continuations_20261016/continuations_completion.json') != '' }}
+        run: python research/outputs/overt_covert_continuations_20261016/independent_verify.py --release --output-dir "$RUNNER_TEMP/overt-covert-continuation-audit"
