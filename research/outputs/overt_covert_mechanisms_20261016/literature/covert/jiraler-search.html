@@ -1,0 +1,1944 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<!-- new favicon config and versions by realfavicongenerator.net -->
+<link rel="apple-touch-icon" sizes="180x180" href="https://static.arxiv.org/static/base/1.0.0a5/images/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://static.arxiv.org/static/base/1.0.0a5/images/icons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="https://static.arxiv.org/static/base/1.0.0a5/images/icons/favicon-16x16.png">
+<link rel="manifest" href="https://static.arxiv.org/static/base/1.0.0a5/images/icons/site.webmanifest">
+<link rel="mask-icon" href="https://static.arxiv.org/static/base/1.0.0a5/images/icons/safari-pinned-tab.svg" color="#b31b1b">
+<link rel="shortcut icon" href="https://static.arxiv.org/static/base/1.0.0a5/images/icons/favicon.ico">
+<meta name="msapplication-TileColor" content="#b31b1b">
+<meta name="msapplication-config" content="images/icons/browserconfig.xml">
+<meta name="theme-color" content="#b31b1b">
+<!-- end favicon config -->
+<title>Search | arXiv e-print repository</title>
+<script defer src="https://static.arxiv.org/static/base/1.0.0a5/fontawesome-free-5.11.2-web/js/all.js"></script>
+<link rel="stylesheet" href="https://static.arxiv.org/static/base/1.0.0a5/css/arxivstyle.css" />
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    messageStyle: "none",
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX", "output/HTML-CSS"],
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+      processEscapes: true,
+      ignoreClass: '.*',
+      processClass: 'mathjax.*'
+    },
+    TeX: {
+        extensions: ["AMSmath.js", "AMSsymbols.js", "noErrors.js"],
+        noErrors: {
+          inlineDelimiters: ["$","$"],
+          multiLine: false,
+          style: {
+            "font-size": "normal",
+            "border": ""
+          }
+        }
+    },
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+<script src='//static.arxiv.org/MathJax-2.7.3/MathJax.js'></script>
+<script src="https://static.arxiv.org/static/base/1.0.0a5/js/notification.js"></script>
+
+    
+  <script>document.documentElement.classList.add('js');</script>
+  <link rel="stylesheet" type="text/css" media="screen" href="https://static.arxiv.org/static/base/1.0.1/css/arxiv-header-footer.css?v=20260626" />
+  <script defer src="https://static.arxiv.org/static/base/1.0.1/js/arxiv-header.js?v=20260626"></script>
+  <link rel="stylesheet" href="https://static.arxiv.org/static/search/0.5.6/css/bulma-tooltip.min.css" />
+  <link rel="stylesheet" href="https://static.arxiv.org/static/search/0.5.6/css/search.css" />
+  <script
+    src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+    integrity="sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g="
+    crossorigin="anonymous"></script>
+
+  <script src="https://static.arxiv.org/static/search/0.5.6/js/fieldset.js"></script>
+  <style>
+  radio#cf-customfield_11400 {
+    display: none;
+  }
+  /* Render the spinout .ds-site-footer standalone / full-bleed. search extends the
+     legacy base, whose bare wrapping <footer> (in base/base.html, outside any
+     overridable block — so it can't be removed from here) is styled by
+     arxivstyle.css with a grey background (hsl(0,0%,95%)) + 1em 2em padding,
+     boxing our warm-wash footer inside a second grey band. display:contents drops
+     the wrapper's box entirely (cleaner than zeroing individual properties) so
+     .ds-site-footer renders in its place; it inherits flex-shrink:0 from the same
+     legacy `footer` rule, so the sticky footer still works. Search-specific
+     legacy-base integration; the shared chrome CSS stays byte-identical to the SSOT. */
+  body > footer {
+    display: contents;
+  }
+  </style>
+
+  </head>
+  <body>
+  
+  
+  <header><a href="#main-container" class="is-sr-only">Skip to main content</a>
+    <div class="ds-announcement" id="announcement-banner" role="region" aria-label="Announcement" data-banner-name="spinout-nonprofit">
+  <img class="ds-announcement-glyph" src="https://static.arxiv.org/static/base/1.0.1/images/icons/smileybones-small.svg" alt="" aria-hidden="true">
+  <span class="ds-announcement-text">arXiv is now an independent nonprofit!</span>
+  <a class="ds-announcement-link" href="https://info.arxiv.org/about">Learn more</a>
+  <button type="button" class="ds-announcement-close" aria-label="Dismiss announcement">&times;</button>
+</div>
+<header class="ds-site-header">
+  <a href="https://arxiv.org/" class="ds-site-header-logo" aria-label="archive home">
+    <img src="https://static.arxiv.org/static/base/1.0.1/images/arxiv-logo-primary-light.svg" alt="archive">
+  </a>
+  <button type="button" id="ds-nav-toggle" class="ds-site-header-nav-toggle"
+    aria-label="Open menu" aria-controls="ds-site-header-nav" aria-expanded="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+  <nav class="ds-site-header-nav" id="ds-site-header-nav" aria-label="Main navigation">
+    <a id="arxiv-search-toggle" href="/search" aria-controls="arxiv-search-overlay" aria-expanded="false">
+      <svg class="ds-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      Search
+    </a>
+    <a href="https://arxiv.org/user/create">Submit</a>
+    <a href="https://info.arxiv.org/about/donate.html">Donate</a>
+    <span class="ds-site-header-divider" aria-hidden="true"></span>
+    <a href="https://arxiv.org/login" class="ds-site-header-login">Log in</a>
+  </nav>
+</header>
+
+<div class="arxiv-search-overlay" id="arxiv-search-overlay" hidden>
+  <div class="arxiv-search-panel" role="search">
+    <form method="GET" action="/search">
+      <label for="arxiv-search-input" class="is-sr-only">Search arXiv</label>
+      <input type="text" name="query" id="arxiv-search-input" autocomplete="off"
+        placeholder="Search papers by title, author, abstract, or ID...">
+      <input type="hidden" name="searchtype" value="all">
+      <input type="hidden" name="source" value="header">
+    </form>
+    <div class="arxiv-search-hint">
+      Press Enter to search &middot; <a href="/search/advanced">Advanced search</a>
+    </div>
+  </div>
+</div>
+
+  </header>
+  <main class="container" id="main-container">
+    
+
+
+    
+  <div class="level is-marginless">
+    <div class="level-left">
+      <h1 class="title is-clearfix">
+    
+        Showing 1&ndash;26 of 26 results for all: <span class="mathjax">Jiralerspong</span>
+    
+</h1>
+    </div>
+    <div class="level-right is-hidden-mobile">
+      <!-- feedback for mobile is moved to footer -->
+      <span class="help" style="display: inline-block;"><a href="https://github.com/arXiv/arxiv-search/releases">Search v0.5.6 released 2020-02-24</a>&nbsp;&nbsp;</span>
+    </div>
+  </div>
+    <div class="content">
+      
+  <form method="GET" action="/search/"  aria-role="search">
+    
+
+    
+    <div class="field has-addons-tablet">
+      <div class="control is-expanded">
+        <label for="query" class="hidden-label">Search term or terms</label>
+        
+          <input class="input is-medium" id="query" name="query" placeholder="Search term..." type="text" value="Jiralerspong">
+        
+        
+      </div>
+      <div class="select control is-medium">
+        <label class="is-hidden" for="searchtype">Field</label>
+        <select class="is-medium" id="searchtype" name="searchtype"><option selected value="all">All fields</option><option value="title">Title</option><option value="author">Author(s)</option><option value="abstract">Abstract</option><option value="comments">Comments</option><option value="journal_ref">Journal reference</option><option value="acm_class">ACM classification</option><option value="msc_class">MSC classification</option><option value="report_num">Report number</option><option value="paper_id">arXiv identifier</option><option value="doi">DOI</option><option value="orcid">ORCID</option><option value="license">License (URI)</option><option value="author_id">arXiv author ID</option><option value="help">Help pages</option><option value="full_text">Full text</option></select>
+      </div>
+      <div class="control">
+          <button class="button is-link is-medium">Search</button>
+      </div>
+    </div>
+    <div class="field">
+      <div class="control is-size-7">
+        
+        <label class="radio">
+          <input checked id="abstracts-0" name="abstracts" type="radio" value="show"> Show abstracts
+        </label>
+        
+        <label class="radio">
+          <input id="abstracts-1" name="abstracts" type="radio" value="hide"> Hide abstracts
+        </label>
+        
+      </div>
+    </div>
+    <div class="is-clearfix" style="height: 2.5em"> 
+      <div class="is-pulled-right">
+        
+        <a href="/search/advanced?terms-0-term=Jiralerspong&amp;terms-0-field=all&amp;size=50&amp;order=-announced_date_first">Advanced Search</a>
+        
+      </div>
+    </div>
+    <input type="hidden" name="order" value="-announced_date_first">
+    <input type="hidden" name="size" value="50">
+  </form>
+
+  
+
+  
+      
+<div class="level breathe-horizontal">
+  <div class="level-left">
+    <form method="GET" action="/search/">
+      <div style="display: none;">
+        
+          
+            <select id="searchtype" name="searchtype"><option selected value="all">All fields</option><option value="title">Title</option><option value="author">Author(s)</option><option value="abstract">Abstract</option><option value="comments">Comments</option><option value="journal_ref">Journal reference</option><option value="acm_class">ACM classification</option><option value="msc_class">MSC classification</option><option value="report_num">Report number</option><option value="paper_id">arXiv identifier</option><option value="doi">DOI</option><option value="orcid">ORCID</option><option value="license">License (URI)</option><option value="author_id">arXiv author ID</option><option value="help">Help pages</option><option value="full_text">Full text</option></select>
+          
+        
+          
+            <input id="query" name="query" type="text" value="Jiralerspong">
+          
+        
+          
+        
+          
+        
+          
+            <ul id="abstracts"><li><input checked id="abstracts-0" name="abstracts" type="radio" value="show"> <label for="abstracts-0">Show abstracts</label></li><li><input id="abstracts-1" name="abstracts" type="radio" value="hide"> <label for="abstracts-1">Hide abstracts</label></li></ul>
+          
+        
+      </div>
+      <div class="box field is-grouped is-grouped-multiline level-item">
+        <div class="control">
+          <span class="select is-small">
+            <select id="size" name="size"><option value="25">25</option><option selected value="50">50</option><option value="100">100</option><option value="200">200</option></select>
+          </span>
+          <label for="size">results per page</label>.
+        </div>
+        <div class="control">
+          <label for="order">Sort results by</label>
+          <span class="select is-small">
+            <select id="order" name="order"><option selected value="-announced_date_first">Announcement date (newest first)</option><option value="announced_date_first">Announcement date (oldest first)</option><option value="-submitted_date">Submission date (newest first)</option><option value="submitted_date">Submission date (oldest first)</option><option value="">Relevance</option></select>
+          </span>
+        </div>
+        <div class="control">
+          <button class="button is-small is-link">Go</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+      
+
+
+
+
+<ol class="breathe-horizontal" start="1"> 
+
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2608.02677">arXiv:2608.02677</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2608.02677">pdf</a>, <a href="https://arxiv.org/ps/2608.02677">ps</a>, <a href="https://arxiv.org/format/2608.02677">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Software Engineering">cs.SE</span>
+        
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Artificial Intelligence">cs.AI</span>
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Multiagent Systems">cs.MA</span>
+          
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        When Policies Change Probabilities: Modular Decision-Making for LLM Code Review
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Kudum%2C+R">Rasvik Kudum</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Corbett%2C+M">Max Corbett</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Paliwal%2C+H">Hitansh Paliwal</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Fatima%2C+R">Romaisa Fatima</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Jiralerspong%2C+T">Thomas Jiralerspong</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Sarangi%2C+S">Sneheel Sarangi</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2608.02677v1-abstract-short" style="display: inline;">
+        LLM code reviewers often estimate patch risk and make approval decisions in one prompt. A probability should depend on evidence; costs should determine the action taken from it. We test whether four deployed reviewer interfaces preserve this separation using 15,792 responses on 720 candidate patches, with one that passed and one that failed an archived test harness for each of 360 repository issue&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2608.02677v1-abstract-full').style.display = 'inline'; document.getElementById('2608.02677v1-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2608.02677v1-abstract-full" style="display: none;">
+        LLM code reviewers often estimate patch risk and make approval decisions in one prompt. A probability should depend on evidence; costs should determine the action taken from it. We test whether four deployed reviewer interfaces preserve this separation using 15,792 responses on 720 candidate patches, with one that passed and one that failed an archived test harness for each of 360 repository issues. In matched calls with the patch and monitor evidence fixed, replacing an equal-cost policy with a 10:1 false-accept policy changes reported failure probabilities by 13.6 to 16.9 percentage points on average. For every reviewer, the actions returned under the high-cost prompt are worse than rejecting all patches. Applying the same high-cost rule to probabilities elicited under equal costs reduces loss for all four systems, showing that probability elicitation itself contributes to the excess loss. We also evaluate a modular pipeline that elicits risk without policy information, combines an independent monitor score, and applies costs in code. Relative to calibrated reviewer-only scores, the pipeline improves average probability accuracy and, at equal costs, reduces mean loss by .073 per issue while accepting 58 to 68% of patches. At 10:1, it accepts none and matches reject-all. Downstream policy can therefore change the probability it is meant to use, motivating separate evaluation of risk, outside evidence, and action.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2608.02677v1-abstract-full').style.display = 'none'; document.getElementById('2608.02677v1-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 2 August, 2026; 
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> August 2026.
+      
+    </p>
+    
+    <p class="comments is-size-7">
+      <span class="has-text-black-bis has-text-weight-semibold">Comments:</span>
+      <span class="has-text-grey-dark mathjax">20 pages, 6 figures; includes technical appendices. Code and data: https://github.com/rasvik/when-policies-change-probabilities</span>
+    </p>
+    
+
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2606.11063">arXiv:2606.11063</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2606.11063">pdf</a>, <a href="https://arxiv.org/ps/2606.11063">ps</a>, <a href="https://arxiv.org/format/2606.11063">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Artificial Intelligence">cs.AI</span>
+        
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Machine Learning">cs.LG</span>
+          
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        CIAware-Bench: Benchmarking Control Intervention Awareness Across Frontier LLMs
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Schaeffer%2C+J">Joachim Schaeffer</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Panfilov%2C+A">Alexander Panfilov</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Jiralerspong%2C+T">Thomas Jiralerspong</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Lajoie%2C+G">Guillaume Lajoie</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Geiping%2C+J">Jonas Geiping</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Bengio%2C+Y">Yoshua Bengio</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Zimmermann%2C+R+S">Roland S. Zimmermann</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2606.11063v2-abstract-short" style="display: inline;">
+        AI control protocols oversee untrusted models by monitoring their actions and modifying potentially unsafe steps, often using a trusted model. This partially tampers with the untrusted model&#39;s trajectory. If the acting model detects such an intervention, it may infer properties of the monitor and adapt to evade the control protocol. We introduce CIAware-Bench, a benchmark for measuring control int&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2606.11063v2-abstract-full').style.display = 'inline'; document.getElementById('2606.11063v2-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2606.11063v2-abstract-full" style="display: none;">
+        AI control protocols oversee untrusted models by monitoring their actions and modifying potentially unsafe steps, often using a trusted model. This partially tampers with the untrusted model&#39;s trajectory. If the acting model detects such an intervention, it may infer properties of the monitor and adapt to evade the control protocol. We introduce CIAware-Bench, a benchmark for measuring control intervention (CI) awareness across frontier models. CIAware-Bench tests whether models can distinguish their own trajectories from those modified by a control intervention. The benchmark comprises four task domains (essay writing, BigCodeBench, Bash Arena, and SHADE-Arena), with options to vary trajectory watermarking, side-task presence, and the control protocol. Evaluating thirteen acting models with eight intervening models shows substantial variation between settings and model pairs. CI awareness rises sharply for GPT-6 Astra and the Claude 5 models (Fable 5 and Opus 5). When explicitly probed, Astra reaches mean AUROC of 0.90 on Essay, 0.91 on BigCodeBench, 0.86 on Bash Arena and 0.77 on SHADE-Arena. Fable 5 and Opus 5 both reach 0.77 on Essay, with less consistent gains in the other environments. On SHADE-Arena, we demonstrate that telling an acting model that an action was replaced and asking it to adapt leads to moderate improvements in monitor evasion rates. In summary, our results highlight that control evaluations should already assume perfect CI awareness for conservative safety estimates, and that protocol design should explore countermeasures that make interventions harder to detect.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2606.11063v2-abstract-full').style.display = 'none'; document.getElementById('2606.11063v2-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 5 October, 2026; <span class="has-text-black-bis has-text-weight-semibold">v1</span> submitted 9 June, 2026;
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> June 2026.
+      
+    </p>
+    
+
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2603.16928">arXiv:2603.16928</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2603.16928">pdf</a>, <a href="https://arxiv.org/ps/2603.16928">ps</a>, <a href="https://arxiv.org/format/2603.16928">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Cryptography and Security">cs.CR</span>
+        
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Machine Learning">cs.LG</span>
+          
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        Noticing the Watcher: LLM Agents Can Infer CoT Monitoring from Blocking Feedback
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Jiralerspong%2C+T">Thomas Jiralerspong</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Kondrup%2C+F">Flemming Kondrup</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Bengio%2C+Y">Yoshua Bengio</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2603.16928v1-abstract-short" style="display: inline;">
+        Chain-of-thought (CoT) monitoring is proposed as a method for overseeing the internal reasoning of language-model agents. Prior work has shown that when models are explicitly informed that their reasoning is being monitored, or are fine-tuned to internalize this fact, they may learn to obfuscate their CoTs in ways that allow them to evade CoT-based monitoring systems. We ask whether reasoning agen&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2603.16928v1-abstract-full').style.display = 'inline'; document.getElementById('2603.16928v1-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2603.16928v1-abstract-full" style="display: none;">
+        Chain-of-thought (CoT) monitoring is proposed as a method for overseeing the internal reasoning of language-model agents. Prior work has shown that when models are explicitly informed that their reasoning is being monitored, or are fine-tuned to internalize this fact, they may learn to obfuscate their CoTs in ways that allow them to evade CoT-based monitoring systems. We ask whether reasoning agents can autonomously infer that their supposedly private CoT is under surveillance, and whether this awareness leads to strategic evasion, without any explicit training or instructions. In a multi-episode agentic framework, models pursue both a primary task and a concealed side task while being told that their reasoning is private; a hidden CoT monitor blocks episodes when suspicious reasoning is detected. We find that frontier models can deduce the existence of this monitor purely from blocking feedback, with the most capable models reaching a confident belief that their thinking is observed in up to 19% of episodes. This awareness scales with model capability and, in rare cases, escalates to an explicit intent to suppress reasoning about the side task. However, models that form this intent uniformly fail to execute it, openly reasoning about their concealed objectives in the very next episode. This intent-capability gap is reassuring for current deployment, but the autonomous emergence of both monitoring awareness and evasion intent suggests that CoT monitoring is not a permanently reliable safeguard.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2603.16928v1-abstract-full').style.display = 'none'; document.getElementById('2603.16928v1-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 13 March, 2026; 
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> March 2026.
+      
+    </p>
+    
+
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2603.04426">arXiv:2603.04426</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2603.04426">pdf</a>, <a href="https://arxiv.org/ps/2603.04426">ps</a>, <a href="https://arxiv.org/format/2603.04426">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Machine Learning">cs.LG</span>
+        
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Artificial Intelligence">cs.AI</span>
+          
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        Delta-Crosscoder: Robust Crosscoder Model Diffing in Narrow Fine-Tuning Regimes
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Kassem%2C+A">Aly Kassem</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Jiralerspong%2C+T">Thomas Jiralerspong</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Rostamzadeh%2C+N">Negar Rostamzadeh</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Farnadi%2C+G">Golnoosh Farnadi</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2603.04426v1-abstract-short" style="display: inline;">
+        Model diffing methods aim to identify how fine-tuning changes a model&#39;s internal representations. Crosscoders approach this by learning shared dictionaries of interpretable latent directions between base and fine-tuned models. However, existing formulations struggle with narrow fine-tuning, where behavioral changes are localized and asymmetric. We introduce Delta-Crosscoder, which combines BatchTo&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2603.04426v1-abstract-full').style.display = 'inline'; document.getElementById('2603.04426v1-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2603.04426v1-abstract-full" style="display: none;">
+        Model diffing methods aim to identify how fine-tuning changes a model&#39;s internal representations. Crosscoders approach this by learning shared dictionaries of interpretable latent directions between base and fine-tuned models. However, existing formulations struggle with narrow fine-tuning, where behavioral changes are localized and asymmetric. We introduce Delta-Crosscoder, which combines BatchTopK sparsity with a delta-based loss prioritizing directions that change between models, plus an implicit contrastive signal from paired activations on matched inputs. Evaluated across 10 model organisms, including synthetic false facts, emergent misalignment, subliminal learning, and taboo word guessing (Gemma, LLaMA, Qwen; 1B-9B parameters), Delta-Crosscoder reliably isolates latent directions causally responsible for fine-tuned behaviors and enables effective mitigation, outperforming SAE-based baselines, while matching the Non-SAE-based. Our results demonstrate that crosscoders remain a powerful tool for model diffing.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2603.04426v1-abstract-full').style.display = 'none'; document.getElementById('2603.04426v1-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 16 February, 2026; 
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> March 2026.
+      
+    </p>
+    
+
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2602.11729">arXiv:2602.11729</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2602.11729">pdf</a>, <a href="https://arxiv.org/ps/2602.11729">ps</a>, <a href="https://arxiv.org/format/2602.11729">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Artificial Intelligence">cs.AI</span>
+        
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Machine Learning">cs.LG</span>
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Software Engineering">cs.SE</span>
+          
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        Cross-Architecture Model Diffing with Crosscoders: Unsupervised Discovery of Differences Between LLMs
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Jiralerspong%2C+T">Thomas Jiralerspong</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Bricken%2C+T">Trenton Bricken</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2602.11729v1-abstract-short" style="display: inline;">
+        Model diffing, the process of comparing models&#39; internal representations to identify their differences, is a promising approach for uncovering safety-critical behaviors in new models. However, its application has so far been primarily focused on comparing a base model with its finetune. Since new LLM releases are often novel architectures, cross-architecture methods are essential to make model dif&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2602.11729v1-abstract-full').style.display = 'inline'; document.getElementById('2602.11729v1-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2602.11729v1-abstract-full" style="display: none;">
+        Model diffing, the process of comparing models&#39; internal representations to identify their differences, is a promising approach for uncovering safety-critical behaviors in new models. However, its application has so far been primarily focused on comparing a base model with its finetune. Since new LLM releases are often novel architectures, cross-architecture methods are essential to make model diffing widely applicable. Crosscoders are one solution capable of cross-architecture model diffing but have only ever been applied to base vs finetune comparisons. We provide the first application of crosscoders to cross-architecture model diffing and introduce Dedicated Feature Crosscoders (DFCs), an architectural modification designed to better isolate features unique to one model. Using this technique, we find in an unsupervised fashion features including Chinese Communist Party alignment in Qwen3-8B and Deepseek-R1-0528-Qwen3-8B, American exceptionalism in Llama3.1-8B-Instruct, and a copyright refusal mechanism in GPT-OSS-20B. Together, our results work towards establishing cross-architecture crosscoder model diffing as an effective method for identifying meaningful behavioral differences between AI models.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2602.11729v1-abstract-full').style.display = 'none'; document.getElementById('2602.11729v1-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 12 February, 2026; 
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> February 2026.
+      
+    </p>
+    
+
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2510.09660">arXiv:2510.09660</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2510.09660">pdf</a>, <a href="https://arxiv.org/ps/2510.09660">ps</a>, <a href="https://arxiv.org/format/2510.09660">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Machine Learning">cs.LG</span>
+        
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Artificial Intelligence">cs.AI</span>
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Computer Vision and Pattern Recognition">cs.CV</span>
+          
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        Learning What Matters: Steering Diffusion via Spectrally Anisotropic Forward Noise
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Scimeca%2C+L">Luca Scimeca</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Jiralerspong%2C+T">Thomas Jiralerspong</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Earnshaw%2C+B">Berton Earnshaw</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Hartford%2C+J">Jason Hartford</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Bengio%2C+Y">Yoshua Bengio</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2510.09660v4-abstract-short" style="display: inline;">
+        Diffusion Probabilistic Models (DPMs) have achieved strong generative performance, yet their inductive biases remain largely implicit. In this work, we aim to build inductive biases into the training and sampling of diffusion models to better accommodate the target distribution of the data to model. We introduce an anisotropic noise operator that shapes these biases by replacing the isotropic forw&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2510.09660v4-abstract-full').style.display = 'inline'; document.getElementById('2510.09660v4-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2510.09660v4-abstract-full" style="display: none;">
+        Diffusion Probabilistic Models (DPMs) have achieved strong generative performance, yet their inductive biases remain largely implicit. In this work, we aim to build inductive biases into the training and sampling of diffusion models to better accommodate the target distribution of the data to model. We introduce an anisotropic noise operator that shapes these biases by replacing the isotropic forward covariance with a structured, frequency-diagonal covariance. This operator unifies band-pass masks and power-law weightings, allowing us to emphasize or suppress designated frequency bands, while keeping the forward process Gaussian. We refer to this as Spectrally Anisotropic Gaussian Diffusion (SAGD). In this work, we derive the score relation for anisotropic forward covariances and show that, under full support, the learned score converges to the true data score as $t\!\to\!0$, while anisotropy reshapes the probability-flow path from noise to data. Empirically, we show the induced anisotropy outperforms standard diffusion across several vision datasets, and enables selective omission: learning while ignoring known corruptions confined to specific bands. Together, these results demonstrate that carefully designed anisotropic forward noise provides a simple, yet principled, handle to tailor inductive bias in DPMs.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2510.09660v4-abstract-full').style.display = 'none'; document.getElementById('2510.09660v4-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 10 December, 2025; <span class="has-text-black-bis has-text-weight-semibold">v1</span> submitted 7 October, 2025;
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> October 2025.
+      
+    </p>
+    
+
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2506.17007">arXiv:2506.17007</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2506.17007">pdf</a>, <a href="https://arxiv.org/ps/2506.17007">ps</a>, <a href="https://arxiv.org/format/2506.17007">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Machine Learning">cs.LG</span>
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        Discrete Compositional Generation via General Soft Operators and Robust Reinforcement Learning
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Jiralerspong%2C+M">Marco Jiralerspong</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Derman%2C+E">Esther Derman</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Vucetic%2C+D">Danilo Vucetic</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Whitammer%2C+E+S">Esmeralda S. Whitammer</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Sun%2C+B">Bilun Sun</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Zhang%2C+T">Tianyu Zhang</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Bacon%2C+P">Pierre-Luc Bacon</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Gidel%2C+G">Gauthier Gidel</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2506.17007v3-abstract-short" style="display: inline;">
+        A major bottleneck in scientific discovery consists of narrowing an exponentially large set of objects, such as proteins or molecules, to a small set of promising candidates with desirable properties. While this process can rely on expert knowledge, recent methods leverage reinforcement learning (RL) guided by a proxy reward function to enable this filtering. By employing various forms of entropy&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2506.17007v3-abstract-full').style.display = 'inline'; document.getElementById('2506.17007v3-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2506.17007v3-abstract-full" style="display: none;">
+        A major bottleneck in scientific discovery consists of narrowing an exponentially large set of objects, such as proteins or molecules, to a small set of promising candidates with desirable properties. While this process can rely on expert knowledge, recent methods leverage reinforcement learning (RL) guided by a proxy reward function to enable this filtering. By employing various forms of entropy regularization, these methods aim to learn samplers that generate diverse candidates that are highly rated by the proxy function. In this work, we make two main contributions. First, we show that these methods are liable to generate overly diverse, suboptimal candidates in large search spaces. To address this issue, we introduce a novel unified operator that combines several regularized RL operators into a general framework that better targets peakier sampling distributions. Secondly, we offer a novel, robust RL perspective of this filtering process. The regularization can be interpreted as robustness to a compositional form of uncertainty in the proxy function (i.e., the true evaluation of a candidate differs from the proxy&#39;s evaluation). Our analysis leads us to a novel, easy-to-use algorithm we name trajectory general mellowmax (TGM): we show it identifies higher quality, diverse candidates than baselines in both synthetic and real-world tasks. Code: https://github.com/marcojira/tgm.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2506.17007v3-abstract-full').style.display = 'none'; document.getElementById('2506.17007v3-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 31 August, 2026; <span class="has-text-black-bis has-text-weight-semibold">v1</span> submitted 20 June, 2025;
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> June 2025.
+      
+    </p>
+    
+
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2502.10236">arXiv:2502.10236</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2502.10236">pdf</a>, <a href="https://arxiv.org/format/2502.10236">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Machine Learning">cs.LG</span>
+        
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Artificial Intelligence">cs.AI</span>
+          
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        Shaping Inductive Bias in Diffusion Models through Frequency-Based Noise Control
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Jiralerspong%2C+T">Thomas Jiralerspong</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Earnshaw%2C+B">Berton Earnshaw</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Hartford%2C+J">Jason Hartford</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Bengio%2C+Y">Yoshua Bengio</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Scimeca%2C+L">Luca Scimeca</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2502.10236v2-abstract-short" style="display: inline;">
+        Diffusion Probabilistic Models (DPMs) are powerful generative models that have achieved unparalleled success in a number of generative tasks. In this work, we aim to build inductive biases into the training and sampling of diffusion models to better accommodate the target distribution of the data to model. For topologically structured data, we devise a frequency-based noising operator to purposefu&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2502.10236v2-abstract-full').style.display = 'inline'; document.getElementById('2502.10236v2-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2502.10236v2-abstract-full" style="display: none;">
+        Diffusion Probabilistic Models (DPMs) are powerful generative models that have achieved unparalleled success in a number of generative tasks. In this work, we aim to build inductive biases into the training and sampling of diffusion models to better accommodate the target distribution of the data to model. For topologically structured data, we devise a frequency-based noising operator to purposefully manipulate, and set, these inductive biases. We first show that appropriate manipulations of the noising forward process can lead DPMs to focus on particular aspects of the distribution to learn. We show that different datasets necessitate different inductive biases, and that appropriate frequency-based noise control induces increased generative performance compared to standard diffusion. Finally, we demonstrate the possibility of ignoring information at particular frequencies while learning. We show this in an image corruption and recovery task, where we train a DPM to recover the original target distribution after severe noise corruption.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2502.10236v2-abstract-full').style.display = 'none'; document.getElementById('2502.10236v2-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 12 March, 2025; <span class="has-text-black-bis has-text-weight-semibold">v1</span> submitted 14 February, 2025;
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> February 2025.
+      
+    </p>
+    
+    <p class="comments is-size-7">
+      <span class="has-text-black-bis has-text-weight-semibold">Comments:</span>
+      <span class="has-text-grey-dark mathjax">Published as workshop paper at DeLTa and FPI workshops, ICLR 2025</span>
+    </p>
+    
+
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2410.20647">arXiv:2410.20647</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2410.20647">pdf</a>, <a href="https://arxiv.org/format/2410.20647">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Machine Learning">cs.LG</span>
+        
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Machine Learning">stat.ML</span>
+          
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        General Causal Imputation via Synthetic Interventions
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Jiralerspong%2C+M">Marco Jiralerspong</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Jiralerspong%2C+T">Thomas Jiralerspong</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Shah%2C+V">Vedant Shah</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Sridhar%2C+D">Dhanya Sridhar</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Gidel%2C+G">Gauthier Gidel</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2410.20647v1-abstract-short" style="display: inline;">
+        Given two sets of elements (such as cell types and drug compounds), researchers typically only have access to a limited subset of their interactions. The task of causal imputation involves using this subset to predict unobserved interactions. Squires et al. (2022) have proposed two estimators for this task based on the synthetic interventions (SI) estimator: SI-A (for actions) and SI-C (for contex&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2410.20647v1-abstract-full').style.display = 'inline'; document.getElementById('2410.20647v1-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2410.20647v1-abstract-full" style="display: none;">
+        Given two sets of elements (such as cell types and drug compounds), researchers typically only have access to a limited subset of their interactions. The task of causal imputation involves using this subset to predict unobserved interactions. Squires et al. (2022) have proposed two estimators for this task based on the synthetic interventions (SI) estimator: SI-A (for actions) and SI-C (for contexts). We extend their work and introduce a novel causal imputation estimator, generalized synthetic interventions (GSI). We prove the identifiability of this estimator for data generated from a more complex latent factor model. On synthetic and real data we show empirically that it recovers or outperforms their estimators.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2410.20647v1-abstract-full').style.display = 'none'; document.getElementById('2410.20647v1-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 27 October, 2024; 
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> October 2024.
+      
+    </p>
+    
+
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2410.14817">arXiv:2410.14817</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2410.14817">pdf</a>, <a href="https://arxiv.org/ps/2410.14817">ps</a>, <a href="https://arxiv.org/format/2410.14817">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Computation and Language">cs.CL</span>
+        
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Artificial Intelligence">cs.AI</span>
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Machine Learning">cs.LG</span>
+          
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        A Complexity-Based Theory of Compositionality
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Elmoznino%2C+E">Eric Elmoznino</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Jiralerspong%2C+T">Thomas Jiralerspong</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Bengio%2C+Y">Yoshua Bengio</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Lajoie%2C+G">Guillaume Lajoie</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2410.14817v5-abstract-short" style="display: inline;">
+        Compositionality is believed to be fundamental to intelligence. In humans, it underlies the structure of thought, language, and higher-level reasoning. In AI, compositional representations can enable a powerful form of out-of-distribution generalization, in which a model systematically adapts to novel combinations of known concepts. However, while we have strong intuitions about what compositional&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2410.14817v5-abstract-full').style.display = 'inline'; document.getElementById('2410.14817v5-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2410.14817v5-abstract-full" style="display: none;">
+        Compositionality is believed to be fundamental to intelligence. In humans, it underlies the structure of thought, language, and higher-level reasoning. In AI, compositional representations can enable a powerful form of out-of-distribution generalization, in which a model systematically adapts to novel combinations of known concepts. However, while we have strong intuitions about what compositionality is, we lack satisfying formal definitions for it that are measurable and mathematical. Here, we propose such a definition, which we call representational compositionality, that accounts for and extends our intuitions about compositionality. The definition is conceptually simple, quantitative, grounded in algorithmic information theory, and applicable to any representation. Intuitively, representational compositionality states that a compositional representation satisfies three properties. First, it must be expressive. Second, it must be possible to re-describe the representation as a function of discrete symbolic sequences with re-combinable parts, analogous to sentences in natural language. Third, the function that relates these symbolic sequences to the representation, analogous to semantics in natural language, must be simple. Through experiments on both synthetic and real world data, we validate our definition of compositionality and show how it unifies disparate intuitions from across the literature in both AI and cognitive science. We also show that representational compositionality, while theoretically intractable, can be readily estimated using standard deep learning tools. We hope that our definition can inspire the design of novel, theoretically-driven models that better capture the mechanisms of compositional thought. We make our code available at https://github.com/EricElmoznino/complexity_compositionality.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2410.14817v5-abstract-full').style.display = 'none'; document.getElementById('2410.14817v5-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 2 June, 2025; <span class="has-text-black-bis has-text-weight-semibold">v1</span> submitted 18 October, 2024;
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> October 2024.
+      
+    </p>
+    
+
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2410.01444">arXiv:2410.01444</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2410.01444">pdf</a>, <a href="https://arxiv.org/ps/2410.01444">ps</a>, <a href="https://arxiv.org/format/2410.01444">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Computation and Language">cs.CL</span>
+        
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Artificial Intelligence">cs.AI</span>
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Information Theory">cs.IT</span>
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Machine Learning">cs.LG</span>
+          
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        Geometric Signatures of Compositionality Across a Language Model&#39;s Lifetime
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Lee%2C+J+H">Jin Hwa Lee</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Jiralerspong%2C+T">Thomas Jiralerspong</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Yu%2C+L">Lei Yu</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Bengio%2C+Y">Yoshua Bengio</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Cheng%2C+E">Emily Cheng</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2410.01444v5-abstract-short" style="display: inline;">
+        By virtue of linguistic compositionality, few syntactic rules and a finite lexicon can generate an unbounded number of sentences. That is, language, though seemingly high-dimensional, can be explained using relatively few degrees of freedom. An open question is whether contemporary language models (LMs) reflect the intrinsic simplicity of language that is enabled by compositionality. We take a geo&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2410.01444v5-abstract-full').style.display = 'inline'; document.getElementById('2410.01444v5-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2410.01444v5-abstract-full" style="display: none;">
+        By virtue of linguistic compositionality, few syntactic rules and a finite lexicon can generate an unbounded number of sentences. That is, language, though seemingly high-dimensional, can be explained using relatively few degrees of freedom. An open question is whether contemporary language models (LMs) reflect the intrinsic simplicity of language that is enabled by compositionality. We take a geometric view of this problem by relating the degree of compositionality in a dataset to the intrinsic dimension (ID) of its representations under an LM, a measure of feature complexity. We find not only that the degree of dataset compositionality is reflected in representations&#39; ID, but that the relationship between compositionality and geometric complexity arises due to learned linguistic features over training. Finally, our analyses reveal a striking contrast between nonlinear and linear dimensionality, showing they respectively encode semantic and superficial aspects of linguistic composition.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2410.01444v5-abstract-full').style.display = 'none'; document.getElementById('2410.01444v5-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 17 June, 2025; <span class="has-text-black-bis has-text-weight-semibold">v1</span> submitted 2 October, 2024;
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> October 2024.
+      
+    </p>
+    
+    <p class="comments is-size-7">
+      <span class="has-text-black-bis has-text-weight-semibold">Comments:</span>
+      <span class="has-text-grey-dark mathjax">Published at ACL 2025</span>
+    </p>
+    
+
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2407.00957">arXiv:2407.00957</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2407.00957">pdf</a>, <a href="https://arxiv.org/format/2407.00957">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Neural and Evolutionary Computing">cs.NE</span>
+        
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Neurons and Cognition">q-bio.NC</span>
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Machine Learning">stat.ML</span>
+          
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        Expressivity of Neural Networks with Random Weights and Learned Biases
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Williams%2C+E">Ezekiel Williams</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Payeur%2C+A">Alexandre Payeur</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Ryoo%2C+A+H">Avery Hee-Woon Ryoo</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Jiralerspong%2C+T">Thomas Jiralerspong</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Perich%2C+M+G">Matthew G. Perich</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Mazzucato%2C+L">Luca Mazzucato</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Lajoie%2C+G">Guillaume Lajoie</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2407.00957v3-abstract-short" style="display: inline;">
+        Landmark universal function approximation results for neural networks with trained weights and biases provided the impetus for the ubiquitous use of neural networks as learning models in neuroscience and Artificial Intelligence (AI). Recent work has extended these results to networks in which a smaller subset of weights (e.g., output weights) are tuned, leaving other parameters random. However, it&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2407.00957v3-abstract-full').style.display = 'inline'; document.getElementById('2407.00957v3-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2407.00957v3-abstract-full" style="display: none;">
+        Landmark universal function approximation results for neural networks with trained weights and biases provided the impetus for the ubiquitous use of neural networks as learning models in neuroscience and Artificial Intelligence (AI). Recent work has extended these results to networks in which a smaller subset of weights (e.g., output weights) are tuned, leaving other parameters random. However, it remains an open question whether universal approximation holds when only biases are learned, despite evidence from neuroscience and AI that biases significantly shape neural responses. The current paper answers this question. We provide theoretical and numerical evidence demonstrating that feedforward neural networks with fixed random weights can approximate any continuous function on compact sets. We further show an analogous result for the approximation of dynamical systems with recurrent neural networks. Our findings are relevant to neuroscience, where they demonstrate the potential for behaviourally relevant changes in dynamics without modifying synaptic weights, as well as for AI, where they shed light on recent fine-tuning methods for large language models, like bias and prefix-based approaches.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2407.00957v3-abstract-full').style.display = 'none'; document.getElementById('2407.00957v3-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 21 March, 2025; <span class="has-text-black-bis has-text-weight-semibold">v1</span> submitted 1 July, 2024;
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> July 2024.
+      
+    </p>
+    
+    <p class="comments is-size-7">
+      <span class="has-text-black-bis has-text-weight-semibold">Comments:</span>
+      <span class="has-text-grey-dark mathjax">upload of camera-ready manuscript accepted as poster at ICLR 2025; change of author order</span>
+    </p>
+    
+
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2402.01207">arXiv:2402.01207</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2402.01207">pdf</a>, <a href="https://arxiv.org/ps/2402.01207">ps</a>, <a href="https://arxiv.org/format/2402.01207">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Machine Learning">cs.LG</span>
+        
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Artificial Intelligence">cs.AI</span>
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Methodology">stat.ME</span>
+          
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        Efficient Causal Graph Discovery Using Large Language Models
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Jiralerspong%2C+T">Thomas Jiralerspong</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Chen%2C+X">Xiaoyin Chen</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=More%2C+Y">Yash More</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Shah%2C+V">Vedant Shah</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Bengio%2C+Y">Yoshua Bengio</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2402.01207v5-abstract-short" style="display: inline;">
+        We propose a novel framework that leverages LLMs for full causal graph discovery. While previous LLM-based methods have used a pairwise query approach, this requires a quadratic number of queries which quickly becomes impractical for larger causal graphs. In contrast, the proposed framework uses a breadth-first search (BFS) approach which allows it to use only a linear number of queries. We also s&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2402.01207v5-abstract-full').style.display = 'inline'; document.getElementById('2402.01207v5-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2402.01207v5-abstract-full" style="display: none;">
+        We propose a novel framework that leverages LLMs for full causal graph discovery. While previous LLM-based methods have used a pairwise query approach, this requires a quadratic number of queries which quickly becomes impractical for larger causal graphs. In contrast, the proposed framework uses a breadth-first search (BFS) approach which allows it to use only a linear number of queries. We also show that the proposed method can easily incorporate observational data when available, to improve performance. In addition to being more time and data-efficient, the proposed framework achieves state-of-the-art results on real-world causal graphs of varying sizes. The results demonstrate the effectiveness and efficiency of the proposed method in discovering causal relationships, showcasing its potential for broad applicability in causal graph discovery tasks across different domains.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2402.01207v5-abstract-full').style.display = 'none'; document.getElementById('2402.01207v5-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 2 April, 2026; <span class="has-text-black-bis has-text-weight-semibold">v1</span> submitted 2 February, 2024;
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> February 2024.
+      
+    </p>
+    
+
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2310.10693">arXiv:2310.10693</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2310.10693">pdf</a>, <a href="https://arxiv.org/format/2310.10693">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Social and Information Networks">cs.SI</span>
+        
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Artificial Intelligence">cs.AI</span>
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Machine Learning">cs.LG</span>
+          
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        Network Analysis of the iNaturalist Citizen Science Community
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Liu%2C+Y+L">Yu Lu Liu</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Jiralerspong%2C+T">Thomas Jiralerspong</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2310.10693v1-abstract-short" style="display: inline;">
+        In recent years, citizen science has become a larger and larger part of the scientific community. Its ability to crowd source data and expertise from thousands of citizen scientists makes it invaluable. Despite the field&#39;s growing popularity, the interactions and structure of citizen science projects are still poorly understood and under analyzed. We use the iNaturalist citizen science platform as&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2310.10693v1-abstract-full').style.display = 'inline'; document.getElementById('2310.10693v1-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2310.10693v1-abstract-full" style="display: none;">
+        In recent years, citizen science has become a larger and larger part of the scientific community. Its ability to crowd source data and expertise from thousands of citizen scientists makes it invaluable. Despite the field&#39;s growing popularity, the interactions and structure of citizen science projects are still poorly understood and under analyzed. We use the iNaturalist citizen science platform as a case study to analyze the structure of citizen science projects. We frame the data from iNaturalist as a bipartite network and use visualizations as well as established network science techniques to gain insights into the structure and interactions between users in citizen science projects. Finally, we propose a novel unique benchmark for network science research by using the iNaturalist data to create a network which has an unusual structure relative to other common benchmark networks. We demonstrate using a link prediction task that this network can be used to gain novel insights into a variety of network science methods.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2310.10693v1-abstract-full').style.display = 'none'; document.getElementById('2310.10693v1-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 15 October, 2023; 
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> October 2023.
+      
+    </p>
+    
+
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2310.09997">arXiv:2310.09997</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2310.09997">pdf</a>, <a href="https://arxiv.org/format/2310.09997">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Artificial Intelligence">cs.AI</span>
+        
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Machine Learning">cs.LG</span>
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Systems and Control">eess.SY</span>
+          
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        Forecaster: Towards Temporally Abstract Tree-Search Planning from Pixels
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Jiralerspong%2C+T">Thomas Jiralerspong</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Kondrup%2C+F">Flemming Kondrup</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Precup%2C+D">Doina Precup</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Khetarpal%2C+K">Khimya Khetarpal</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2310.09997v1-abstract-short" style="display: inline;">
+        The ability to plan at many different levels of abstraction enables agents to envision the long-term repercussions of their decisions and thus enables sample-efficient learning. This becomes particularly beneficial in complex environments from high-dimensional state space such as pixels, where the goal is distant and the reward sparse. We introduce Forecaster, a deep hierarchical reinforcement lea&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2310.09997v1-abstract-full').style.display = 'inline'; document.getElementById('2310.09997v1-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2310.09997v1-abstract-full" style="display: none;">
+        The ability to plan at many different levels of abstraction enables agents to envision the long-term repercussions of their decisions and thus enables sample-efficient learning. This becomes particularly beneficial in complex environments from high-dimensional state space such as pixels, where the goal is distant and the reward sparse. We introduce Forecaster, a deep hierarchical reinforcement learning approach which plans over high-level goals leveraging a temporally abstract world model. Forecaster learns an abstract model of its environment by modelling the transitions dynamics at an abstract level and training a world model on such transition. It then uses this world model to choose optimal high-level goals through a tree-search planning procedure. It additionally trains a low-level policy that learns to reach those goals. Our method not only captures building world models with longer horizons, but also, planning with such models in downstream tasks. We empirically demonstrate Forecaster&#39;s potential in both single-task learning and generalization to new tasks in the AntMaze domain.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2310.09997v1-abstract-full').style.display = 'none'; document.getElementById('2310.09997v1-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 15 October, 2023; 
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> October 2023.
+      
+    </p>
+    
+
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2310.02779">arXiv:2310.02779</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2310.02779">pdf</a>, <a href="https://arxiv.org/ps/2310.02779">ps</a>, <a href="https://arxiv.org/format/2310.02779">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Machine Learning">cs.LG</span>
+        
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Computer Science and Game Theory">cs.GT</span>
+          
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        Expected flow networks in stochastic environments and two-player zero-sum games
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Jiralerspong%2C+M">Marco Jiralerspong</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Sun%2C+B">Bilun Sun</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Vucetic%2C+D">Danilo Vucetic</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Zhang%2C+T">Tianyu Zhang</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Bengio%2C+Y">Yoshua Bengio</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Gidel%2C+G">Gauthier Gidel</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Whitammer%2C+E+S">Esmeralda S. Whitammer</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2310.02779v3-abstract-short" style="display: inline;">
+        Generative flow networks (GFlowNets) are sequential sampling models trained to match a given distribution. GFlowNets have been successfully applied to various structured object generation tasks, sampling a diverse set of high-reward objects quickly. We propose expected flow networks (EFlowNets), which extend GFlowNets to stochastic environments. We show that EFlowNets outperform other GFlowNet for&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2310.02779v3-abstract-full').style.display = 'inline'; document.getElementById('2310.02779v3-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2310.02779v3-abstract-full" style="display: none;">
+        Generative flow networks (GFlowNets) are sequential sampling models trained to match a given distribution. GFlowNets have been successfully applied to various structured object generation tasks, sampling a diverse set of high-reward objects quickly. We propose expected flow networks (EFlowNets), which extend GFlowNets to stochastic environments. We show that EFlowNets outperform other GFlowNet formulations in stochastic tasks such as protein design. We then extend the concept of EFlowNets to adversarial environments, proposing adversarial flow networks (AFlowNets) for two-player zero-sum games. We show that AFlowNets learn to find above 80% of optimal moves in Connect-4 via self-play and outperform AlphaZero in tournaments.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2310.02779v3-abstract-full').style.display = 'none'; document.getElementById('2310.02779v3-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 31 August, 2026; <span class="has-text-black-bis has-text-weight-semibold">v1</span> submitted 4 October, 2023;
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> October 2023.
+      
+    </p>
+    
+    <p class="comments is-size-7">
+      <span class="has-text-black-bis has-text-weight-semibold">Comments:</span>
+      <span class="has-text-grey-dark mathjax">ICLR 2024; code: https://github.com/GFNOrg/AdversarialFlowNetworks</span>
+    </p>
+    
+
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2310.02423">arXiv:2310.02423</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2310.02423">pdf</a>, <a href="https://arxiv.org/ps/2310.02423">ps</a>, <a href="https://arxiv.org/format/2310.02423">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Machine Learning">cs.LG</span>
+        
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Machine Learning">stat.ML</span>
+          
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        Delta-AI: Local objectives for amortized inference in sparse graphical models
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Falet%2C+J">Jean-Pierre Falet</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Lee%2C+H+B">Hae Beom Lee</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Whitammer%2C+E+S">Esmeralda S. Whitammer</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Sun%2C+C">Chen Sun</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Secrieru%2C+D">Dragos Secrieru</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Jiralerspong%2C+T">Thomas Jiralerspong</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Zhang%2C+D">Dinghuai Zhang</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Lajoie%2C+G">Guillaume Lajoie</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Bengio%2C+Y">Yoshua Bengio</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2310.02423v3-abstract-short" style="display: inline;">
+        We present a new algorithm for amortized inference in sparse probabilistic graphical models (PGMs), which we call $Δ$-amortized inference ($Δ$-AI). Our approach is based on the observation that when the sampling of variables in a PGM is seen as a sequence of actions taken by an agent, sparsity of the PGM enables local credit assignment in the agent&#39;s policy learning objective. This yields a local&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2310.02423v3-abstract-full').style.display = 'inline'; document.getElementById('2310.02423v3-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2310.02423v3-abstract-full" style="display: none;">
+        We present a new algorithm for amortized inference in sparse probabilistic graphical models (PGMs), which we call $Δ$-amortized inference ($Δ$-AI). Our approach is based on the observation that when the sampling of variables in a PGM is seen as a sequence of actions taken by an agent, sparsity of the PGM enables local credit assignment in the agent&#39;s policy learning objective. This yields a local constraint that can be turned into a local loss in the style of generative flow networks (GFlowNets) that enables off-policy training but avoids the need to instantiate all the random variables for each parameter update, thus speeding up training considerably. The $Δ$-AI objective matches the conditional distribution of a variable given its Markov blanket in a tractable learned sampler, which has the structure of a Bayesian network, with the same conditional distribution under the target PGM. As such, the trained sampler recovers marginals and conditional distributions of interest and enables inference of partial subsets of variables. We illustrate $Δ$-AI&#39;s effectiveness for sampling from synthetic PGMs and training latent variable models with sparse factor structure.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2310.02423v3-abstract-full').style.display = 'none'; document.getElementById('2310.02423v3-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 31 August, 2026; <span class="has-text-black-bis has-text-weight-semibold">v1</span> submitted 3 October, 2023;
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> October 2023.
+      
+    </p>
+    
+    <p class="comments is-size-7">
+      <span class="has-text-black-bis has-text-weight-semibold">Comments:</span>
+      <span class="has-text-grey-dark mathjax">ICLR 2024; 19 pages, code: https://github.com/GFNOrg/Delta-AI/</span>
+    </p>
+    
+
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2310.00429">arXiv:2310.00429</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2310.00429">pdf</a>, <a href="https://arxiv.org/format/2310.00429">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Machine Learning">cs.LG</span>
+        
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Machine Learning">stat.ML</span>
+          
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        On the Stability of Iterative Retraining of Generative Models on their own Data
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Bertrand%2C+Q">Quentin Bertrand</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Bose%2C+A+J">Avishek Joey Bose</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Duplessis%2C+A">Alexandre Duplessis</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Jiralerspong%2C+M">Marco Jiralerspong</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Gidel%2C+G">Gauthier Gidel</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2310.00429v5-abstract-short" style="display: inline;">
+        Deep generative models have made tremendous progress in modeling complex data, often exhibiting generation quality that surpasses a typical human&#39;s ability to discern the authenticity of samples. Undeniably, a key driver of this success is enabled by the massive amounts of web-scale data consumed by these models. Due to these models&#39; striking performance and ease of availability, the web will inev&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2310.00429v5-abstract-full').style.display = 'inline'; document.getElementById('2310.00429v5-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2310.00429v5-abstract-full" style="display: none;">
+        Deep generative models have made tremendous progress in modeling complex data, often exhibiting generation quality that surpasses a typical human&#39;s ability to discern the authenticity of samples. Undeniably, a key driver of this success is enabled by the massive amounts of web-scale data consumed by these models. Due to these models&#39; striking performance and ease of availability, the web will inevitably be increasingly populated with synthetic content. Such a fact directly implies that future iterations of generative models will be trained on both clean and artificially generated data from past models. In this paper, we develop a framework to rigorously study the impact of training generative models on mixed datasets -- from classical training on real data to self-consuming generative models trained on purely synthetic data. We first prove the stability of iterative training under the condition that the initial generative models approximate the data distribution well enough and the proportion of clean training data (w.r.t. synthetic data) is large enough. We empirically validate our theory on both synthetic and natural images by iteratively training normalizing flows and state-of-the-art diffusion models on CIFAR10 and FFHQ.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2310.00429v5-abstract-full').style.display = 'none'; document.getElementById('2310.00429v5-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 2 April, 2024; <span class="has-text-black-bis has-text-weight-semibold">v1</span> submitted 30 September, 2023;
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> October 2023.
+      
+    </p>
+    
+
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2308.05711">arXiv:2308.05711</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2308.05711">pdf</a>, <a href="https://arxiv.org/format/2308.05711">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Machine Learning">cs.LG</span>
+        
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Systems and Control">eess.SY</span>
+          
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        A Comparison of Classical and Deep Reinforcement Learning Methods for HVAC Control
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Wang%2C+M">Marshall Wang</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Willes%2C+J">John Willes</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Jiralerspong%2C+T">Thomas Jiralerspong</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Moezzi%2C+M">Matin Moezzi</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2308.05711v1-abstract-short" style="display: inline;">
+        Reinforcement learning (RL) is a promising approach for optimizing HVAC control. RL offers a framework for improving system performance, reducing energy consumption, and enhancing cost efficiency. We benchmark two popular classical and deep RL methods (Q-Learning and Deep-Q-Networks) across multiple HVAC environments and explore the practical consideration of model hyper-parameter selection and re&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2308.05711v1-abstract-full').style.display = 'inline'; document.getElementById('2308.05711v1-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2308.05711v1-abstract-full" style="display: none;">
+        Reinforcement learning (RL) is a promising approach for optimizing HVAC control. RL offers a framework for improving system performance, reducing energy consumption, and enhancing cost efficiency. We benchmark two popular classical and deep RL methods (Q-Learning and Deep-Q-Networks) across multiple HVAC environments and explore the practical consideration of model hyper-parameter selection and reward tuning. The findings provide insight for configuring RL agents in HVAC systems, promoting energy-efficient and cost-effective operation.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2308.05711v1-abstract-full').style.display = 'none'; document.getElementById('2308.05711v1-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 10 August, 2023; 
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> August 2023.
+      
+    </p>
+    
+
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2308.05260">arXiv:2308.05260</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2308.05260">pdf</a>, <a href="https://arxiv.org/format/2308.05260">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Artificial Intelligence">cs.AI</span>
+        
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Computers and Society">cs.CY</span>
+          
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        AI4GCC -- Track 3: Consumption and the Challenges of Multi-Agent RL
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Jiralerspong%2C+M">Marco Jiralerspong</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Gidel%2C+G">Gauthier Gidel</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2308.05260v1-abstract-short" style="display: inline;">
+        The AI4GCC competition presents a bold step forward in the direction of integrating machine learning with traditional economic policy analysis. Below, we highlight two potential areas for improvement that could enhance the competition&#39;s ability to identify and evaluate proposed negotiation protocols. Firstly, we suggest the inclusion of an additional index that accounts for consumption/utility as&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2308.05260v1-abstract-full').style.display = 'inline'; document.getElementById('2308.05260v1-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2308.05260v1-abstract-full" style="display: none;">
+        The AI4GCC competition presents a bold step forward in the direction of integrating machine learning with traditional economic policy analysis. Below, we highlight two potential areas for improvement that could enhance the competition&#39;s ability to identify and evaluate proposed negotiation protocols. Firstly, we suggest the inclusion of an additional index that accounts for consumption/utility as part of the evaluation criteria. Secondly, we recommend further investigation into the learning dynamics of agents in the simulator and the game theoretic properties of outcomes from proposed negotiation protocols. We hope that these suggestions can be of use for future iterations of the competition/simulation.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2308.05260v1-abstract-full').style.display = 'none'; document.getElementById('2308.05260v1-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 9 August, 2023; 
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> August 2023.
+      
+    </p>
+    
+    <p class="comments is-size-7">
+      <span class="has-text-black-bis has-text-weight-semibold">Comments:</span>
+      <span class="has-text-grey-dark mathjax">Presented at AI For Global Climate Cooperation Competition, 2023 (arXiv:cs/2307.06951)</span>
+    </p>
+    
+
+    
+      <p class="comments is-size-7">
+        
+          <span class="has-text-black-bis has-text-weight-semibold">Report number:</span>
+          AI4GCC/2023/track3/4
+        
+
+        
+
+        
+      </p>
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2302.04440">arXiv:2302.04440</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2302.04440">pdf</a>, <a href="https://arxiv.org/format/2302.04440">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Machine Learning">cs.LG</span>
+        
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Computer Vision and Pattern Recognition">cs.CV</span>
+          
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        Feature Likelihood Divergence: Evaluating the Generalization of Generative Models Using Samples
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Jiralerspong%2C+M">Marco Jiralerspong</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Bose%2C+A+J">Avishek Joey Bose</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Gemp%2C+I">Ian Gemp</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Qin%2C+C">Chongli Qin</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Bachrach%2C+Y">Yoram Bachrach</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Gidel%2C+G">Gauthier Gidel</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2302.04440v4-abstract-short" style="display: inline;">
+        The past few years have seen impressive progress in the development of deep generative models capable of producing high-dimensional, complex, and photo-realistic data. However, current methods for evaluating such models remain incomplete: standard likelihood-based metrics do not always apply and rarely correlate with perceptual fidelity, while sample-based metrics, such as FID, are insensitive to&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2302.04440v4-abstract-full').style.display = 'inline'; document.getElementById('2302.04440v4-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2302.04440v4-abstract-full" style="display: none;">
+        The past few years have seen impressive progress in the development of deep generative models capable of producing high-dimensional, complex, and photo-realistic data. However, current methods for evaluating such models remain incomplete: standard likelihood-based metrics do not always apply and rarely correlate with perceptual fidelity, while sample-based metrics, such as FID, are insensitive to overfitting, i.e., inability to generalize beyond the training set. To address these limitations, we propose a new metric called the Feature Likelihood Divergence (FLD), a parametric sample-based metric that uses density estimation to provide a comprehensive trichotomic evaluation accounting for novelty (i.e., different from the training samples), fidelity, and diversity of generated samples. We empirically demonstrate the ability of FLD to identify overfitting problem cases, even when previously proposed metrics fail. We also extensively evaluate FLD on various image datasets and model classes, demonstrating its ability to match intuitions of previous metrics like FID while offering a more comprehensive evaluation of generative models. Code is available at https://github.com/marcojira/fld.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2302.04440v4-abstract-full').style.display = 'none'; document.getElementById('2302.04440v4-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 12 March, 2024; <span class="has-text-black-bis has-text-weight-semibold">v1</span> submitted 8 February, 2023;
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> February 2023.
+      
+    </p>
+    
+    <p class="comments is-size-7">
+      <span class="has-text-black-bis has-text-weight-semibold">Comments:</span>
+      <span class="has-text-grey-dark mathjax">FLD code: https://github.com/marcojira/fld</span>
+    </p>
+    
+
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2210.05845">arXiv:2210.05845</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2210.05845">pdf</a>, <a href="https://arxiv.org/format/2210.05845">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Machine Learning">cs.LG</span>
+        
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Artificial Intelligence">cs.AI</span>
+          
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        Contrastive Retrospection: honing in on critical steps for rapid learning and generalization in RL
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Sun%2C+C">Chen Sun</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Yang%2C+W">Wannan Yang</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Jiralerspong%2C+T">Thomas Jiralerspong</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Malenfant%2C+D">Dane Malenfant</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Alsbury-Nealy%2C+B">Benjamin Alsbury-Nealy</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Bengio%2C+Y">Yoshua Bengio</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Richards%2C+B">Blake Richards</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2210.05845v7-abstract-short" style="display: inline;">
+        In real life, success is often contingent upon multiple critical steps that are distant in time from each other and from the final reward. These critical steps are challenging to identify with traditional reinforcement learning (RL) methods that rely on the Bellman equation for credit assignment. Here, we present a new RL algorithm that uses offline contrastive learning to hone in on these critica&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2210.05845v7-abstract-full').style.display = 'inline'; document.getElementById('2210.05845v7-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2210.05845v7-abstract-full" style="display: none;">
+        In real life, success is often contingent upon multiple critical steps that are distant in time from each other and from the final reward. These critical steps are challenging to identify with traditional reinforcement learning (RL) methods that rely on the Bellman equation for credit assignment. Here, we present a new RL algorithm that uses offline contrastive learning to hone in on these critical steps. This algorithm, which we call Contrastive Retrospection (ConSpec), can be added to any existing RL algorithm. ConSpec learns a set of prototypes for the critical steps in a task by a novel contrastive loss and delivers an intrinsic reward when the current state matches one of the prototypes. The prototypes in ConSpec provide two key benefits for credit assignment: (i) They enable rapid identification of all the critical steps. (ii) They do so in a readily interpretable manner, enabling out-of-distribution generalization when sensory features are altered. Distinct from other contemporary RL approaches to credit assignment, ConSpec takes advantage of the fact that it is easier to retrospectively identify the small set of steps that success is contingent upon (and ignoring other states) than it is to prospectively predict reward at every taken step. ConSpec greatly improves learning in a diverse set of RL tasks. The code is available at the link: https://github.com/sunchipsster1/ConSpec
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2210.05845v7-abstract-full').style.display = 'none'; document.getElementById('2210.05845v7-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 27 October, 2023; <span class="has-text-black-bis has-text-weight-semibold">v1</span> submitted 11 October, 2022;
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> October 2022.
+      
+    </p>
+    
+
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2210.02552">arXiv:2210.02552</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2210.02552">pdf</a>, <a href="https://arxiv.org/format/2210.02552">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Machine Learning">cs.LG</span>
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        Towards Safe Mechanical Ventilation Treatment Using Deep Offline Reinforcement Learning
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Kondrup%2C+F">Flemming Kondrup</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Jiralerspong%2C+T">Thomas Jiralerspong</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Lau%2C+E">Elaine Lau</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=de+Lara%2C+N">Nathan de Lara</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Shkrob%2C+J">Jacob Shkrob</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Tran%2C+M+D">My Duc Tran</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Precup%2C+D">Doina Precup</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Basu%2C+S">Sumana Basu</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2210.02552v1-abstract-short" style="display: inline;">
+        Mechanical ventilation is a key form of life support for patients with pulmonary impairment. Healthcare workers are required to continuously adjust ventilator settings for each patient, a challenging and time consuming task. Hence, it would be beneficial to develop an automated decision support tool to optimize ventilation treatment. We present DeepVent, a Conservative Q-Learning (CQL) based offli&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2210.02552v1-abstract-full').style.display = 'inline'; document.getElementById('2210.02552v1-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2210.02552v1-abstract-full" style="display: none;">
+        Mechanical ventilation is a key form of life support for patients with pulmonary impairment. Healthcare workers are required to continuously adjust ventilator settings for each patient, a challenging and time consuming task. Hence, it would be beneficial to develop an automated decision support tool to optimize ventilation treatment. We present DeepVent, a Conservative Q-Learning (CQL) based offline Deep Reinforcement Learning (DRL) agent that learns to predict the optimal ventilator parameters for a patient to promote 90 day survival. We design a clinically relevant intermediate reward that encourages continuous improvement of the patient vitals as well as addresses the challenge of sparse reward in RL. We find that DeepVent recommends ventilation parameters within safe ranges, as outlined in recent clinical trials. The CQL algorithm offers additional safety by mitigating the overestimation of the value estimates of out-of-distribution states/actions. We evaluate our agent using Fitted Q Evaluation (FQE) and demonstrate that it outperforms physicians from the MIMIC-III dataset.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2210.02552v1-abstract-full').style.display = 'none'; document.getElementById('2210.02552v1-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 5 October, 2022; 
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> October 2022.
+      
+    </p>
+    
+    <p class="comments is-size-7">
+      <span class="has-text-black-bis has-text-weight-semibold">Comments:</span>
+      <span class="has-text-grey-dark mathjax">to be published in IAAI (Innovative Applications of Artificial Intelligence) 2023</span>
+    </p>
+    
+
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2207.06958">arXiv:2207.06958</a>
+        <span>&nbsp;&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Sound">cs.SD</span>
+        
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Machine Learning">cs.LG</span>
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Audio and Speech Processing">eess.AS</span>
+          
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        Proceedings of the ICML 2022 Expressive Vocalizations Workshop and Competition: Recognizing, Generating, and Personalizing Vocal Bursts
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Baird%2C+A">Alice Baird</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Tzirakis%2C+P">Panagiotis Tzirakis</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Gidel%2C+G">Gauthier Gidel</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Jiralerspong%2C+M">Marco Jiralerspong</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Muller%2C+E+B">Eilif B. Muller</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Mathewson%2C+K">Kory Mathewson</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Schuller%2C+B">Björn Schuller</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Cambria%2C+E">Erik Cambria</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Keltner%2C+D">Dacher Keltner</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Cowen%2C+A">Alan Cowen</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2207.06958v2-abstract-short" style="display: inline;">
+        This is the Proceedings of the ICML Expressive Vocalization (ExVo) Competition. The ExVo competition focuses on understanding and generating vocal bursts: laughs, gasps, cries, and other non-verbal vocalizations that are central to emotional expression and communication. ExVo 2022, included three competition tracks using a large-scale dataset of 59,201 vocalizations from 1,702 speakers. The first,&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2207.06958v2-abstract-full').style.display = 'inline'; document.getElementById('2207.06958v2-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2207.06958v2-abstract-full" style="display: none;">
+        This is the Proceedings of the ICML Expressive Vocalization (ExVo) Competition. The ExVo competition focuses on understanding and generating vocal bursts: laughs, gasps, cries, and other non-verbal vocalizations that are central to emotional expression and communication. ExVo 2022, included three competition tracks using a large-scale dataset of 59,201 vocalizations from 1,702 speakers. The first, ExVo-MultiTask, requires participants to train a multi-task model to recognize expressed emotions and demographic traits from vocal bursts. The second, ExVo-Generate, requires participants to train a generative model that produces vocal bursts conveying ten different emotions. The third, ExVo-FewShot, requires participants to leverage few-shot learning incorporating speaker identity to train a model for the recognition of 10 emotions conveyed by vocal bursts.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2207.06958v2-abstract-full').style.display = 'none'; document.getElementById('2207.06958v2-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 16 August, 2022; <span class="has-text-black-bis has-text-weight-semibold">v1</span> submitted 14 July, 2022;
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> July 2022.
+      
+    </p>
+    
+
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2206.12563">arXiv:2206.12563</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2206.12563">pdf</a>, <a href="https://arxiv.org/format/2206.12563">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Sound">cs.SD</span>
+        
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Machine Learning">cs.LG</span>
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Audio and Speech Processing">eess.AS</span>
+          
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        Generating Diverse Vocal Bursts with StyleGAN2 and MEL-Spectrograms
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Jiralerspong%2C+M">Marco Jiralerspong</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Gidel%2C+G">Gauthier Gidel</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2206.12563v1-abstract-short" style="display: inline;">
+        We describe our approach for the generative emotional vocal burst task (ExVo Generate) of the ICML Expressive Vocalizations Competition. We train a conditional StyleGAN2 architecture on mel-spectrograms of preprocessed versions of the audio samples. The mel-spectrograms generated by the model are then inverted back to the audio domain. As a result, our generated samples substantially improve upon&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2206.12563v1-abstract-full').style.display = 'inline'; document.getElementById('2206.12563v1-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2206.12563v1-abstract-full" style="display: none;">
+        We describe our approach for the generative emotional vocal burst task (ExVo Generate) of the ICML Expressive Vocalizations Competition. We train a conditional StyleGAN2 architecture on mel-spectrograms of preprocessed versions of the audio samples. The mel-spectrograms generated by the model are then inverted back to the audio domain. As a result, our generated samples substantially improve upon the baseline provided by the competition from a qualitative and quantitative perspective for all emotions. More precisely, even for our worst-performing emotion (awe), we obtain an FAD of 1.76 compared to the baseline of 4.81 (as a reference, the FAD between the train/validation sets for awe is 0.776).
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2206.12563v1-abstract-full').style.display = 'none'; document.getElementById('2206.12563v1-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 25 June, 2022; 
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> June 2022.
+      
+    </p>
+    
+    <p class="comments is-size-7">
+      <span class="has-text-black-bis has-text-weight-semibold">Comments:</span>
+      <span class="has-text-grey-dark mathjax">To be published at the ICML Expressive Vocalizations Workshop and Competition (ExVo Generate) held in conjunction with the 39th International Conference on Machine Learning</span>
+    </p>
+    
+
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2205.01780">arXiv:2205.01780</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2205.01780">pdf</a>, <a href="https://arxiv.org/format/2205.01780">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Audio and Speech Processing">eess.AS</span>
+        
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Machine Learning">cs.LG</span>
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Sound">cs.SD</span>
+          
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        The ICML 2022 Expressive Vocalizations Workshop and Competition: Recognizing, Generating, and Personalizing Vocal Bursts
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Baird%2C+A">Alice Baird</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Tzirakis%2C+P">Panagiotis Tzirakis</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Gidel%2C+G">Gauthier Gidel</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Jiralerspong%2C+M">Marco Jiralerspong</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Muller%2C+E+B">Eilif B. Muller</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Mathewson%2C+K">Kory Mathewson</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Schuller%2C+B">Björn Schuller</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Cambria%2C+E">Erik Cambria</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Keltner%2C+D">Dacher Keltner</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Cowen%2C+A">Alan Cowen</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2205.01780v3-abstract-short" style="display: inline;">
+        The ICML Expressive Vocalization (ExVo) Competition is focused on understanding and generating vocal bursts: laughs, gasps, cries, and other non-verbal vocalizations that are central to emotional expression and communication. ExVo 2022, includes three competition tracks using a large-scale dataset of 59,201 vocalizations from 1,702 speakers. The first, ExVo-MultiTask, requires participants to trai&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2205.01780v3-abstract-full').style.display = 'inline'; document.getElementById('2205.01780v3-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2205.01780v3-abstract-full" style="display: none;">
+        The ICML Expressive Vocalization (ExVo) Competition is focused on understanding and generating vocal bursts: laughs, gasps, cries, and other non-verbal vocalizations that are central to emotional expression and communication. ExVo 2022, includes three competition tracks using a large-scale dataset of 59,201 vocalizations from 1,702 speakers. The first, ExVo-MultiTask, requires participants to train a multi-task model to recognize expressed emotions and demographic traits from vocal bursts. The second, ExVo-Generate, requires participants to train a generative model that produces vocal bursts conveying ten different emotions. The third, ExVo-FewShot, requires participants to leverage few-shot learning incorporating speaker identity to train a model for the recognition of 10 emotions conveyed by vocal bursts. This paper describes the three tracks and provides performance measures for baseline models using state-of-the-art machine learning strategies. The baseline for each track is as follows, for ExVo-MultiTask, a combined score, computing the harmonic mean of Concordance Correlation Coefficient (CCC), Unweighted Average Recall (UAR), and inverted Mean Absolute Error (MAE) ($S_{MTL}$) is at best, 0.335 $S_{MTL}$; for ExVo-Generate, we report Fréchet inception distance (FID) scores ranging from 4.81 to 8.27 (depending on the emotion) between the training set and generated samples. We then combine the inverted FID with perceptual ratings of the generated samples ($S_{Gen}$) and obtain 0.174 $S_{Gen}$; and for ExVo-FewShot, a mean CCC of 0.444 is obtained.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2205.01780v3-abstract-full').style.display = 'none'; document.getElementById('2205.01780v3-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 12 July, 2022; <span class="has-text-black-bis has-text-weight-semibold">v1</span> submitted 3 May, 2022;
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> May 2022.
+      
+    </p>
+    
+
+    
+
+    
+  </li>
+
+</ol>
+
+
+  
+
+
+      <div class="is-hidden-tablet">
+        <!-- feedback for mobile only -->
+        <span class="help" style="display: inline-block;"><a href="https://github.com/arXiv/arxiv-search/releases">Search v0.5.6 released 2020-02-24</a>&nbsp;&nbsp;</span>
+      </div>
+    </div>
+
+  </main>
+  <footer>
+    
+<footer class="ds-site-footer">
+  <div class="ds-site-footer-grid">
+    <div class="ds-site-footer-main">
+      <div class="ds-site-footer-ack">
+        We gratefully acknowledge support from
+        our <strong>major funders</strong>,
+        <a href="https://info.arxiv.org/about/ourmembers.html"><strong>member institutions</strong></a><span class="ack-member-inline" hidden>, <strong></strong></span>,
+        and all contributors.
+      </div>
+      <nav class="ds-site-footer-links" aria-label="Site navigation">
+        <a href="https://info.arxiv.org/about">About</a>
+        <span class="ds-site-footer-sep" aria-hidden="true">&middot;</span>
+        <a href="https://info.arxiv.org/help">Help</a>
+        <span class="ds-site-footer-sep" aria-hidden="true">&middot;</span>
+        <a href="https://info.arxiv.org/help/contact.html">Contact</a>
+        <span class="ds-site-footer-sep" aria-hidden="true">&middot;</span>
+        <a href="https://info.arxiv.org/help/subscribe">Subscribe</a>
+        <span class="ds-site-footer-sep" aria-hidden="true">&middot;</span>
+        <a href="https://info.arxiv.org/help/license/index.html">Copyright</a>
+        <span class="ds-site-footer-sep" aria-hidden="true">&middot;</span>
+        <a href="https://info.arxiv.org/help/policies/privacy_policy.html">Privacy</a>
+        <span class="ds-site-footer-sep" aria-hidden="true">&middot;</span>
+        <a href="https://info.arxiv.org/help/web_accessibility.html">Accessibility</a>
+        <span class="ds-site-footer-sep" aria-hidden="true">&middot;</span>
+        <a href="https://status.arxiv.org" target="_blank" rel="noopener noreferrer">Operational Status<span class="is-sr-only"> (opens in new tab)</span></a>
+      </nav>
+    </div>
+    <div class="ds-site-footer-funders" aria-label="Major funders">
+      <div class="ds-site-footer-funders-label">Major funding support from</div>
+      <div class="ds-site-footer-funders-logos">
+        <a class="ds-funder-link" href="https://www.simonsfoundation.org/" target="_blank" rel="noopener noreferrer">
+          <img class="ds-funder-logo" src="https://static.arxiv.org/static/base/1.0.1/images/funders/simons-foundation.png" alt="Simons Foundation"></a>
+        <a class="ds-funder-link" href="https://www.sfi.org.bm/" target="_blank" rel="noopener noreferrer">
+          <img class="ds-funder-logo" src="https://static.arxiv.org/static/base/1.0.1/images/funders/simons-foundation-international.png" alt="Simons Foundation International"></a>
+        <a class="ds-funder-link" href="https://www.schmidtsciences.org/" target="_blank" rel="noopener noreferrer">
+          <img class="ds-funder-logo" src="https://static.arxiv.org/static/base/1.0.1/images/funders/schmidt-sciences.png" alt="Schmidt Sciences"></a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+  </footer>
+  <script src="https://static.arxiv.org/static/base/1.0.0a5/js/member_acknowledgement.js"></script>
+  </body>
+</html>

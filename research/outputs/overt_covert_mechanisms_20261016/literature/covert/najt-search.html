@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<!-- new favicon config and versions by realfavicongenerator.net -->
+<link rel="apple-touch-icon" sizes="180x180" href="https://static.arxiv.org/static/base/1.0.0a5/images/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://static.arxiv.org/static/base/1.0.0a5/images/icons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="https://static.arxiv.org/static/base/1.0.0a5/images/icons/favicon-16x16.png">
+<link rel="manifest" href="https://static.arxiv.org/static/base/1.0.0a5/images/icons/site.webmanifest">
+<link rel="mask-icon" href="https://static.arxiv.org/static/base/1.0.0a5/images/icons/safari-pinned-tab.svg" color="#b31b1b">
+<link rel="shortcut icon" href="https://static.arxiv.org/static/base/1.0.0a5/images/icons/favicon.ico">
+<meta name="msapplication-TileColor" content="#b31b1b">
+<meta name="msapplication-config" content="images/icons/browserconfig.xml">
+<meta name="theme-color" content="#b31b1b">
+<!-- end favicon config -->
+<title>Search | arXiv e-print repository</title>
+<script defer src="https://static.arxiv.org/static/base/1.0.0a5/fontawesome-free-5.11.2-web/js/all.js"></script>
+<link rel="stylesheet" href="https://static.arxiv.org/static/base/1.0.0a5/css/arxivstyle.css" />
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    messageStyle: "none",
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX", "output/HTML-CSS"],
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+      processEscapes: true,
+      ignoreClass: '.*',
+      processClass: 'mathjax.*'
+    },
+    TeX: {
+        extensions: ["AMSmath.js", "AMSsymbols.js", "noErrors.js"],
+        noErrors: {
+          inlineDelimiters: ["$","$"],
+          multiLine: false,
+          style: {
+            "font-size": "normal",
+            "border": ""
+          }
+        }
+    },
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+<script src='//static.arxiv.org/MathJax-2.7.3/MathJax.js'></script>
+<script src="https://static.arxiv.org/static/base/1.0.0a5/js/notification.js"></script>
+
+    
+  <script>document.documentElement.classList.add('js');</script>
+  <link rel="stylesheet" type="text/css" media="screen" href="https://static.arxiv.org/static/base/1.0.1/css/arxiv-header-footer.css?v=20260626" />
+  <script defer src="https://static.arxiv.org/static/base/1.0.1/js/arxiv-header.js?v=20260626"></script>
+  <link rel="stylesheet" href="https://static.arxiv.org/static/search/0.5.6/css/bulma-tooltip.min.css" />
+  <link rel="stylesheet" href="https://static.arxiv.org/static/search/0.5.6/css/search.css" />
+  <script
+    src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+    integrity="sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g="
+    crossorigin="anonymous"></script>
+
+  <script src="https://static.arxiv.org/static/search/0.5.6/js/fieldset.js"></script>
+  <style>
+  radio#cf-customfield_11400 {
+    display: none;
+  }
+  /* Render the spinout .ds-site-footer standalone / full-bleed. search extends the
+     legacy base, whose bare wrapping <footer> (in base/base.html, outside any
+     overridable block — so it can't be removed from here) is styled by
+     arxivstyle.css with a grey background (hsl(0,0%,95%)) + 1em 2em padding,
+     boxing our warm-wash footer inside a second grey band. display:contents drops
+     the wrapper's box entirely (cleaner than zeroing individual properties) so
+     .ds-site-footer renders in its place; it inherits flex-shrink:0 from the same
+     legacy `footer` rule, so the sticky footer still works. Search-specific
+     legacy-base integration; the shared chrome CSS stays byte-identical to the SSOT. */
+  body > footer {
+    display: contents;
+  }
+  </style>
+
+  </head>
+  <body>
+  
+  
+  <header><a href="#main-container" class="is-sr-only">Skip to main content</a>
+    <div class="ds-announcement" id="announcement-banner" role="region" aria-label="Announcement" data-banner-name="spinout-nonprofit">
+  <img class="ds-announcement-glyph" src="https://static.arxiv.org/static/base/1.0.1/images/icons/smileybones-small.svg" alt="" aria-hidden="true">
+  <span class="ds-announcement-text">arXiv is now an independent nonprofit!</span>
+  <a class="ds-announcement-link" href="https://info.arxiv.org/about">Learn more</a>
+  <button type="button" class="ds-announcement-close" aria-label="Dismiss announcement">&times;</button>
+</div>
+<header class="ds-site-header">
+  <a href="https://arxiv.org/" class="ds-site-header-logo" aria-label="archive home">
+    <img src="https://static.arxiv.org/static/base/1.0.1/images/arxiv-logo-primary-light.svg" alt="archive">
+  </a>
+  <button type="button" id="ds-nav-toggle" class="ds-site-header-nav-toggle"
+    aria-label="Open menu" aria-controls="ds-site-header-nav" aria-expanded="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+  <nav class="ds-site-header-nav" id="ds-site-header-nav" aria-label="Main navigation">
+    <a id="arxiv-search-toggle" href="/search" aria-controls="arxiv-search-overlay" aria-expanded="false">
+      <svg class="ds-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      Search
+    </a>
+    <a href="https://arxiv.org/user/create">Submit</a>
+    <a href="https://info.arxiv.org/about/donate.html">Donate</a>
+    <span class="ds-site-header-divider" aria-hidden="true"></span>
+    <a href="https://arxiv.org/login" class="ds-site-header-login">Log in</a>
+  </nav>
+</header>
+
+<div class="arxiv-search-overlay" id="arxiv-search-overlay" hidden>
+  <div class="arxiv-search-panel" role="search">
+    <form method="GET" action="/search">
+      <label for="arxiv-search-input" class="is-sr-only">Search arXiv</label>
+      <input type="text" name="query" id="arxiv-search-input" autocomplete="off"
+        placeholder="Search papers by title, author, abstract, or ID...">
+      <input type="hidden" name="searchtype" value="all">
+      <input type="hidden" name="source" value="header">
+    </form>
+    <div class="arxiv-search-hint">
+      Press Enter to search &middot; <a href="/search/advanced">Advanced search</a>
+    </div>
+  </div>
+</div>
+
+  </header>
+  <main class="container" id="main-container">
+    
+
+
+    
+  <div class="level is-marginless">
+    <div class="level-left">
+      <h1 class="title is-clearfix">
+    
+        Showing 1&ndash;7 of 7 results for all: <span class="mathjax">Najt</span>
+    
+</h1>
+    </div>
+    <div class="level-right is-hidden-mobile">
+      <!-- feedback for mobile is moved to footer -->
+      <span class="help" style="display: inline-block;"><a href="https://github.com/arXiv/arxiv-search/releases">Search v0.5.6 released 2020-02-24</a>&nbsp;&nbsp;</span>
+    </div>
+  </div>
+    <div class="content">
+      
+  <form method="GET" action="/search/"  aria-role="search">
+    
+
+    
+    <div class="field has-addons-tablet">
+      <div class="control is-expanded">
+        <label for="query" class="hidden-label">Search term or terms</label>
+        
+          <input class="input is-medium" id="query" name="query" placeholder="Search term..." type="text" value="Najt">
+        
+        
+      </div>
+      <div class="select control is-medium">
+        <label class="is-hidden" for="searchtype">Field</label>
+        <select class="is-medium" id="searchtype" name="searchtype"><option selected value="all">All fields</option><option value="title">Title</option><option value="author">Author(s)</option><option value="abstract">Abstract</option><option value="comments">Comments</option><option value="journal_ref">Journal reference</option><option value="acm_class">ACM classification</option><option value="msc_class">MSC classification</option><option value="report_num">Report number</option><option value="paper_id">arXiv identifier</option><option value="doi">DOI</option><option value="orcid">ORCID</option><option value="license">License (URI)</option><option value="author_id">arXiv author ID</option><option value="help">Help pages</option><option value="full_text">Full text</option></select>
+      </div>
+      <div class="control">
+          <button class="button is-link is-medium">Search</button>
+      </div>
+    </div>
+    <div class="field">
+      <div class="control is-size-7">
+        
+        <label class="radio">
+          <input checked id="abstracts-0" name="abstracts" type="radio" value="show"> Show abstracts
+        </label>
+        
+        <label class="radio">
+          <input id="abstracts-1" name="abstracts" type="radio" value="hide"> Hide abstracts
+        </label>
+        
+      </div>
+    </div>
+    <div class="is-clearfix" style="height: 2.5em"> 
+      <div class="is-pulled-right">
+        
+        <a href="/search/advanced?terms-0-term=Najt&amp;terms-0-field=all&amp;size=50&amp;order=-announced_date_first">Advanced Search</a>
+        
+      </div>
+    </div>
+    <input type="hidden" name="order" value="-announced_date_first">
+    <input type="hidden" name="size" value="50">
+  </form>
+
+  
+
+  
+      
+<div class="level breathe-horizontal">
+  <div class="level-left">
+    <form method="GET" action="/search/">
+      <div style="display: none;">
+        
+          
+            <select id="searchtype" name="searchtype"><option selected value="all">All fields</option><option value="title">Title</option><option value="author">Author(s)</option><option value="abstract">Abstract</option><option value="comments">Comments</option><option value="journal_ref">Journal reference</option><option value="acm_class">ACM classification</option><option value="msc_class">MSC classification</option><option value="report_num">Report number</option><option value="paper_id">arXiv identifier</option><option value="doi">DOI</option><option value="orcid">ORCID</option><option value="license">License (URI)</option><option value="author_id">arXiv author ID</option><option value="help">Help pages</option><option value="full_text">Full text</option></select>
+          
+        
+          
+            <input id="query" name="query" type="text" value="Najt">
+          
+        
+          
+        
+          
+        
+          
+            <ul id="abstracts"><li><input checked id="abstracts-0" name="abstracts" type="radio" value="show"> <label for="abstracts-0">Show abstracts</label></li><li><input id="abstracts-1" name="abstracts" type="radio" value="hide"> <label for="abstracts-1">Hide abstracts</label></li></ul>
+          
+        
+      </div>
+      <div class="box field is-grouped is-grouped-multiline level-item">
+        <div class="control">
+          <span class="select is-small">
+            <select id="size" name="size"><option value="25">25</option><option selected value="50">50</option><option value="100">100</option><option value="200">200</option></select>
+          </span>
+          <label for="size">results per page</label>.
+        </div>
+        <div class="control">
+          <label for="order">Sort results by</label>
+          <span class="select is-small">
+            <select id="order" name="order"><option selected value="-announced_date_first">Announcement date (newest first)</option><option value="announced_date_first">Announcement date (oldest first)</option><option value="-submitted_date">Submission date (newest first)</option><option value="submitted_date">Submission date (oldest first)</option><option value="">Relevance</option></select>
+          </span>
+        </div>
+        <div class="control">
+          <button class="button is-small is-link">Go</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+      
+
+
+
+
+<ol class="breathe-horizontal" start="1"> 
+
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2606.07157">arXiv:2606.07157</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2606.07157">pdf</a>, <a href="https://arxiv.org/ps/2606.07157">ps</a>, <a href="https://arxiv.org/format/2606.07157">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Artificial Intelligence">cs.AI</span>
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        Think Fast: Estimating No-CoT Task-Completion Time Horizons of Frontier AI Models
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Gould%2C+D">Dewi Gould</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Ward%2C+F+R">Francis Rhys Ward</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Woodruff%2C+A+C">Anders Cairns Woodruff</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Arike%2C+R">Rauno Arike</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Hills%2C+J">Josh Hills</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Serrano%2C+A">Alex Serrano</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Caspary%2C+I">Ida Caspary</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Brown%2C+J+R">Jason Ross Brown</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Jiao%2C+J+J">Jo J. Jiao</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Leask%2C+P">Patrick Leask</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Stone%2C+T">Twm Stone</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Potham%2C+R">Ram Potham</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Stan%2C+I+G">Ionut Gabriel Stan</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Mayne%2C+H">Harry Mayne</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Hellsten%2C+S">Simeon Hellsten</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Biswas%2C+S">Shubhorup Biswas</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Azarbal%2C+A">Ariana Azarbal</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Anderson%2C+W+L">William L. Anderson</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Najt%2C+E">Elle Najt</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Greenblatt%2C+R">Ryan Greenblatt</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Stastny%2C+J">Julian Stastny</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2606.07157v4-abstract-short" style="display: inline;">
+        Many efforts to ensure frontier AI models are safe rely on monitoring their chain-of-thought (CoT) reasoning. If models become able to perform sufficiently complex reasoning internally, without explicit thinking tokens, this would undermine such oversight. We measure how well frontier models reason without CoT across a suite of over 30,000 questions spanning 43 benchmarks in domains including math&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2606.07157v4-abstract-full').style.display = 'inline'; document.getElementById('2606.07157v4-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2606.07157v4-abstract-full" style="display: none;">
+        Many efforts to ensure frontier AI models are safe rely on monitoring their chain-of-thought (CoT) reasoning. If models become able to perform sufficiently complex reasoning internally, without explicit thinking tokens, this would undermine such oversight. We measure how well frontier models reason without CoT across a suite of over 30,000 questions spanning 43 benchmarks in domains including math, coding, puzzles, causality, theory-of-mind, and strategic reasoning. To compare models against humans, we estimate the $50\%$-task-completion time horizon (TH): the human time required for tasks a model completes with $50\%$ success rate. We complement this with a $50\%$ reasoning token horizon: the minimum number of o3-mini reasoning tokens needed for tasks a model solves with $50\%$ success rate. We find that the no-CoT $50\%$ TH of frontier models has been doubling roughly every year over the past six years, with GPT-5.5&#39;s TH reaching over 3 minutes and reasoning token horizon exceeding 1,500 tokens. Our median estimates predict that frontier no-CoT THs could exceed 7 minutes by 2028, and 25 minutes by 2030, though these projections carry substantial uncertainty. We recommend frontier developers track this explicitly.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2606.07157v4-abstract-full').style.display = 'none'; document.getElementById('2606.07157v4-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 4 August, 2026; <span class="has-text-black-bis has-text-weight-semibold">v1</span> submitted 5 June, 2026;
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> June 2026.
+      
+    </p>
+    
+
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2605.16626">arXiv:2605.16626</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2605.16626">pdf</a>, <a href="https://arxiv.org/ps/2605.16626">ps</a>, <a href="https://arxiv.org/format/2605.16626">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Cryptography and Security">cs.CR</span>
+        
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Artificial Intelligence">cs.AI</span>
+          
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        SLEIGHT-Bench: A Benchmark of Evasion Attacks Against Agent Monitors
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Najt%2C+E">Elle Najt</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Toft%2C+C">Colin Toft</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Tracy%2C+T">Tyler Tracy</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Roger%2C+F">Fabien Roger</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Benton%2C+J">Joe Benton</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2605.16626v2-abstract-short" style="display: inline;">
+        Since autonomous coding agents generate complex behaviors at high-volume, we may want to use other LLMs to monitor actions to reduce the risk from dangerous misaligned behavior. To better understand the limitations of such monitors against the diverse attack strategies that a coding agent could use, we present SLEIGHT-Bench (Subtle Low-itEration Insight-Guided Harmful Transcripts), a benchmark of&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2605.16626v2-abstract-full').style.display = 'inline'; document.getElementById('2605.16626v2-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2605.16626v2-abstract-full" style="display: none;">
+        Since autonomous coding agents generate complex behaviors at high-volume, we may want to use other LLMs to monitor actions to reduce the risk from dangerous misaligned behavior. To better understand the limitations of such monitors against the diverse attack strategies that a coding agent could use, we present SLEIGHT-Bench (Subtle Low-itEration Insight-Guided Harmful Transcripts), a benchmark of synthetic transcripts containing 40 attacks across 11 categories, each showing a coding agent covertly pursuing a harmful objective (e.g. weight exfiltration, credential theft, unmonitored rogue deployment). We find that 20 of 40 attacks are never caught by an Opus 4.6 monitor with extended thinking across 10 trials at a 1% false-positive rate, while the overall catch rate is 32%. We identify several evasion strategies such as exploiting model priors, user instruction ambiguity, and state manipulation, which facilitate creating attacks that evade frontier monitors. We also elicit stronger monitor performance using coding agents as monitors versus regular prompted monitors, and for some evasion strategies show improved catch rates with targeted monitor prompts. Our dataset and evaluation framework are available at https://github.com/safety-research/sleight-bench and https://huggingface.co/datasets/sleightbench/SLEIGHT-Bench.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2605.16626v2-abstract-full').style.display = 'none'; document.getElementById('2605.16626v2-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 18 May, 2026; <span class="has-text-black-bis has-text-weight-semibold">v1</span> submitted 15 May, 2026;
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> May 2026.
+      
+    </p>
+    
+
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2604.03121">arXiv:2604.03121</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2604.03121">pdf</a>, <a href="https://arxiv.org/ps/2604.03121">ps</a>, <a href="https://arxiv.org/format/2604.03121">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Cryptography and Security">cs.CR</span>
+        
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Artificial Intelligence">cs.AI</span>
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Computation and Language">cs.CL</span>
+          
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        An Independent Safety Evaluation of Kimi K2.5
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Yong%2C+Z">Zheng-Xin Yong</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Mahajan%2C+P">Parv Mahajan</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Wang%2C+A">Andy Wang</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Caspary%2C+I">Ida Caspary</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Yestekov%2C+Y">Yernat Yestekov</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Che%2C+Z">Zora Che</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Levy%2C+M">Mosh Levy</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Najt%2C+E">Elle Najt</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Murphy%2C+D">Dennis Murphy</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Kulkarni%2C+P">Prashant Kulkarni</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=McKinney%2C+L">Lev McKinney</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Nishimura-Gasparian%2C+K">Kei Nishimura-Gasparian</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Potham%2C+R">Ram Potham</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Lynch%2C+A">Aengus Lynch</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Chen%2C+M+L">Michael L. Chen</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2604.03121v1-abstract-short" style="display: inline;">
+        Kimi K2.5 is an open-weight LLM that rivals closed models across coding, multimodal, and agentic benchmarks, but was released without an accompanying safety evaluation. In this work, we conduct a preliminary safety assessment of Kimi K2.5 focusing on risks likely to be exacerbated by powerful open-weight models. Specifically, we evaluate the model for CBRNE misuse risk, cybersecurity risk, misalig&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2604.03121v1-abstract-full').style.display = 'inline'; document.getElementById('2604.03121v1-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2604.03121v1-abstract-full" style="display: none;">
+        Kimi K2.5 is an open-weight LLM that rivals closed models across coding, multimodal, and agentic benchmarks, but was released without an accompanying safety evaluation. In this work, we conduct a preliminary safety assessment of Kimi K2.5 focusing on risks likely to be exacerbated by powerful open-weight models. Specifically, we evaluate the model for CBRNE misuse risk, cybersecurity risk, misalignment, political censorship, bias, and harmlessness, in both agentic and non-agentic settings. We find that Kimi K2.5 shows similar dual-use capabilities to GPT 5.2 and Claude Opus 4.5, but with significantly fewer refusals on CBRNE-related requests, suggesting it may uplift malicious actors in weapon creation. On cyber-related tasks, we find that Kimi K2.5 demonstrates competitive cybersecurity performance, but it does not appear to possess frontier-level autonomous cyberoffensive capabilities such as vulnerability discovery and exploitation. We further find that Kimi K2.5 shows concerning levels of sabotage ability and self-replication propensity, although it does not appear to have long-term malicious goals. In addition, Kimi K2.5 exhibits narrow censorship and political bias, especially in Chinese, and is more compliant with harmful requests related to spreading disinformation and copyright infringement. Finally, we find the model refuses to engage in user delusions and generally has low over-refusal rates. While preliminary, our findings highlight how safety risks exist in frontier open-weight models and may be amplified by the scale and accessibility of open-weight releases. Therefore, we strongly urge open-weight model developers to conduct and release more systematic safety evaluations required for responsible deployment.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2604.03121v1-abstract-full').style.display = 'none'; document.getElementById('2604.03121v1-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 3 April, 2026; 
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> April 2026.
+      
+    </p>
+    
+
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2203.17167">arXiv:2203.17167</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2203.17167">pdf</a>, <a href="https://arxiv.org/format/2203.17167">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Computational Complexity">cs.CC</span>
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        The Legend of Zelda: The Complexity of Mechanics
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Bosboom%2C+J">Jeffrey Bosboom</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Brunner%2C+J">Josh Brunner</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Coulombe%2C+M">Michael Coulombe</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Demaine%2C+E+D">Erik D. Demaine</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Hendrickson%2C+D+H">Dylan H. Hendrickson</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Lynch%2C+J">Jayson Lynch</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Najt%2C+E">Elle Najt</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2203.17167v1-abstract-short" style="display: inline;">
+        We analyze some of the many game mechanics available to Link in the classic Legend of Zelda series of video games. In each case, we prove that the generalized game with that mechanic is polynomial, NP-complete, NP-hard and in PSPACE, or PSPACE-complete. In the process we give an overview of many of the hardness proof techniques developed for video games over the past decade: the motion-planning-th&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2203.17167v1-abstract-full').style.display = 'inline'; document.getElementById('2203.17167v1-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2203.17167v1-abstract-full" style="display: none;">
+        We analyze some of the many game mechanics available to Link in the classic Legend of Zelda series of video games. In each case, we prove that the generalized game with that mechanic is polynomial, NP-complete, NP-hard and in PSPACE, or PSPACE-complete. In the process we give an overview of many of the hardness proof techniques developed for video games over the past decade: the motion-planning-through-gadgets framework, the planar doors framework, the doors-and-buttons framework, the &#34;Nintendo&#34; platform game / SAT framework, and the collectible tokens and toll roads / Hamiltonicity framework.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2203.17167v1-abstract-full').style.display = 'none'; document.getElementById('2203.17167v1-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 31 March, 2022; 
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> March 2022.
+      
+    </p>
+    
+    <p class="comments is-size-7">
+      <span class="has-text-black-bis has-text-weight-semibold">Comments:</span>
+      <span class="has-text-grey-dark mathjax">Full version of the paper appearing at TJCDCGGG 2021. 27 pages, 14 figures</span>
+    </p>
+    
+
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2012.04564">arXiv:2012.04564</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2012.04564">pdf</a>, <a href="https://arxiv.org/format/2012.04564">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Physics and Society">physics.soc-ph</span>
+        
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Statistical Mechanics">cond-mat.stat-mech</span>
+          
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        Empirical Sampling of Connected Graph Partitions for Redistricting
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Najt%2C+E">Elle Najt</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=DeFord%2C+D">Daryl DeFord</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Solomon%2C+J">Justin Solomon</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2012.04564v1-abstract-short" style="display: inline;">
+        The space of connected graph partitions underlies statistical models used as evidence in court cases and reform efforts that analyze political districting plans. In response to the demands of redistricting applications, researchers have developed sampling methods that traverse this space, building on techniques developed for statistical physics. In this paper, we study connections between redist&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2012.04564v1-abstract-full').style.display = 'inline'; document.getElementById('2012.04564v1-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2012.04564v1-abstract-full" style="display: none;">
+          The space of connected graph partitions underlies statistical models used as evidence in court cases and reform efforts that analyze political districting plans. In response to the demands of redistricting applications, researchers have developed sampling methods that traverse this space, building on techniques developed for statistical physics. In this paper, we study connections between redistricting and statistical physics, and in particular with self-avoiding walks. We exploit knowledge of phase transitions and asymptotic behavior in self avoiding walks to analyze two questions of crucial importance for Markov Chain Monte Carlo analysis of districting plans. First, we examine mixing times of a popular Glauber dynamics based Markov chain and show how the self-avoiding walk phase transitions interact with mixing time. We examine factors new to the redistricting context that complicate the picture, notably the population balance requirements, connectivity requirements, and the irregular graphs used. Second, we analyze the robustness of the qualitative properties of typical districting plans with respect to score functions and a certain lattice-like graph, called the state-dual graph, that is used as a discretization of geographic regions in most districting analysis. This helps us better understand the complex relationship between typical properties of districting plans and the score functions designed by political districting analysts. We conclude with directions for research at the interface of statistical physics, Markov chains, and political districting.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2012.04564v1-abstract-full').style.display = 'none'; document.getElementById('2012.04564v1-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 8 December, 2020; 
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> December 2020.
+      
+    </p>
+    
+    <p class="comments is-size-7">
+      <span class="has-text-black-bis has-text-weight-semibold">Comments:</span>
+      <span class="has-text-grey-dark mathjax">17 pages</span>
+    </p>
+    
+
+    
+      <p class="comments is-size-7">
+        
+
+        
+          <span class="has-text-black-bis has-text-weight-semibold">MSC Class:</span>
+          62P25; 82-05
+        
+
+        
+          <span class="has-text-black-bis has-text-weight-semibold">ACM Class:</span>
+          K.4.1; G.3
+        
+      </p>
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/1908.08881">arXiv:1908.08881</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/1908.08881">pdf</a>, <a href="https://arxiv.org/format/1908.08881">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Computational Complexity">cs.CC</span>
+        
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Computers and Society">cs.CY</span>
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Discrete Mathematics">cs.DM</span>
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Combinatorics">math.CO</span>
+          
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        Complexity and Geometry of Sampling Connected Graph Partitions
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Najt%2C+E">Elle Najt</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=DeFord%2C+D">Daryl DeFord</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Solomon%2C+J">Justin Solomon</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="1908.08881v1-abstract-short" style="display: inline;">
+        In this paper, we prove intractability results about sampling from the set of partitions of a planar graph into connected components. Our proofs are motivated by a technique introduced by Jerrum, Valiant, and Vazirani. Moreover, we use gadgets inspired by their technique to provide families of graphs where the &#34;flip walk&#34; Markov chain used in practice for this sampling task exhibits exponentiall&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('1908.08881v1-abstract-full').style.display = 'inline'; document.getElementById('1908.08881v1-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="1908.08881v1-abstract-full" style="display: none;">
+          In this paper, we prove intractability results about sampling from the set of partitions of a planar graph into connected components. Our proofs are motivated by a technique introduced by Jerrum, Valiant, and Vazirani. Moreover, we use gadgets inspired by their technique to provide families of graphs where the &#34;flip walk&#34; Markov chain used in practice for this sampling task exhibits exponentially slow mixing. Supporting our theoretical results we present some empirical evidence demonstrating the slow mixing of the flip walk on grid graphs and on real data. Inspired by connections to the statistical physics of self-avoiding walks, we investigate the sensitivity of certain popular sampling algorithms to the graph topology. Finally, we discuss a few cases where the sampling problem is tractable. Applications to political redistricting have recently brought increased attention to this problem, and we articulate open questions about this application that are highlighted by our results.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('1908.08881v1-abstract-full').style.display = 'none'; document.getElementById('1908.08881v1-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 23 August, 2019; 
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> August 2019.
+      
+    </p>
+    
+
+    
+      <p class="comments is-size-7">
+        
+
+        
+          <span class="has-text-black-bis has-text-weight-semibold">MSC Class:</span>
+          60J10; 68Q17; 68R10; 97A40; 68Q25
+        
+
+        
+          <span class="has-text-black-bis has-text-weight-semibold">ACM Class:</span>
+          G.2.1; G.2.2; G.3; F.2.2; K.4.1; K.5.2
+        
+      </p>
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/1905.03173">arXiv:1905.03173</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/1905.03173">pdf</a>, <a href="https://arxiv.org/format/1905.03173">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Physics and Society">physics.soc-ph</span>
+        
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Differential Geometry">math.DG</span>
+          
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        The Gerrymandering Jumble: Map Projections Permute Districts&#39; Compactness Scores
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Bar-Natan%2C+A">Assaf Bar-Natan</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Najt%2C+E">Elle Najt</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Schutzman%2C+Z">Zachary Schutzman</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="1905.03173v2-abstract-short" style="display: inline;">
+        In political redistricting, the compactness of a district is used as a quantitative proxy for its fairness. Several well-established, yet competing, notions of geographic compactness are commonly used to evaluate the shapes of regions, including the Polsby-Popper score, the convex hull score, and the Reock score, and these scores are used to compare two or more districts or plans. In this paper, w&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('1905.03173v2-abstract-full').style.display = 'inline'; document.getElementById('1905.03173v2-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="1905.03173v2-abstract-full" style="display: none;">
+        In political redistricting, the compactness of a district is used as a quantitative proxy for its fairness. Several well-established, yet competing, notions of geographic compactness are commonly used to evaluate the shapes of regions, including the Polsby-Popper score, the convex hull score, and the Reock score, and these scores are used to compare two or more districts or plans. In this paper, we prove mathematically that any map projection from the sphere to the plane reverses the ordering of the scores of some pair of regions for all three of these scores. Empirically, we demonstrate that the effect of using the Cartesian latitude-longitude projection on the order of Reock scores is quite dramatic.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('1905.03173v2-abstract-full').style.display = 'none'; document.getElementById('1905.03173v2-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 13 May, 2019; <span class="has-text-black-bis has-text-weight-semibold">v1</span> submitted 1 May, 2019;
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> May 2019.
+      
+    </p>
+    
+    <p class="comments is-size-7">
+      <span class="has-text-black-bis has-text-weight-semibold">Comments:</span>
+      <span class="has-text-grey-dark mathjax">20 pages, 13 figures</span>
+    </p>
+    
+
+    
+      <p class="comments is-size-7">
+        
+
+        
+          <span class="has-text-black-bis has-text-weight-semibold">MSC Class:</span>
+          53A05 (Primary) 91D20; 97G60 (Secondary)
+        
+
+        
+      </p>
+    
+
+    
+  </li>
+
+</ol>
+
+
+  
+
+
+      <div class="is-hidden-tablet">
+        <!-- feedback for mobile only -->
+        <span class="help" style="display: inline-block;"><a href="https://github.com/arXiv/arxiv-search/releases">Search v0.5.6 released 2020-02-24</a>&nbsp;&nbsp;</span>
+      </div>
+    </div>
+
+  </main>
+  <footer>
+    
+<footer class="ds-site-footer">
+  <div class="ds-site-footer-grid">
+    <div class="ds-site-footer-main">
+      <div class="ds-site-footer-ack">
+        We gratefully acknowledge support from
+        our <strong>major funders</strong>,
+        <a href="https://info.arxiv.org/about/ourmembers.html"><strong>member institutions</strong></a><span class="ack-member-inline" hidden>, <strong></strong></span>,
+        and all contributors.
+      </div>
+      <nav class="ds-site-footer-links" aria-label="Site navigation">
+        <a href="https://info.arxiv.org/about">About</a>
+        <span class="ds-site-footer-sep" aria-hidden="true">&middot;</span>
+        <a href="https://info.arxiv.org/help">Help</a>
+        <span class="ds-site-footer-sep" aria-hidden="true">&middot;</span>
+        <a href="https://info.arxiv.org/help/contact.html">Contact</a>
+        <span class="ds-site-footer-sep" aria-hidden="true">&middot;</span>
+        <a href="https://info.arxiv.org/help/subscribe">Subscribe</a>
+        <span class="ds-site-footer-sep" aria-hidden="true">&middot;</span>
+        <a href="https://info.arxiv.org/help/license/index.html">Copyright</a>
+        <span class="ds-site-footer-sep" aria-hidden="true">&middot;</span>
+        <a href="https://info.arxiv.org/help/policies/privacy_policy.html">Privacy</a>
+        <span class="ds-site-footer-sep" aria-hidden="true">&middot;</span>
+        <a href="https://info.arxiv.org/help/web_accessibility.html">Accessibility</a>
+        <span class="ds-site-footer-sep" aria-hidden="true">&middot;</span>
+        <a href="https://status.arxiv.org" target="_blank" rel="noopener noreferrer">Operational Status<span class="is-sr-only"> (opens in new tab)</span></a>
+      </nav>
+    </div>
+    <div class="ds-site-footer-funders" aria-label="Major funders">
+      <div class="ds-site-footer-funders-label">Major funding support from</div>
+      <div class="ds-site-footer-funders-logos">
+        <a class="ds-funder-link" href="https://www.simonsfoundation.org/" target="_blank" rel="noopener noreferrer">
+          <img class="ds-funder-logo" src="https://static.arxiv.org/static/base/1.0.1/images/funders/simons-foundation.png" alt="Simons Foundation"></a>
+        <a class="ds-funder-link" href="https://www.sfi.org.bm/" target="_blank" rel="noopener noreferrer">
+          <img class="ds-funder-logo" src="https://static.arxiv.org/static/base/1.0.1/images/funders/simons-foundation-international.png" alt="Simons Foundation International"></a>
+        <a class="ds-funder-link" href="https://www.schmidtsciences.org/" target="_blank" rel="noopener noreferrer">
+          <img class="ds-funder-logo" src="https://static.arxiv.org/static/base/1.0.1/images/funders/schmidt-sciences.png" alt="Schmidt Sciences"></a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+  </footer>
+  <script src="https://static.arxiv.org/static/base/1.0.0a5/js/member_acknowledgement.js"></script>
+  </body>
+</html>

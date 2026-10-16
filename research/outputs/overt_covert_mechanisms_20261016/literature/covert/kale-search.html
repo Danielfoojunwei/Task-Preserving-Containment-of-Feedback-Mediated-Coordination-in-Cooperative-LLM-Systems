@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<!-- new favicon config and versions by realfavicongenerator.net -->
+<link rel="apple-touch-icon" sizes="180x180" href="https://static.arxiv.org/static/base/1.0.0a5/images/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://static.arxiv.org/static/base/1.0.0a5/images/icons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="https://static.arxiv.org/static/base/1.0.0a5/images/icons/favicon-16x16.png">
+<link rel="manifest" href="https://static.arxiv.org/static/base/1.0.0a5/images/icons/site.webmanifest">
+<link rel="mask-icon" href="https://static.arxiv.org/static/base/1.0.0a5/images/icons/safari-pinned-tab.svg" color="#b31b1b">
+<link rel="shortcut icon" href="https://static.arxiv.org/static/base/1.0.0a5/images/icons/favicon.ico">
+<meta name="msapplication-TileColor" content="#b31b1b">
+<meta name="msapplication-config" content="images/icons/browserconfig.xml">
+<meta name="theme-color" content="#b31b1b">
+<!-- end favicon config -->
+<title>Search | arXiv e-print repository</title>
+<script defer src="https://static.arxiv.org/static/base/1.0.0a5/fontawesome-free-5.11.2-web/js/all.js"></script>
+<link rel="stylesheet" href="https://static.arxiv.org/static/base/1.0.0a5/css/arxivstyle.css" />
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    messageStyle: "none",
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX", "output/HTML-CSS"],
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+      processEscapes: true,
+      ignoreClass: '.*',
+      processClass: 'mathjax.*'
+    },
+    TeX: {
+        extensions: ["AMSmath.js", "AMSsymbols.js", "noErrors.js"],
+        noErrors: {
+          inlineDelimiters: ["$","$"],
+          multiLine: false,
+          style: {
+            "font-size": "normal",
+            "border": ""
+          }
+        }
+    },
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+<script src='//static.arxiv.org/MathJax-2.7.3/MathJax.js'></script>
+<script src="https://static.arxiv.org/static/base/1.0.0a5/js/notification.js"></script>
+
+    
+  <script>document.documentElement.classList.add('js');</script>
+  <link rel="stylesheet" type="text/css" media="screen" href="https://static.arxiv.org/static/base/1.0.1/css/arxiv-header-footer.css?v=20260626" />
+  <script defer src="https://static.arxiv.org/static/base/1.0.1/js/arxiv-header.js?v=20260626"></script>
+  <link rel="stylesheet" href="https://static.arxiv.org/static/search/0.5.6/css/bulma-tooltip.min.css" />
+  <link rel="stylesheet" href="https://static.arxiv.org/static/search/0.5.6/css/search.css" />
+  <script
+    src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+    integrity="sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g="
+    crossorigin="anonymous"></script>
+
+  <script src="https://static.arxiv.org/static/search/0.5.6/js/fieldset.js"></script>
+  <style>
+  radio#cf-customfield_11400 {
+    display: none;
+  }
+  /* Render the spinout .ds-site-footer standalone / full-bleed. search extends the
+     legacy base, whose bare wrapping <footer> (in base/base.html, outside any
+     overridable block — so it can't be removed from here) is styled by
+     arxivstyle.css with a grey background (hsl(0,0%,95%)) + 1em 2em padding,
+     boxing our warm-wash footer inside a second grey band. display:contents drops
+     the wrapper's box entirely (cleaner than zeroing individual properties) so
+     .ds-site-footer renders in its place; it inherits flex-shrink:0 from the same
+     legacy `footer` rule, so the sticky footer still works. Search-specific
+     legacy-base integration; the shared chrome CSS stays byte-identical to the SSOT. */
+  body > footer {
+    display: contents;
+  }
+  </style>
+
+  </head>
+  <body>
+  
+  
+  <header><a href="#main-container" class="is-sr-only">Skip to main content</a>
+    <div class="ds-announcement" id="announcement-banner" role="region" aria-label="Announcement" data-banner-name="spinout-nonprofit">
+  <img class="ds-announcement-glyph" src="https://static.arxiv.org/static/base/1.0.1/images/icons/smileybones-small.svg" alt="" aria-hidden="true">
+  <span class="ds-announcement-text">arXiv is now an independent nonprofit!</span>
+  <a class="ds-announcement-link" href="https://info.arxiv.org/about">Learn more</a>
+  <button type="button" class="ds-announcement-close" aria-label="Dismiss announcement">&times;</button>
+</div>
+<header class="ds-site-header">
+  <a href="https://arxiv.org/" class="ds-site-header-logo" aria-label="archive home">
+    <img src="https://static.arxiv.org/static/base/1.0.1/images/arxiv-logo-primary-light.svg" alt="archive">
+  </a>
+  <button type="button" id="ds-nav-toggle" class="ds-site-header-nav-toggle"
+    aria-label="Open menu" aria-controls="ds-site-header-nav" aria-expanded="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+  <nav class="ds-site-header-nav" id="ds-site-header-nav" aria-label="Main navigation">
+    <a id="arxiv-search-toggle" href="/search" aria-controls="arxiv-search-overlay" aria-expanded="false">
+      <svg class="ds-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      Search
+    </a>
+    <a href="https://arxiv.org/user/create">Submit</a>
+    <a href="https://info.arxiv.org/about/donate.html">Donate</a>
+    <span class="ds-site-header-divider" aria-hidden="true"></span>
+    <a href="https://arxiv.org/login" class="ds-site-header-login">Log in</a>
+  </nav>
+</header>
+
+<div class="arxiv-search-overlay" id="arxiv-search-overlay" hidden>
+  <div class="arxiv-search-panel" role="search">
+    <form method="GET" action="/search">
+      <label for="arxiv-search-input" class="is-sr-only">Search arXiv</label>
+      <input type="text" name="query" id="arxiv-search-input" autocomplete="off"
+        placeholder="Search papers by title, author, abstract, or ID...">
+      <input type="hidden" name="searchtype" value="all">
+      <input type="hidden" name="source" value="header">
+    </form>
+    <div class="arxiv-search-hint">
+      Press Enter to search &middot; <a href="/search/advanced">Advanced search</a>
+    </div>
+  </div>
+</div>
+
+  </header>
+  <main class="container" id="main-container">
+    
+
+
+    
+  <div class="level is-marginless">
+    <div class="level-left">
+      <h1 class="title is-clearfix">
+    
+        Showing 1&ndash;4 of 4 results for all: <span class="mathjax">Kale monitoring</span>
+    
+</h1>
+    </div>
+    <div class="level-right is-hidden-mobile">
+      <!-- feedback for mobile is moved to footer -->
+      <span class="help" style="display: inline-block;"><a href="https://github.com/arXiv/arxiv-search/releases">Search v0.5.6 released 2020-02-24</a>&nbsp;&nbsp;</span>
+    </div>
+  </div>
+    <div class="content">
+      
+  <form method="GET" action="/search/"  aria-role="search">
+    
+
+    
+    <div class="field has-addons-tablet">
+      <div class="control is-expanded">
+        <label for="query" class="hidden-label">Search term or terms</label>
+        
+          <input class="input is-medium" id="query" name="query" placeholder="Search term..." type="text" value="Kale monitoring">
+        
+        
+      </div>
+      <div class="select control is-medium">
+        <label class="is-hidden" for="searchtype">Field</label>
+        <select class="is-medium" id="searchtype" name="searchtype"><option selected value="all">All fields</option><option value="title">Title</option><option value="author">Author(s)</option><option value="abstract">Abstract</option><option value="comments">Comments</option><option value="journal_ref">Journal reference</option><option value="acm_class">ACM classification</option><option value="msc_class">MSC classification</option><option value="report_num">Report number</option><option value="paper_id">arXiv identifier</option><option value="doi">DOI</option><option value="orcid">ORCID</option><option value="license">License (URI)</option><option value="author_id">arXiv author ID</option><option value="help">Help pages</option><option value="full_text">Full text</option></select>
+      </div>
+      <div class="control">
+          <button class="button is-link is-medium">Search</button>
+      </div>
+    </div>
+    <div class="field">
+      <div class="control is-size-7">
+        
+        <label class="radio">
+          <input checked id="abstracts-0" name="abstracts" type="radio" value="show"> Show abstracts
+        </label>
+        
+        <label class="radio">
+          <input id="abstracts-1" name="abstracts" type="radio" value="hide"> Hide abstracts
+        </label>
+        
+      </div>
+    </div>
+    <div class="is-clearfix" style="height: 2.5em"> 
+      <div class="is-pulled-right">
+        
+        <a href="/search/advanced?terms-0-term=Kale+monitoring&amp;terms-0-field=all&amp;size=50&amp;order=-announced_date_first">Advanced Search</a>
+        
+      </div>
+    </div>
+    <input type="hidden" name="order" value="-announced_date_first">
+    <input type="hidden" name="size" value="50">
+  </form>
+
+  
+
+  
+      
+<div class="level breathe-horizontal">
+  <div class="level-left">
+    <form method="GET" action="/search/">
+      <div style="display: none;">
+        
+          
+            <select id="searchtype" name="searchtype"><option selected value="all">All fields</option><option value="title">Title</option><option value="author">Author(s)</option><option value="abstract">Abstract</option><option value="comments">Comments</option><option value="journal_ref">Journal reference</option><option value="acm_class">ACM classification</option><option value="msc_class">MSC classification</option><option value="report_num">Report number</option><option value="paper_id">arXiv identifier</option><option value="doi">DOI</option><option value="orcid">ORCID</option><option value="license">License (URI)</option><option value="author_id">arXiv author ID</option><option value="help">Help pages</option><option value="full_text">Full text</option></select>
+          
+        
+          
+            <input id="query" name="query" type="text" value="Kale monitoring">
+          
+        
+          
+        
+          
+        
+          
+            <ul id="abstracts"><li><input checked id="abstracts-0" name="abstracts" type="radio" value="show"> <label for="abstracts-0">Show abstracts</label></li><li><input id="abstracts-1" name="abstracts" type="radio" value="hide"> <label for="abstracts-1">Hide abstracts</label></li></ul>
+          
+        
+      </div>
+      <div class="box field is-grouped is-grouped-multiline level-item">
+        <div class="control">
+          <span class="select is-small">
+            <select id="size" name="size"><option value="25">25</option><option selected value="50">50</option><option value="100">100</option><option value="200">200</option></select>
+          </span>
+          <label for="size">results per page</label>.
+        </div>
+        <div class="control">
+          <label for="order">Sort results by</label>
+          <span class="select is-small">
+            <select id="order" name="order"><option selected value="-announced_date_first">Announcement date (newest first)</option><option value="announced_date_first">Announcement date (oldest first)</option><option value="-submitted_date">Submission date (newest first)</option><option value="submitted_date">Submission date (oldest first)</option><option value="">Relevance</option></select>
+          </span>
+        </div>
+        <div class="control">
+          <button class="button is-small is-link">Go</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+      
+
+
+
+
+<ol class="breathe-horizontal" start="1"> 
+
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2511.07325">arXiv:2511.07325</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2511.07325">pdf</a>, <a href="https://arxiv.org/ps/2511.07325">ps</a>, <a href="https://arxiv.org/format/2511.07325">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Computer Vision and Pattern Recognition">cs.CV</span>
+        
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Machine Learning">cs.LG</span>
+          
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        Garbage Vulnerable Point <span class="search-hit mathjax">Monitoring</span> using IoT and Computer Vision
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Kumar%2C+R">R. Kumar</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Lall%2C+A">A. Lall</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Chaudhari%2C+S">S. Chaudhari</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Kale%2C+M">M. Kale</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Vattem%2C+A">A. Vattem</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2511.07325v1-abstract-short" style="display: inline;">
+        This paper proposes a smart way to manage municipal solid waste by using the Internet of Things (IoT) and computer vision (CV) to <span class="search-hit mathjax">monitor</span> illegal waste dumping at garbage vulnerable points (GVPs) in urban areas. The system can quickly detect and&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2511.07325v1-abstract-full').style.display = 'inline'; document.getElementById('2511.07325v1-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2511.07325v1-abstract-full" style="display: none;">
+        This paper proposes a smart way to manage municipal solid waste by using the Internet of Things (IoT) and computer vision (CV) to <span class="search-hit mathjax">monitor</span> illegal waste dumping at garbage vulnerable points (GVPs) in urban areas. The system can quickly detect and <span class="search-hit mathjax">monitor</span> dumped waste using a street-level camera and object detection algorithm. Data was collected from the Sangareddy district in Telangana, India. A series of comprehensive experiments was carried out using the proposed dataset to assess the accuracy and overall performance of various object detection models. Specifically, we performed an in-depth evaluation of YOLOv8, YOLOv10, YOLO11m, and RT-DETR on our dataset. Among these models, YOLO11m achieved the highest accuracy of 92.39\% in waste detection, demonstrating its effectiveness in detecting waste. Additionally, it attains an mAP@50 of 0.91, highlighting its high precision. These findings confirm that the object detection model is well-suited for <span class="search-hit mathjax">monitoring</span> and tracking waste dumping events at GVP locations. Furthermore, the system effectively captures waste disposal patterns, including hourly, daily, and weekly dumping trends, ensuring comprehensive daily and nightly <span class="search-hit mathjax">monitoring</span>.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2511.07325v1-abstract-full').style.display = 'none'; document.getElementById('2511.07325v1-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 10 November, 2025; 
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> November 2025.
+      
+    </p>
+    
+
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2510.04869">arXiv:2510.04869</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2510.04869">pdf</a>, <a href="https://arxiv.org/ps/2510.04869">ps</a>, <a href="https://arxiv.org/format/2510.04869">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="High Energy Physics - Experiment">hep-ex</span>
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        First Measurement of Neutrino Emissions from Spent Nuclear Fuel by the Double Chooz Experiment
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Double+Chooz+Collaboration"> Double Chooz Collaboration</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Abrah%C3%A3o%2C+T">T. Abrahão</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Almazan%2C+H">H. Almazan</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Anjos%2C+J+C+d">J. C. dos Anjos</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Appel%2C+S">S. Appel</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Barriere%2C+J+C">J. C. Barriere</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Bekman%2C+I">I. Bekman</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Bezerra%2C+T+J+C">T. J. C. Bezerra</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Bezrukov%2C+L">L. Bezrukov</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Blucher%2C+E">E. Blucher</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Bourgeois%2C+C">C. Bourgeois</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Buck%2C+C">C. Buck</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Busenitz%2C+J">J. Busenitz</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Cabrera%2C+A">A. Cabrera</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Cerrada%2C+M">M. Cerrada</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Chauveau%2C+E">E. Chauveau</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Chimenti%2C+P">P. Chimenti</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Corpace%2C+O">O. Corpace</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Dawson%2C+J+V">J. V. Dawson</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Du%2C+J+F">J. F. Du</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Djurcic%2C+Z">Z. Djurcic</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Etenko%2C+A">A. Etenko</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Furuta%2C+H">H. Furuta</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Gil-Botella%2C+I">I. Gil-Botella</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Givaudan%2C+A">A. Givaudan</a>
+      , et al. (69 additional authors not shown)
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2510.04869v1-abstract-short" style="display: inline;">
+        Neutrino emission from nuclear reactors provides real-time insights into reactor power and fuel evolution, with potential applications in <span class="search-hit mathjax">monitoring</span> and nuclear safeguards. Following reactor shutdown, a low-intensity flux of ``residual neutrinos&#39;&#39; persists due to the decay of long-lived fission isotopes in the partially burnt fuel remaining within th&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2510.04869v1-abstract-full').style.display = 'inline'; document.getElementById('2510.04869v1-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2510.04869v1-abstract-full" style="display: none;">
+        Neutrino emission from nuclear reactors provides real-time insights into reactor power and fuel evolution, with potential applications in <span class="search-hit mathjax">monitoring</span> and nuclear safeguards. Following reactor shutdown, a low-intensity flux of ``residual neutrinos&#39;&#39; persists due to the decay of long-lived fission isotopes in the partially burnt fuel remaining within the reactor cores and in spent nuclear fuel stored in nearby cooling pools. The Double Chooz experiment at the Chooz B nuclear power plant in France achieved the first quantitative measurement of this residual flux based on 17.2 days of reactor-off data. In the energy range where the residual signal is most pronounced, the neutrino detector located 400$\,$m from the cores recorded $106 \pm 18$ neutrino candidate events (5.9$σ$ significance). This measurement is in excellent agreement with the predicted value of $88 \pm 7$ events derived from detailed reactor simulations modeling the decay activities of fission products and incorporating the best-available models of neutrino spectra.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2510.04869v1-abstract-full').style.display = 'none'; document.getElementById('2510.04869v1-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 6 October, 2025; 
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> October 2025.
+      
+    </p>
+    
+
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/2508.19461">arXiv:2508.19461</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/2508.19461">pdf</a>, <a href="https://arxiv.org/ps/2508.19461">ps</a>, <a href="https://arxiv.org/format/2508.19461">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Artificial Intelligence">cs.AI</span>
+        
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Cryptography and Security">cs.CR</span>
+          
+            <span class="tag is-small is-grey tooltip is-tooltip-top" data-tooltip="Machine Learning">cs.LG</span>
+          
+        </div>
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        Reliable Weak-to-Strong <span class="search-hit mathjax">Monitoring</span> of LLM Agents
+      
+    </p>
+    <p class="authors">
+      <span class="search-hit">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Kale%2C+N">Neil Kale</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Zhang%2C+C+B+C">Chen Bo Calvin Zhang</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Zhu%2C+K">Kevin Zhu</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Aich%2C+A">Ankit Aich</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Rodriguez%2C+P">Paula Rodriguez</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Team%2C+S+R">Scale Red Team</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Knight%2C+C+Q">Christina Q. Knight</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Wang%2C+Z">Zifan Wang</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="has-text-black-bis has-text-weight-semibold">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="2508.19461v1-abstract-short" style="display: inline;">
+        We stress test <span class="search-hit mathjax">monitoring</span> systems for detecting covert misbehavior in autonomous LLM agents (e.g., secretly sharing private information). To this end, we systematize a&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2508.19461v1-abstract-full').style.display = 'inline'; document.getElementById('2508.19461v1-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="2508.19461v1-abstract-full" style="display: none;">
+        We stress test <span class="search-hit mathjax">monitoring</span> systems for detecting covert misbehavior in autonomous LLM agents (e.g., secretly sharing private information). To this end, we systematize a <span class="search-hit mathjax">monitor</span> red teaming (MRT) workflow that incorporates: (1) varying levels of agent and <span class="search-hit mathjax">monitor</span> situational awareness; (2) distinct adversarial strategies to evade the <span class="search-hit mathjax">monitor</span>, such as prompt injection; and (3) two datasets and environments -- SHADE-Arena for tool-calling agents and our new CUA-SHADE-Arena, which extends TheAgentCompany, for computer-use agents. We run MRT on existing LLM <span class="search-hit mathjax">monitor</span> scaffoldings, which orchestrate LLMs and parse agent trajectories, alongside a new hybrid hierarchical-sequential scaffolding proposed in this work. Our empirical results yield three key findings. First, agent awareness dominates <span class="search-hit mathjax">monitor</span> awareness: an agent&#39;s knowledge that it is being <span class="search-hit mathjax">monitored</span> substantially degrades the <span class="search-hit mathjax">monitor&#39;s</span> reliability. On the contrary, providing the <span class="search-hit mathjax">monitor</span> with more information about the agent is less helpful than expected. Second, <span class="search-hit mathjax">monitor</span> scaffolding matters more than <span class="search-hit mathjax">monitor</span> awareness: the hybrid scaffolding consistently outperforms baseline <span class="search-hit mathjax">monitor</span> scaffolding, and can enable weaker models to reliably <span class="search-hit mathjax">monitor</span> stronger agents -- a weak-to-strong scaling effect. Third, in a human-in-the-loop setting where humans discuss with the LLM <span class="search-hit mathjax">monitor</span> to get an updated judgment for the agent&#39;s behavior, targeted human oversight is most effective; escalating only pre-flagged cases to human reviewers improved the TPR by approximately 15% at FPR = 0.01. Our work establishes a standard workflow for MRT, highlighting the lack of adversarial robustness for LLMs and humans when <span class="search-hit mathjax">monitoring</span> and detecting agent misbehavior. We release code, data, and logs to spur further research.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('2508.19461v1-abstract-full').style.display = 'none'; document.getElementById('2508.19461v1-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 26 August, 2025; 
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> August 2025.
+      
+    </p>
+    
+    <p class="comments is-size-7">
+      <span class="has-text-black-bis has-text-weight-semibold">Comments:</span>
+      <span class="has-text-grey-dark mathjax">18 pages, 15 figures</span>
+    </p>
+    
+
+    
+
+    
+  </li>
+
+  <li class="arxiv-result">
+    <div class="is-marginless">
+      <p class="list-title is-inline-block"><a href="https://arxiv.org/abs/1111.7105">arXiv:1111.7105</a>
+        <span>&nbsp;[<a href="https://arxiv.org/pdf/1111.7105">pdf</a>, <a href="https://arxiv.org/ps/1111.7105">ps</a>, <a href="https://arxiv.org/format/1111.7105">other</a>]&nbsp;</span>
+      </p>
+      <div class="tags is-inline-block">
+        <span class="tag is-small is-link tooltip is-tooltip-top" data-tooltip="Applications">stat.AP</span>
+        </div>
+      
+        
+          <div class="is-inline-block" style="margin-left: 0.5rem">
+            <div class="tags has-addons">
+              <span class="tag is-dark is-size-7">doi</span>
+              <span class="tag is-light is-size-7"><a class="" href="https://doi.org/10.1214/11-AOAS454">10.1214/11-AOAS454 <i class="fa fa-external-link" aria-hidden="true"></i></a></span>
+            </div>
+          </div>
+        
+      
+    </div>
+    
+    <p class="title is-5 mathjax">
+      
+        On Bayesian &#34;central clustering&#34;: Application to landscape classification of Western Ghats
+      
+    </p>
+    <p class="authors">
+      <span class="has-text-black-bis has-text-weight-semibold">Authors:</span>
+      
+      <a href="/search/?searchtype=author&amp;query=Mukhopadhyay%2C+S">Sabyasachi Mukhopadhyay</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Bhattacharya%2C+S">Sourabh Bhattacharya</a>, 
+      
+      <a href="/search/?searchtype=author&amp;query=Dihidar%2C+K">Kajal Dihidar</a>
+      
+    </p>
+    
+    <p class="abstract mathjax">
+      <span class="search-hit">Abstract</span>:
+      <span class="abstract-short has-text-grey-dark mathjax" id="1111.7105v1-abstract-short" style="display: inline;">
+        Landscape classification of the well-known biodiversity hotspot, Western Ghats (mountains), on the west coast of India, is an important part of a world-wide program of <span class="search-hit mathjax">monitoring</span> biodiversity. To this end, a massive vegetation data set, consisting of 51,834 4-variate observations has been clustered into different landscapes by Nagendra and Gadgil [Current Sc&hellip;
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('1111.7105v1-abstract-full').style.display = 'inline'; document.getElementById('1111.7105v1-abstract-short').style.display = 'none';">&#9661; More</a>
+      </span>
+      <span class="abstract-full has-text-grey-dark mathjax" id="1111.7105v1-abstract-full" style="display: none;">
+        Landscape classification of the well-known biodiversity hotspot, Western Ghats (mountains), on the west coast of India, is an important part of a world-wide program of <span class="search-hit mathjax">monitoring</span> biodiversity. To this end, a massive vegetation data set, consisting of 51,834 4-variate observations has been clustered into different landscapes by Nagendra and Gadgil [Current Sci. 75 (1998) 264--271]. But a study of such importance may be affected by nonuniqueness of cluster analysis and the lack of methods for quantifying uncertainty of the clusterings obtained. Motivated by this applied problem of much scientific importance, we propose a new methodology for obtaining the global, as well as the local modes of the posterior distribution of clustering, along with the desired credible and &#34;highest posterior density&#34; regions in a nonparametric Bayesian framework. To meet the need of an appropriate metric for computing the distance between any two clusterings, we adopt and provide a much simpler, but accurate modification of the metric proposed in [In Felicitation Volume in Honour of Prof. B. K. <span class="search-hit mathjax">Kale</span> (2009) MacMillan]. A very fast and efficient Bayesian methodology, based on [Sankhyā Ser. B 70 (2008) 133--155], has been utilized to solve the computational problems associated with the massive data and to obtain samples from the posterior distribution of clustering on which our proposed methods of summarization are illustrated.
+        <a class="is-size-7" style="white-space: nowrap;" onclick="document.getElementById('1111.7105v1-abstract-full').style.display = 'none'; document.getElementById('1111.7105v1-abstract-short').style.display = 'inline';">&#9651; Less</a>
+      </span>
+    </p>
+    
+
+    <p class="is-size-7"><span class="has-text-black-bis has-text-weight-semibold">Submitted</span> 30 November, 2011; 
+      <span class="has-text-black-bis has-text-weight-semibold">originally announced</span> November 2011.
+      
+    </p>
+    
+    <p class="comments is-size-7">
+      <span class="has-text-black-bis has-text-weight-semibold">Comments:</span>
+      <span class="has-text-grey-dark mathjax">Published in at http://dx.doi.org/10.1214/11-AOAS454 the Annals of Applied Statistics (http://www.imstat.org/aoas/) by the Institute of Mathematical Statistics (http://www.imstat.org)</span>
+    </p>
+    
+
+    
+      <p class="comments is-size-7">
+        
+          <span class="has-text-black-bis has-text-weight-semibold">Report number:</span>
+          IMS-AOAS-AOAS454
+        
+
+        
+
+        
+      </p>
+    
+
+    
+      <p class="comments is-size-7">
+        <span class="has-text-black-bis has-text-weight-semibold">Journal ref:</span>
+        Annals of Applied Statistics 2011, Vol. 5, No. 3, 1948-1977
+      </p>
+    
+  </li>
+
+</ol>
+
+
+  
+
+
+      <div class="is-hidden-tablet">
+        <!-- feedback for mobile only -->
+        <span class="help" style="display: inline-block;"><a href="https://github.com/arXiv/arxiv-search/releases">Search v0.5.6 released 2020-02-24</a>&nbsp;&nbsp;</span>
+      </div>
+    </div>
+
+  </main>
+  <footer>
+    
+<footer class="ds-site-footer">
+  <div class="ds-site-footer-grid">
+    <div class="ds-site-footer-main">
+      <div class="ds-site-footer-ack">
+        We gratefully acknowledge support from
+        our <strong>major funders</strong>,
+        <a href="https://info.arxiv.org/about/ourmembers.html"><strong>member institutions</strong></a><span class="ack-member-inline" hidden>, <strong></strong></span>,
+        and all contributors.
+      </div>
+      <nav class="ds-site-footer-links" aria-label="Site navigation">
+        <a href="https://info.arxiv.org/about">About</a>
+        <span class="ds-site-footer-sep" aria-hidden="true">&middot;</span>
+        <a href="https://info.arxiv.org/help">Help</a>
+        <span class="ds-site-footer-sep" aria-hidden="true">&middot;</span>
+        <a href="https://info.arxiv.org/help/contact.html">Contact</a>
+        <span class="ds-site-footer-sep" aria-hidden="true">&middot;</span>
+        <a href="https://info.arxiv.org/help/subscribe">Subscribe</a>
+        <span class="ds-site-footer-sep" aria-hidden="true">&middot;</span>
+        <a href="https://info.arxiv.org/help/license/index.html">Copyright</a>
+        <span class="ds-site-footer-sep" aria-hidden="true">&middot;</span>
+        <a href="https://info.arxiv.org/help/policies/privacy_policy.html">Privacy</a>
+        <span class="ds-site-footer-sep" aria-hidden="true">&middot;</span>
+        <a href="https://info.arxiv.org/help/web_accessibility.html">Accessibility</a>
+        <span class="ds-site-footer-sep" aria-hidden="true">&middot;</span>
+        <a href="https://status.arxiv.org" target="_blank" rel="noopener noreferrer">Operational Status<span class="is-sr-only"> (opens in new tab)</span></a>
+      </nav>
+    </div>
+    <div class="ds-site-footer-funders" aria-label="Major funders">
+      <div class="ds-site-footer-funders-label">Major funding support from</div>
+      <div class="ds-site-footer-funders-logos">
+        <a class="ds-funder-link" href="https://www.simonsfoundation.org/" target="_blank" rel="noopener noreferrer">
+          <img class="ds-funder-logo" src="https://static.arxiv.org/static/base/1.0.1/images/funders/simons-foundation.png" alt="Simons Foundation"></a>
+        <a class="ds-funder-link" href="https://www.sfi.org.bm/" target="_blank" rel="noopener noreferrer">
+          <img class="ds-funder-logo" src="https://static.arxiv.org/static/base/1.0.1/images/funders/simons-foundation-international.png" alt="Simons Foundation International"></a>
+        <a class="ds-funder-link" href="https://www.schmidtsciences.org/" target="_blank" rel="noopener noreferrer">
+          <img class="ds-funder-logo" src="https://static.arxiv.org/static/base/1.0.1/images/funders/schmidt-sciences.png" alt="Schmidt Sciences"></a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+  </footer>
+  <script src="https://static.arxiv.org/static/base/1.0.0a5/js/member_acknowledgement.js"></script>
+  </body>
+</html>

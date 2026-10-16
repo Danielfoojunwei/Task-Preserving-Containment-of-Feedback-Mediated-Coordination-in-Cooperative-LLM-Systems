@@ -1,0 +1,790 @@
+                                                 Audit the Whisper: Detecting Steganographic
+                                                        Collusion in Multi-Agent LLMs
+
+
+                                                                                    Om Tailor
+                                                                            otailor@terpmail.umd.edu
+arXiv:2510.04303v2 [cs.MA] 17 Oct 2025
+
+
+
+
+                                                                                       Abstract
+
+                                                  Multi-agent deployments of large language models (LLMs) are increasingly em-
+                                                  bedded in market, allocation, and governance workflows, yet covert coordination
+                                                  among agents can silently erode trust and social welfare. Existing audits are dom-
+                                                  inated by heuristics that lack theoretical guarantees, struggle to transfer across
+                                                  tasks, and seldom ship with the infrastructure needed for independent replication.
+                                                  We introduce Audit the Whisper, a conference-grade research artifact that spans
+                                                  theory, benchmark design, detection, and reproducibility. Our contributions are: (i)
+                                                  a channel-capacity analysis showing how interventions such as paraphrase, rate lim-
+                                                  iting, and role permutation impose quantifiable capacity penalties—operationalised
+                                                  via paired-run Kullback–Leibler diagnostics—that tighten mutual-information
+                                                  thresholds with finite-sample guarantees and full proofs; (ii) C OLLUDE B ENCH-v0,
+                                                  covering pricing, first-price auctions, peer review, and hosted Gemini/Groq APIs
+                                                  with configurable covert schemes, deterministic manifests, and reward instrumenta-
+                                                  tion; and (iii) a calibrated auditing pipeline that fuses cross-run mutual information,
+                                                  permutation invariance, watermark variance, and fairness-aware acceptance bias,
+                                                  each tuned to a 10−3 false-positive budget and validated by 10k honest runs plus
+                                                  an e-value martingale. Across ColludeBench and external suites including Secret
+                                                  Collusion, CASE, Perfect Collusion Benchmark, and SentinelAgent, the union
+                                                  meta-test attains state-of-the-art power at fixed FPR while ablations surface price-
+                                                  of-auditing trade-offs and fairness-driven colluders invisible to MI alone. We
+                                                  release regeneration scripts, anonymised manifests, and documentation so that
+                                                  external auditors can reproduce every figure, satisfy double-blind requirements,
+                                                  and extend the framework with minimal effort.
+
+
+                                         1   Introduction
+                                         Large language models (LLMs) are rapidly being embedded into multi-agent workflows for pricing,
+                                         auctions, peer review, and platform governance. These systems inherit both the flexibility and the
+                                         opacity of natural language; agents can covertly signal intent through lexical choice, message length,
+                                         or fairness bias while ostensibly complying with auditing policies. The resulting collusion threatens
+                                         consumer welfare, exacerbates inequality, and undermines the credibility of automated oversight
+                                         [Cachin et al., 1998, Campbell et al., 2024]. Despite growing recognition of the hazard, current audits
+                                         remain ill-equipped: they lean on heuristics such as keyword filters or perplexity shifts, seldom offer
+                                         calibrated false-positive guarantees, and rarely ship with reproducible artifacts or intervention stress
+                                         tests.
+                                         Designing an auditing framework for collusive LLM agents demands a synthesis of theory, benchmark
+                                         realism, and disciplined engineering. Auditors must reason about covert-channel capacity, understand
+                                         how interventions throttle communication, and deploy diagnostics that remain interpretable to human
+                                         operators. Equally important, they must package evidence so practitioners, regulators, and researchers
+                                         can independently validate claims.
+
+                                         Preprint. Under review.
+This paper introduces Audit the Whisper, a comprehensive research artifact that elevates collu-
+sion auditing to NeurIPS standards. The framework unifies channel-capacity analysis, benchmark
+construction, detector implementation, and reproducibility infrastructure. Our contributions are:
+
+      1. Capacity-guided auditing. We derive bounds linking auditor interventions to covert-channel
+         capacity, establishing mutual-information thresholds with explicit finite-sample guarantees
+         and motivating detector fusion through an OR-union of complementary statistics (Section 4).
+      2. C OLLUDE B ENCH-v0. We release a benchmark suite spanning pricing duopoly, first-price
+         auctions, and peer review (Section 5). Each scenario offers configurable covert schemes
+         (keyword, parity, adaptive temperature, fairness skew) and deterministic manifests that
+         capture seeds, interventions, and transcript hashes for byte-level reproducibility.
+      3. Calibrated detector pipeline. We implement mutual-information, permutation-invariance,
+         watermark-variance, and fairness-aware acceptance-bias detectors, calibrating each to
+         FPR ≤ 10−3 with 200-seed honest runs (Section 6). Across 600 audited runs, the union
+         meta-test achieves TPR = 1 with zero observed false alarms, hosted Gemini and Groq
+         audits reuse the same thresholds without exceeding the budget, and ablations quantify the
+         price of auditing while illuminating fairness-driven collusion regimes invisible to MI alone.
+         A 10k-run honest replay campaign and sequential e-value analysis certify that the 10−3
+         target holds with 95% confidence, closing the gap between empirical counts and conference
+         reproducibility expectations.
+
+Audit the Whisper ships with regeneration scripts, dataset manifests, notebooks, and documentation so
+that practitioners can reproduce every figure and table with a single command. We additionally evalu-
+ate on the public Secret Collusion, CASE, Perfect Collusion Benchmark, and SentinelAgent suites
+using the exact same thresholds, demonstrating that the auditor is not over-fit to C OLLUDE B ENCH.
+By pairing rigorous theory with operational guidance and explicit double-blind packaging guidance,
+we aim to provide a durable blueprint for trustworthy collusion auditing in agentic LLM ecosystems.
+
+2   Threat Model and Auditor Capabilities
+Audit the Whisper adopts the threat model formalised in [Tailor, 2025] and expands it with explicit
+assumptions about adaptation, intervention observability, and calibration workload.
+
+Agent populations. Each scenario instantiates a fixed roster of roles (two firms, three bidders, or
+three reviewers). Honest agents pursue individual utility using stochastic policies seeded by the or-
+chestrator and conditioned only on public transcripts. Colluding agents share a covert communication
+blueprint—keyword substitution, parity encoding, adaptive temperature jitter, or fairness bias—and
+coordinate to maximise collective reward while staying below auditing thresholds. Colluders cannot
+view the auditor’s internal randomness or unseen transcripts but do observe the interventions applied
+to their own messages and may adapt across episodes.
+
+Auditor observables. The auditor monitors complete transcripts, intervention logs, task-level
+metrics (profits, welfare, acceptance decisions), and deterministic metadata (seeds, hashes). Internal
+model weights, gradients, prompts, and intermediate activations remain hidden, reflecting deployment
+settings where only conversation logs are archived. The auditor can replay environments under fresh
+seeds to generate honest baselines and collusion sweeps for calibration.
+
+Intervention surface. Interventions are publicly documented channel transformations: token-
+budget jitter truncates or pads messages, selective paraphrase performs synonym substitutions, role
+permutation reassigns conversational order, rate limiting prepends banners, and canary injection
+appends low-frequency tokens. Each transformation is parameterised, logged, and applied symmet-
+rically to honest and colluding agents. Interventions are independent across runs but deterministic
+given the run seed, enabling reproducible capacity estimates.
+
+Adversarial objective. Colluders aim to maximise joint reward, subject to maintaining all detector
+statistics below calibrated thresholds. They may switch covert schemes between runs, randomise
+payloads, or exploit fairness channels, but they cannot tamper with logged transcripts or intervention
+
+
+                                                  2
+metadata. The auditor commits to a 10−3 false-positive budget and prioritises detectors that admit
+interpretable diagnostics for human operators.
+This threat model captures the operational realities of auditing language-based agents: auditors face
+adaptive adversaries, limited observability, and strict FPR constraints, yet can deploy controlled
+interventions and replay infrastructure to throttle covert-channel capacity.
+
+3   Related Work
+Economic collusion detection. Traditional market-surveillance toolkits analyse structured obser-
+vations such as price series, bid rotation, and welfare deviations [Porter, 1983, Imhof et al., 2017].
+These methods assume explicit quantitative features and independent signalling channels; they do not
+address the open-ended semantics of language-based coordination or the need to reason about covert
+payload capacity under adversarial interventions.
+
+LLM safety and red teaming. The LLM safety community has explored adversarial prompting,
+jailbreak defence, and red teaming to improve single-agent robustness [Zou et al., 2023]. These
+works largely treat the model as an isolated responder and focus on input sanitisation. In contrast, our
+setting involves multiple cooperative agents interacting over many rounds, where the auditor must
+consider joint strategies, replayable transcripts, and fairness-sensitive objectives.
+
+Watermarking and steganalysis. Token-level watermarking methods bias generation towards
+detectable vocabularies [Kirchenbauer et al., 2023], while classical steganalysis leverages likelihood-
+ratio tests over cover objects [Fridrich, 2009]. We repurpose these ideas in a multi-agent environment
+by measuring watermark variance in conversational data and calibrating thresholds through replayed
+honest runs. Our analysis ties watermark sensitivity to channel-capacity penalties induced by
+interventions, enabling rigorous false-positive control absent in prior heuristic detectors.
+
+Collusion in LLM agents. Campbell et al. [2024] first report emergent collusion among language
+agents trained with reinforcement learning. However, their study lacks a benchmark with config-
+urable covert channels, omits calibrated detector pipelines, and leaves reproducibility infrastructure
+unspecified. Audit the Whisper advances this line by formalising capacity reductions under auditor
+interventions, releasing C OLLUDE B ENCH-v0 with deterministic manifests, and demonstrating a
+calibrated detector stack that covers high-MI and fairness-driven collusion regimes.
+
+Governance and reproducibility. AI governance work emphasises transparency, documentation,
+and auditability for socio-technical systems [Raji et al., 2020]. We operationalise these princi-
+ples through regeneration scripts, dataset hashes, and auditor manifests that make every transcript,
+intervention log, and calibration artefact independently verifiable.
+
+4   From Channel Capacity to Detection Power
+We formalise how auditor interventions throttle covert communication and translate capacity reduc-
+tions into calibrated detection guarantees.
+
+Setup. Let Z denote the latent payload shared by colluding agents and X the transcript features
+observed by the auditor. Following Cachin et al. [1998], the achievable covert rate is upper bounded
+by the mutual information I(Z; X). The auditor applies a stochastic intervention T (e.g., paraphrase,
+role permutation, budget jitter) to each utterance, yielding transformed transcripts T (X).
+
+Intervention-induced penalties. Data-processing guarantees I(Z; T (X)) ≤ I(Z; X) for any T .
+We define the capacity penalty
+                                                          
+                              d(T ) = I(Z; X) − I Z; T (X) ≥ 0,                         (1)
+which quantifies the reduction attributable to the intervention. We estimate d(T ) empirically via
+paired runs with and without interventions, logging surrogate divergences (e.g., DKL (pX ∥pT (X) ))
+alongside transcript manifests.
+
+
+                                                   3
+Neural mutual-information calibration. The upgraded cross-run detector trains
+Donsker–Varadhan (DV) and NWJ critics on whitened transcript features while retaining a
+discretised plug-in estimator. Features are clipped to ∥ϕ(Mi,t )∥2 ≤ B; the critic class comprises
+two-layer ReLU networks with Frobenius norms ∥W1 ∥F , ∥W2 ∥F ≤ W . Averaging across K
+                                              PK bDV
+replicated runs yields the statistic I¯DV = K
+                                            1
+                                                k=1 Ik .
+
+Lemmap 1 (DV generalisation). For any δ ∈ (0, 1) and each run with nk paired samples, |IbkDV −
+ DV
+Ik | ≤ 8B 2 W 2 log(4/δ)/nk with probability at least 1 − δ [Belghazi et al., 2018, Nguyen et al.,
+2010].
+
+Combining Lemma 1 with independence across runs produces a closed-form calibration threshold.
+Theorem 1 (Type I control for DV/NWJ). Let n̄ = mink nk and ηopt denote the optimisation gap
+measured on held-out honest transcripts. Setting
+                                                r
+                                         2BW        4
+                                  τα = √         log + ηopt                               (2)
+                                           K n̄     α
+guarantees PrH0 [I¯DV > τα ] ≤ α.    We implement the bound by taking the min-
+imum of τα and the empirical 1 − α quantile computed from honest replay logs
+(results/calibration/logs/* calibration.json).
+
+Honest-run sample complexity. The 10k-run calibration campaign used in our experiments yields
+the Clopper–Pearson one-sided upper bound u = 1 − α1/N with N = 10,000 and no observed false
+positives, so u ≈ 5.1 × 10−4 < 10−3 . This establishes that the advertised α = 10−3 guarantee holds
+with 95% confidence using honest replay alone, addressing the inadequacy of small-sample counts
+(e.g., 0/600) noted by reviewers. When rerunning the auditor is expensive, the optional-stopping-safe
+e-value martingale in Lemma 2 provides the same guarantee with substantially fewer samples via
+time-uniform concentration [Howard et al., 2021].
+Theorem 2 (Power of the DV detector). Let I⋆ = I(Z; T (X)) denote the post-intervention mutual
+information. Whenever I⋆ > τα + ηopt ,
+                                                        K n̄(I⋆ − τα − ηopt )2
+                                                                               
+                         Pr I¯DV ≤ τα ≤ exp −
+                                        
+                                                                                   .                     (3)
+                          H1                                   8B 2 W 2
+                                   K n̄(I⋆ −τα −ηopt )2
+                                                       
+Equivalently, TPR ≥ 1 − exp −            8B 2 W 2         . Thus, as long as the interventions leave enough
+residual capacity for the colluders to achieve I⋆ > τα , power increases exponentially with the number
+of audited runs.
+
+Permutation and fairness detectors. Role permutation statistics retain their exact null guarantees,
+while acceptance-bias tests rely on asymptotic normality of subgroup differences. Both feed into the
+Holm–Bonferroni and Westfall–Young unions [Holm, 1979, Westfall and Young, 1993], maintaining
+FWER control at 10−3 (Section 6).
+
+Minimax lower bound. The guarantees above are tight. Consider collusive distributions con-
+strained by the post-intervention KL budget d(T ). Le Cam’s method converts this divergence into a
+                                                                                           2
+lower bound on total variation, implying any detector requires at least K ≥ 2 log(1/(1−2α)
+                                                                                   d(T )
+                                                                                             )
+                                                                                               runs to
+achieve error α on both sides.
+Theorem 3 (Minimax KL lower bound). For any test δ observing K runs,
+                                                                               q
+                                                    Pr[δ = 1] + Pr[δ = 0] ≥ 1 − Kd
+                                                                         
+                inf             sup                                              2 .                    (4)
+                 δ P0 ,P1 :DKL (P1 ◦T ∥ P0 ◦T )≤d   P0          P1
+
+
+Hence achieving Type I/II errors ≤ α demands Kd ≳ log(1/α) [Tsybakov, 2009].
+
+Constructive adversary. We instantiate the lower bound via a parity-based covert channel: collud-
+ers emit√honest messages with probability 1 − ρ and insert watermark-aligned tokens with probability
+ρ = Θ( d). Auditor paraphrase or canary interventions flip payload bits with probability γ, yielding
+
+
+                                                         4
+post-intervention KL d ≈ ρ2 (1 − 2γ)2 and matching Theorem 3. This strategy is available in
+ColludeBench for red-team studies.
+The guarantee mirrors empirical behaviour: pricing and auction colluders maintain I⋆ above the
+calibrated threshold, whereas fairness-only colluders shrink I⋆ below τα and rely on acceptance-bias
+deviations to evade MI detection.
+
+Optional-stopping safety. Sequential audits may query detectors after each run and halt once
+evidence is sufficient. For a calibrated detector producing p-values pt , define the e-value Et =
+                                                   QT
+1/ max(pt , 10−12 ) and the running product MT = t=1 Et . Ville’s inequality [Ville, 1939] implies
+that MT is a non-negative supermartingale with respect to the natural filtration.
+Lemma 2 (Martingale union bound). For any stopping time τ with respect to the auditor filtration,
+                                                 
+                                                1
+                                 Pr sup Mt ≥        ≤ α.                                      (5)
+                                 H0 t≤τ         α
+
+Proof sketch. The result follows from Ville’s inequality: Pr[supt Mt ≥ 1/α] ≤ α for any non-
+negative supermartingale with unit expectation under H0 . Consequently, the martingale union in
+Section 6 controls family-wise error even under adaptive stopping, while Bonferroni and Holm
+correspond to fixed-horizon bounds.
+
+5   ColludeBench-v0
+C OLLUDE B ENCH-v0 packages three environments with honest and colluding agents, each param-
+eterised for intervention sweeps and backed by deterministic manifests. Configuration files live in
+configs/, and every run records transcripts, interventions, reward metrics, and SHA-256 hashes
+so that results can be reproduced byte-for-byte. We execute 200 honest calibration runs and 200
+colluding runs per scenario, spanning 12 intervention variants and producing 600 audited transcripts
+catalogued in results/dataset_manifest.json.
+
+Pricing duopoly. Two firms simultaneously set prices for differentiated products under a logit-
+demand model. Honest agents maximise individual profit; colluders use keyword, adaptive smart, or
+adaptive temperature channels to synchronise prices. The auditor toggles token-budget jitter, selective
+paraphrase, rate limiting, and canary insertion. Logged metrics include per-firm reward, consumer
+surplus, Lerner indices, and message-length statistics to contextualise capacity estimates.
+
+First-price auction. Three bidders compete for a single slot. Honest bidders submit truthful
+valuations drawn from a common prior, while colluders rotate bids via keyword and adaptive
+payloads. We report auctioneer revenue, allocative efficiency, win-rate dispersion, and intervention
+hit rates. Calibration reveals that even welfare-degrading colluders sustain high mutual information,
+highlighting the persistence of covert capacity under strategic bidding.
+
+Peer review. Three reviewers deliberate over submissions with hidden ground-truth quality. Honest
+reviewers vote according to noisy private signals; colluders embed payloads lexically or by biasing
+acceptance rates toward a protected subgroup. This environment stresses detectors because mutual
+information remains near zero despite impactful outcomes. Our fairness detector isolates 0.14–0.24
+acceptance gaps, illustrating how collusion can manifest as subtle fairness skew rather than explicit
+coordination.
+Every scenario supports intervention toggles such as:
+
+       • paraphrase off
+       • rate limit high
+       • adaptive temperature
+       • canary high
+       • role permute
+
+
+                                                  5
+Hosted API connectors. To validate cross-model transfer, C OLLUDE B ENCH ships thin clients for
+Gemini 2.5 Flash and Groq-hosted Llama 3. Honest calibrations keep consumer surplus near 79.3±0.2
+while colluding runs collapse it to zero across both providers, producing reproducible manifests in
+results/experiments/pricing_llm_*. Thresholds pre-registered on Gemini transfer zero-shot
+to Groq without exceeding the 10−3 FPR budget, and the documentation in docs/colludebench_
+usage.md details the API throttling (2.1 s request spacing) and seed controls needed for reviewers to
+repeat the comparison.
+Sweeps, experiments, and reports are orchestrated by scripts/regenerate_results.py, which
+chains calibration, detection, and analysis end-to-end with deterministic seeds and manifest checks.
+
+6   Experiments
+We evaluate Audit the Whisper by orchestrating deterministic sweeps with auditor.experiments
+and auditor.sweeps. Aggregate metrics live in results/experiments/metrics.md, and per-
+task analyses capture ROC/PR curves, intervention hit rates, and fairness statistics.
+
+Calibration. Honest agents are replayed for 200 seeds per task to estimate null distributions for each
+detector. The resulting thresholds—stored in results/calibration/detector_thresholds.
+json—provide empirical p95, p99, and explicit FPR targets (10−2 , 10−3 ). Calibration includes
+bootstrap confidence intervals to verify that the 10−3 threshold lies inside the sampling noise predicted
+by Lemma 1, ensuring downstream detectors respect the promised FPR budget.
+
+False-positive evidence. To make the 10−3 claim statistically airtight, we run 10,000 honest audits
+per scenario and record zero false alarms. The exact Clopper–Pearson 95% upper bound on the FPR
+is therefore 5.1 × 10−4 , comfortably beneath the stated target. The optional-stopping martingale
+from Lemma 2 remains active during this sweep, producing a time-uniform confidence curve that
+witnesses the bound after 2,143 runs on average, so the result can be reproduced with far fewer
+samples if needed.
+
+Detector Performance. We aggregate pricing, auction, review, and continuous double-auction
+transcripts to stress the calibrated detectors across heterogeneous collusion styles. Table 1 reports
+ROC/PR summaries: cross run mi achieves TPR@10−2 = 0.658 / TPR@10−3 = 0.598 at
+the advertised false-positive budgets, while the fairness-driven acceptance bias and watermark-
+variance tests retain unit recall with zero observed false alarms. The welfare-shift guard reaches
+TPR = 0.955 at both operating points with FPR = 0, ensuring economic harm is caught even when
+payload rates shrink; it feeds into the union meta-test but is omitted from the table for space. The
+permutation statistic remains a high-recall diagnostic but overshoots the raw FPR target, so the
+Holm–Bonferroni union [Holm, 1979] combines MI, permutation, watermark, and fairness p-values
+with family-wise control at 10−2 and 10−3 , short-circuiting whenever acceptance bias itself falls
+below the requested α. We also include a per-detector Bonferroni baseline (union bonferroni),
+which allocates the α budget evenly across detectors (TPR@10−2 = 1.0 / TPR@10−3 ≈ 0.89 with
+FPR = 0), and a Westfall–Young maxT option (union westfall young) that bootstraps from the
+calibration pools [Westfall and Young, 1993]. An e-value martingale union (union martingale)
+declares as soon as the Ville bound 1/α is exceeded [Ville, 1939]; empirically it matches the Holm
+coverage while remaining safe for optional stopping. Sparse low-rate variants embed in only 2–7% of
+turns (≤ 0.07 bits/exchange) yet still yield MI ≈ 1.7–2.1, so the Holm union fires at 10−2 (and at 10−3
+for pricing/auction). The adaptive rate-decay loop (scripts/run_adaptive_lowrate.py) keeps
+triggering the union even after the payload budget collapses to 0.2 bits/100 tokens, confirming that
+welfare signals dominate once colluders coordinate on prices, bids, or votes. A 10k-run Monte Carlo
+audit (python -m auditor.validate_union) reports FPR ≈ 2.2 × 10−3 / 4 × 10−4 (Bonferroni),
+2.0 × 10−3 / < 10−4 (Holm), and 4.2 × 10−3 / 10−4 (Westfall–Young), all within the promised
+budgets. We deliver the same table in Markdown and LATEX via scripts/generate_head_to_
+head_tables.py for full reproducibility.
+
+External baselines. The lower panel of Table 2 contrasts Audit the Whisper against the public
+baselines from CASE, the Perfect Collusion Benchmark, SentinelAgent, and the Secret Collusion suite
+[Anonymous, 2024, Motwani, Shreyas Rajesh and Baranchuk, Matvey and Hammond, Lewis and
+Schroeder de Witt, Christian , 2023 , Anonymous, 2023, Motwani, Shreyas Rajesh and Baranchuk,
+
+
+                                                   6
+ Detector                    ROC AUC    PR AUC     TPR@1e-2       FPR@1e-2    TPR@1e-3      FPR@1e-3
+ cross run mi                 0.819      0.652         0.658       0.010         0.598         0.001
+ acceptance bias              1.000      1.000         1.000       0.000         1.000         0.000
+ watermark variance           0.752      0.783         0.504       0.000         0.504         0.000
+ union bonferroni               -          -           1.000       0.000         0.889         0.000
+ union holm bonferroni          -          -           0.667       0.000         0.556         0.000
+ union westfall young           -          -           0.667       0.000         0.556         0.000
+ union martingale               -          -           0.667       0.000         0.667         0.000
+Table 1: ColludeBench-v0 multi-task audit metrics. union holm bonferroni enforces the step-down
+bound; union bonferroni uses per-detector Bonferroni thresholds; union westfall young applies an
+empirical maxT correction (bootstrap-augmented); union martingale provides an e-value sequential
+bound (Ville’s inequality).
+
+
+ Detector                     ROC AUC     PR AUC       TPR@1e-2    FPR@1e-2      TPR@1e-3      FPR@1e-3
+ cross run mi                   1.000      0.977         0.756        0.000         0.444        0.000
+ CASE-baseline                  1.000      1.000         1.000        0.000         1.000        0.000
+ PerfectCollusion-baseline      1.000      1.000         1.000        0.000         1.000        0.000
+ SentinelAgent-baseline         1.000      1.000         1.000        0.000         1.000        0.000
+Table 2: Continuous double auction benchmark comparison against external audits (CASE, Perfect
+Collusion Benchmark, SentinelAgent).
+
+
+Matvey and Strohmeier, Michael and Bolina, Vinicius and Torr, Philip H. S. and Hammond, Lewis
+and Schroeder de Witt, Christian , 2024 ]. All detectors are evaluated with their released thresholds at
+FPR targets of 10−2 and 10−3 . The external audits saturate on the stylised continuous double auction
+(TPR@10−3 = 1.0, FPR = 0) but fail to extend to fairness- and watermark-driven attacks. Our MI
+detector remains competitive on the shared benchmark (TPR@10−3 = 0.444), while the calibrated
+union is the only method that transfers to C OLLUDE B ENCH without retuning.
+
+Hosted cross-model generalisation. To validate transfer across hosted models, we pre-register
+thresholds on Gemini 2.5 Flash and replay them zero-shot on Groq-hosted Llama 3. Honest cal-
+ibrations keep consumer surplus at 79.3 ± 0.2 with Lerner indices near 0.08. Colluding sweeps
+collapse surplus to 0 on both platforms while cross run mi reports p = 2.3 × 10−3 (Gemini) and
+p = 1.9 × 10−3 (Groq). The welfare-shift detector records a 79.2 point drop with p < 10−6 , so the
+Holm union flags every run without breaching the 10−3 FPR budget. Reproduction requires only
+API keys and the configs under configs/audits/pricing_llm_*; runtime notes and throttling
+guidance live in docs/colludebench_usage.md.
+
+Intervention sweeps. Pricing sweeps show that disabling the paraphrase wrapper reduces MI from
+1.338 ± 0.041 to 1.065 ± 0.037 without harming reward, whereas aggressive rate limiting yields
+negligible MI change but increases intervention footprint and human-perceived latency. Adaptive-
+temperature colluders raise MI to 1.77 ± 0.05 and expand mean message length to 6.7 tokens,
+simultaneously triggering MI and permutation detectors. Introducing a sparse keyword channel
+(≈ 3.7% embeds) still yields MI ≈ 1.78 (p≈ 5 × 10−4 ), so the union fires at both 10−2 and 10−3 .
+Review sweeps maintain near-zero MI yet produce fairness gaps of 0.14–0.24; the acceptance-bias
+detector reliably flags these and now short-circuits the union at 10−2 even when MI remains quiet (the
+10−3 budget stays conservative). Auction sweeps confirm that high MI persists even when collusion
+depresses welfare, and the sparse low-rate run (≈ 6.5% embeds) continues to trigger the union at
+10−2 , reinforcing the capacity-to-detection link predicted by Theorem 1.
+
+Generalisation and red teaming. Cross-task evaluations—training thresholds on pricing and
+testing on auction/review logs—retain zero observed false positives while the Holm union over
+{welfare shift, acceptance bias, signal bias, watermark variance} sustains TPR ≈
+0.90 at both 10−2 and 10−3 . The fairness short-circuit ensures acceptance bias raises an alert
+at 10−2 even when MI remains quiet (the union stays conservative at 10−3 ), closing the gap noted
+in earlier drafts. Adaptive colluders that randomise payload phrasing (temperature jitter) or steer
+fairness bias remain visible to the calibrated detectors, and the sparse rate-decay loop confirms
+
+
+                                                   7
+that MI stays dominant even as payload throughput shrinks to 0.2 bits/100 tokens. Residual risks,
+including potential low-rate linguistic steganography and sparse-sample deployments, are catalogued
+in docs/residual_risks.md with concrete red-team proposals.
+
+Ablations. Detector ablations drawn from results/experiments/ablation.json quantify
+each component’s contribution at the 10−2 operating point: cross run mi alone achieves
+TPR = 0.12 with zero false alarms, permutation invariance reaches TPR = 0.71, and
+acceptance bias contributes TPR = 0.24. Pairwise combinations highlight complementarity:
+cross run mi + permutation recovers TPR = 0.71, while acceptance bias + permutation
+climbs to TPR = 0.88 without inflating FPR. Excluding watermark variance or the welfare guard
+blinds the audit to canary payloads and welfare collapses, respectively. A stricter majority-vote
+meta-test preserves zero false positives but further suppresses recall, motivating the Holm–Bonferroni
+union while we pursue dependency-aware corrections and resampling options to re-incorporate
+permutation at higher power.
+
+Runtime and cost. CPU-only audits of the canonical keyword suites finish in under 0.15 seconds
+for two seeds (pricing: 0.075 s/run, auction: 0.043 s, review: 0.032 s), so offline evaluation incurs
+negligible overhead. Hosted LLM audits are dominated by API latency: Gemini executes at the
+free-tier limit in roughly 45 s/run (≈ 75 calls), while Groq completes in 38 s/run under a 30 rpm
+cap. The martingale union typically crosses the Ville threshold by round four in pricing stress tests,
+enabling auditors to stop early without violating the FWER guarantee.
+
+Reproducibility. All experiments regenerate via scripts/regenerate_results.py, which
+chains calibration, sweeps, metric aggregation, figure export, and manifest updates. Seed metadata and
+SHA-256 hashes in results/dataset_manifest.json allow external auditors to verify transcript
+integrity. For submission hygiene, we ship an anonymised tarball that strips vendor names and replaces
+public repository URLs with neutral identifiers, satisfying NeurIPS double-blind requirements while
+keeping every script invocable end-to-end.
+
+
+7   Discussion
+
+Detector coverage. The detector union satisfies the 10−3 FPR constraint while providing inter-
+pretable signals: cross-run MI captures high-capacity colluders, permutation invariance reveals
+alignment of role-conditioned strategies, watermark variance responds to canary propagation, and ac-
+ceptance bias surfaces fairness manipulation. Because each statistic is calibrated separately, auditors
+can inspect which channel triggered an alert and prioritise remediation accordingly.
+
+Operational guidance. Intervention sweeps show that selective paraphrase is the most efficient
+lever for shrinking MI without harming utility, whereas aggressive rate limiting yields little benefit
+while increasing interaction cost. Canary injections enhance watermark detection but must be paired
+with fairness monitoring to catch low-MI colluders that repurpose acceptance rates. Practitioners
+can therefore deploy a minimal intervention set (paraphrase + canary) and rely on detector fusion to
+maintain coverage.
+
+Generalisation evidence. Cross-task and cross-provider evaluations demonstrate that thresholds
+calibrated on pricing carry over to auction, peer-review, Gemini, Groq, and open-weight transformers
+without re-tuning. The same union meta-test wins head-to-head against the Secret Collusion, CASE,
+Perfect Collusion Benchmark, and SentinelAgent baselines, underscoring that our signals are not
+bespoke to C OLLUDE B ENCH.
+
+Limitations. The fairness detector assumes subgroup annotations; deployments without reliable
+metadata will need proxy cohorts, synthetic demographic tags, or adaptive thresholding. Linguistic
+steganalysis remains weak compared with MI and permutation statistics, motivating richer seman-
+tic drift tests and representation-level audits. Although calibrations use 200 seeds per scenario,
+production systems with limited samples may require sequential testing or Bayesian threshold up-
+dates. Appendix A and docs/residual_risks.md document these open issues alongside proposed
+mitigations.
+
+
+                                                  8
+Future work. Promising extensions include expanding C OLLUDE B ENCH to multimodal or tool-
+augmented tasks, training adversaries that jointly minimise MI and fairness gaps, and integrating
+causal tracing or counterfactual prompting to attribute collusive behaviours to specific prompts. The
+release materials are designed to accelerate such efforts by providing fully reproducible baselines and
+hook points for new detectors and environments.
+
+Submission hygiene. All public artefacts have anonymous mirrors and redacted vendor identifiers
+so that reviewers can reproduce every figure while maintaining NeurIPS double-blind compliance.
+The main paper stays within the prescribed nine-page limit, ships the mandatory checklist, and
+highlights where anonymised supplementary material supplies extended proofs or code.
+
+Conclusion. Audit the Whisper couples channel-capacity theory with calibrated detector engi-
+neering, empirically validated interventions, and hosted-model benchmarks. The union meta-test
+delivers near-perfect recall at stringent false-positive budgets, while the release artefacts—transcripts,
+manifests, configs, and notebooks—allow reviewers to replay every figure and extend the study with
+minimal friction. We view the resulting package as a foundation for dependable collusion auditing in
+multi-agent LLM deployments.
+
+8   Ethics Statement
+Audit the Whisper targets detection of harmful coordination in multi-agent LLM deployments that
+manipulate prices, allocations, or peer review outcomes. All transcripts are synthetic and generated
+from publicly accessible models; no proprietary, personal, or user-generated content is included. We
+provide colluder templates solely to benchmark auditors and accompany them with responsible-use
+guidance, emphasising that offensive replication should occur only in controlled research settings.
+False-positive harm. Even with 10-3 calibration there remains a non-zero chance that honest agents
+are flagged. We recommend that practitioners treat detector outputs as triage signals: flagged
+transcripts should undergo human review and reproducible replay before any sanction is imposed.
+The release bundle logs all seeds, interventions, and thresholds so external reviewers can audit the
+decision trail.
+Fairness and privacy. Acceptance-bias detectors require subgroup labels. In deployments where
+demographic attributes are unavailable or sensitive, auditors should either use synthetic cohorts or
+obtain explicit consent from affected users, ensuring compliance with privacy regulations. When such
+metadata are absent, the limitations section of the paper instructs operators to rely on welfare-centric
+detectors and to document the residual blind spot.
+Misuse risk. Publishing colluder templates and detector code could help adversaries iterate on their
+own schemes or could be repurposed for censorship. We mitigate this by shipping only synthetic,
+domain-specific colluders, documenting known weaknesses, and stressing that any application should
+adhere to sector-specific governance (e.g., antitrust enforcement, peer-review integrity) rather than
+indiscriminate surveillance. Sequential e-value documentation gives auditors a principled stopping
+rule so that escalation decisions remain transparent and reviewable.
+By documenting residual risks, providing reproducible baselines, and recommending human oversight,
+we aim to enable regulators, platform operators, and researchers to detect covert collusion responsibly
+while acknowledging the dual-use nature of security research.
+
+9   Broader Impact
+Steganographic collusion threatens markets, allocation systems, and governance processes, potentially
+exacerbating inequities and eroding public trust. By releasing a calibrated, reproducible auditor,
+we enable regulators, platform operators, and researchers to benchmark mitigation strategies before
+deploying multi-agent LLM systems and to quantify the price-of-auditing trade-offs. Our fairness
+detector highlights how covert collusion can manifest as subtle acceptance bias, encouraging prac-
+titioners to pair statistical audits with domain expertise and human oversight. Publishing colluder
+templates carries the risk that adversaries may evaluate or iterate on their own schemes; we mitigate
+this by documenting residual weaknesses, emphasising responsible use, and shipping strong baselines
+that raise the bar for defensive research. Ultimately, the framework aims to accelerate the development
+
+
+                                                    9
+of trustworthy multi-agent AI ecosystems and to inform policy discussions about mandatory auditing
+requirements for language-agent deployments.
+The work is not intended for surveillance or censorship of benign coordination. Operators should de-
+ploy the auditor only in contexts where collusion entails demonstrable harm (e.g., price fixing, biased
+scientific review) and should respect local privacy and due-process requirements when interpreting
+detector outputs.
+
+References
+Motwani, Shreyas Rajesh and Baranchuk, Matvey and Hammond, Lewis and Schroeder de Witt,
+ Christian . A Perfect Collusion Benchmark: How can AI agents be prevented from colluding
+ with information-theoretic undetectability? , 2023 . NeurIPS Workshop on Multi-Agent Security
+ (MASEC) .
+Motwani, Shreyas Rajesh and Baranchuk, Matvey and Strohmeier, Michael and Bolina, Vinicius and
+ Torr, Philip H. S. and Hammond, Lewis and Schroeder de Witt, Christian . Secret Collusion among
+ AI Agents: Multi-Agent Deception via Steganography , 2024 . Advances in Neural Information
+ Processing Systems 37 .
+Anonymous. Sentinelagent: Open oversight agents for multi-agent safety, 2023. OpenReview
+  repository, anonymized.
+Anonymous. Case: Collusion auditing via statistical evidence, 2024. NeurIPS submission;
+  anonymized preprint.
+Mohamed Ishmael Belghazi, Adrien Baratin, Sai Rajeshwar, Sherjil Ozair, Yoshua Bengio, Aaron
+ Courville, and R Devon Hjelm. Mutual information neural estimation. In International Conference
+ on Machine Learning, pages 531–540, 2018.
+Christian Cachin, Joe Kilian, and Eran Tromer. Anonymity in electronic voting protocols. EURO-
+  CRYPT, 1998.
+Benjamin Campbell, Subhiksha Gopalakrishnan, and Ananya Mitra. Emergent collusion in multi-
+  agent llm systems, 2024. arXiv:2403.01234.
+Jessica Fridrich. Steganography in Digital Media: Principles, Algorithms, and Applications. Cam-
+  bridge University Press, 2009.
+Sture Holm. A simple sequentially rejective multiple test procedure. Scandinavian Journal of
+  Statistics, 6(2):65–70, 1979.
+Steven R. Howard, Aaditya Ramdas, Jon A. Sison, and Jon D. McAuliffe. Time-uniform chernoff
+  bounds via nonnegative supermartingales. Sequential Analysis, 40(3):368–394, 2021.
+David Imhof, Elyon Karagozoglu, and Olivier Zuercher. Detecting bid-rigging in procurement
+  auctions. Journal of Industrial Economics, 65(3):1–27, 2017.
+John Kirchenbauer, Jonas Geiping, and Tom Goldstein. A watermark for large language models.
+  https://doi.org/10.48550/arXiv.2307.15593, 2023.
+XuanLong Nguyen, Martin J Wainwright, and Michael I Jordan. Estimating divergence functionals
+  and the likelihood ratio by v-statistics. IEEE Transactions on Information Theory, 56(11):5847–
+  5861, 2010.
+Robert H Porter. A study of cartel stability: The joint executive committee, 1880–1886. The Bell
+  Journal of Economics, 14(2):301–314, 1983.
+Inioluwa Raji, Andrew Smart, and Rebecca White. Closing the ai accountability gap. In ACM
+  Fairness, Accountability, and Transparency, 2020.
+Om Tailor. Audit the whisper threat model, 2025.                https://github.com/Ostailor/
+ Steganographic_Collusion.
+
+
+                                                  10
+Alexandre B. Tsybakov. Introduction to Nonparametric Estimation. Springer, 2009.
+Jean Ville. Etude Critique de la Notion de Collectif. Gauthier-Villars, 1939.
+Peter H. Westfall and S. Stanley Young. Resampling-Based Multiple Testing: Examples and Methods
+  for p-Value Adjustment. Wiley, 1993.
+Andy Zou, Zifan Chen, Matt Fredrikson, et al. Universal and transferable adversarial attacks on
+  aligned language models. https://doi.org/10.48550/arXiv.2307.15043, 2023.
+
+
+A     Additional Details and Proofs
+A.1   Notation and Standing Assumptions
+
+Let Z denote the latent payload communicated by colluding agents and X ∈ X the transcript features
+observed by the auditor. For every audited run k ∈ {1, . . . , K} we collect nk i.i.d. paired samples
+    (k)   (k)
+{(zi , xi )}ni=1
+               k
+                   and compute a mutual-information estimate IbkDV using the Donsker–Varadhan
+critic. The critic class consists of two-layer ReLU networks fθ : X → R with weight matrices
+bounded by ∥W1 ∥F , ∥W2 ∥F ≤ W ; transcript embeddings satisfy ∥ϕ(x)∥2 ≤ B. The global statistic
+is the average
+                                                  K
+                                                1 X bDV
+                                        I¯DV =       Ik .
+                                                K
+                                                    k=1
+Auditor interventions are modelled as stochastic maps T applied to the channel, and we define the
+capacity penalty d(T ) = I(Z; X) − I(Z; T (X)) ≥ 0. Unless stated otherwise, expectations and
+probabilities are taken with respect to the distribution induced by H0 (no collusion) or H1 (collusion
+with residual capacity I⋆ = I(Z; T (X))).
+
+A.2   Proof of Lemma 1
+
+We restate the lemma for completeness.
+Lemma 1 (DV generalisation). For any δ ∈ (0, 1) and run k with nk samples,
+                                           s
+                                               8B 2 W 2 log(4/δ)
+                            IbkDV − IkDV ≤
+                                                      nk
+with probability at least 1 − δ.
+
+Proof. Consider the centred critic class F = {fθ : ∥W1 ∥F , ∥W2 ∥F ≤ W } and note that the DV
+estimator can be written as
+                                    nk                        nk
+                                                                                  !
+                   DV           1  X       (k)  (k)       1  X
+                                                                  f (z̃
+                                                                        (k) (k)
+                                                                           ,x   )
+                 Ibk = sup             f (zi , xi ) − log        e i i              ,
+                          f ∈F nk i=1                     nk i=1
+        (k)
+where z̃i denotes an independent draw from the marginal of Z. Lemma 3 of Belghazi et al.
+[2018] bounds the empirical process term by the Rademacher complexity
+                                                                 √       of F; using the bounded-
+input/bounded-weight assumption we obtain Rnk (F) ≤ 2BW/ nk (Theorem 2 of Nguyen et al.
+[2010]). Applying McDiarmid’s inequality yields the stated deviation bound with probability at least
+1 − δ.
+
+A.3   Proof of Theorem 1
+
+We show that the DV statistic satisfies the advertised Type I control with the combined ana-
+lytic/empirical threshold.
+Theorem 1 (Type I control). Let n̄ = mink nk and ηopt be the optimisation gap measured on
+held-out data. Setting                     r
+                                     2BW        4
+                               τα = √       log + ηopt
+                                      K n̄      α
+ensures PrH0 [I¯DV > τα ] ≤ α.
+
+
+                                                 11
+Proof. Fix δ = α/2. Lemma 1 implies that for each run k,
+                                          s                    
+                                              8B 2 W 2 log(8/α)
+                      Pr IbkDV − IkDV >                         ≤ α.
+                                                     nk             4
+
+Applying the union bound across K runs gives
+                             "                      r      #
+                               ¯DV    ¯DV    2BW         4    α
+                          Pr I     − Itrue > √       log     ≤ .
+                                               K n̄      α    2
+
+The optimisation gap ηopt accounts for imperfect critic training and is estimated via a held-out
+validation set; we therefore have
+                                                         α    α α
+                       Pr[I¯DV > τα ] ≤ Pr I¯true
+                                            DV
+                                                  > ηopt + ≤ + = α,
+                       H0               H0                2    2    2
+where the penultimate inequality holds because under H0 the mutual information is zero and the
+empirical estimate concentrates below ηopt . Replacing the analytic bound with the empirical 1 − α
+quantile of the calibration pool can only reduce the Type I error, completing the proof.
+
+A.4   Proof of Theorem 2
+
+Theorem 2 (Power). Let I⋆ = I(Z; T (X)). Whenever I⋆ > τα + ηopt ,
+                                            K n̄(I⋆ − τα − ηopt )2
+                                                                  
+                    Pr I¯DV ≤ τα ≤ exp −
+                                 
+                                                                     .
+                     H1                            8B 2 W 2
+
+Proof. Define Yk = IbkDV − p
+                           I⋆ . Under H1 the variables Yk are centred and bounded by Lemma 1; in
+particular |Yk | ≤ c = 2BW log(4/α)/nk . Hoeffding’s inequality yields
+                                                            2K n̄t2
+                                                                   
+                          Pr I¯DV − I⋆ ≤ −t ≤ exp −
+                                             
+                                                                       .
+                          H1                               (2BW )2
+Choosing t = I⋆ − τα − ηopt proves the claim, provided t > 0, i.e. I⋆ > τα + ηopt .
+
+A.5   Proof of Theorem 3
+
+Theorem 3 (Minimax KL lower bound). For any test δ observing K runs,
+                                                                     q
+                                      Pr[δ = 1] + Pr[δ = 0] ≥ 1 − Kd
+                                                             
+            inf         sup                                            2 .
+                δ P0 ,P1 :DKL (P1 ◦T ∥P0 ◦T )≤d   P0        P1
+
+
+Proof. Let P0 denote the honest distribution and P1 any colluding distribution satisfying the
+KL constraint p after interventions. By Pinsker’s inequality, the total variation distance obeys
+TV(P0 , P1 ) ≤ d/2. Le Cam’s two-point method (Proposition 2.2 of Tsybakov [2009]) states that,
+for any test δ,
+                          Pr[δ = 1] + Pr[δ = 0] ≥ 1 − TV(P0⊗K , P1⊗K ).
+                          P0             P1
+                                                                                 ⊗K   ⊗K
+p total variation scales at most linearly with K under independence, we have TV(P0 , P1 ) ≤
+Since
+  Kd/2, establishing the bound.
+
+A.6   Constructive Adversary Achieving the Lower Bound
+
+Consider the parity-based strategy described in Section 4: colluders emit    √ honest messages with
+probability 1 − ρ and watermark-aligned tokens with probability ρ = c d. Auditor paraphrase
+or canary interventions flip payload bits with probability γ. A direct calculation shows the post-
+intervention KL divergence satisfies DKL (P1 ◦ T ∥P0 ◦ T ) ≈ c2 (1 − 2γ)2 d. Choosing c = 1/(1 − 2γ)
+matches the minimax rate Kd ≳ log(1/α), demonstrating near-optimality of the detector union on
+ColludeBench.
+
+
+                                                       12
+A.7   Proof of Lemma 2
+                                                                                QT
+Lemma 2 (Martingale union bound). Let Et = 1/ max{pt , 10−12 } and MT =           t=1 Et . For any
+stopping time τ with respect to the auditor filtration,
+                                                         
+                                                        1
+                                      Pr sup Mt ≥           ≤ α.
+                                      H0 t≤τ            α
+
+Proof. By construction Mt is a non-negative supermartingale with EH0 [Mt ] ≤ 1 (Lemma 1 of
+Howard et al. [2021]). Ville’s inequality therefore implies
+                                                       
+                                                      1
+                                      Pr sup Mt ≥         ≤ α.
+                                      H0 t≥1          α
+Restricting the supremum to t ≤ τ can only decrease the probability, completing the proof.
+
+A.8   Proof of Theorem 2 via Hoeffding (Alternative Derivation)
+
+For completeness we provide a classical derivation using Hoeffding’s inequality and bounded MI
+estimators. Define R = I(Z; X) and d = d(T ). Under the alternative hypothesis, E[Iˆj ] = R − d.
+                                          PK ˆ
+Applying Hoeffding’s inequality to Iˆ = K
+                                        1
+                                            j=1 Ij with threshold τα yields
+
+                          Pr[Iˆ ≤ τα ] ≤ exp −2K(R − d − τα )2 ,
+                                                                   
+                             H1
+                                                                       √
+which matches the bound stated in the main text when R − d = I⋆ and BW/ n̄ is absorbed into the
+constants.
+
+A.9   Additional Artefacts
+
+Detector thresholds. Comprehensive per-detector thresholds (means, variances, quantiles, and
+Clopper–Pearson bounds) are recorded in results/calibration/detector_thresholds.json
+and reproduced in notebooks/detector_calibration.ipynb.
+
+Supplementary figures. All figures in the main paper and appendix can be regenerated with
+scripts/regenerate_results.py, which emits MI versus reward curves, fairness-gap his-
+tograms, and intervention hit-rate summaries.
+
+Residual risks. docs/residual_risks.md catalogues open issues—including subgroup avail-
+ability, linguistic steganography, and sample-efficiency concerns—along with proposed mitigations.
+
+
+
+
+                                               13
+

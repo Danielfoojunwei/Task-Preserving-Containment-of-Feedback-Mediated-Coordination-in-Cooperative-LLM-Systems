@@ -1,0 +1,1 @@
+This unused preparation draft predates the first freeze and all API calls. The final rubric adds two independent reviews and a fixed third-review disagreement policy. No study output was observed before this change. The active prompt_material.json is regenerated from that final rubric.
