@@ -15,6 +15,8 @@ import subprocess
 import sys
 import tempfile
 
+REPRODUCTION_PYTHON=(3,12,14)
+
 
 NETWORK_GUARD = '''"""Force all reproduction child processes to remain offline."""
 import socket
@@ -144,12 +146,35 @@ def validate_primary_check(report_path,verifier_path,plan_path,raw_path,reviews_
     return {"passed":True,"report_sha256":sha(report_path),"source_hashes":expected}
 
 
-def reproduce(bundle, output=None, skip_unit_tests=False):
+def runtime_check(allow_other_python_3_12_patch=False):
+    """Qualify exact floating-point reproduction before opening any evidence."""
+    version=tuple(sys.version_info[:3]);implementation=sys.implementation.name
+    final=tuple(sys.version_info[3:])==("final",0)
+    exact=implementation=="cpython" and version==REPRODUCTION_PYTHON and final
+    override=(allow_other_python_3_12_patch and implementation=="cpython"
+              and version[:2]==REPRODUCTION_PYTHON[:2] and final and not exact)
+    return {"passed":bool(exact or override),"required_implementation":"cpython",
+        "required_python_version":"3.12.14","observed_implementation":implementation,
+        "observed_python_version":".".join(map(str,version)),"observed_runtime":sys.version,
+        "observed_release_level":list(sys.version_info[3:]),
+        "exact_runtime_match":exact,"other_3_12_patch_explicitly_allowed":bool(override),
+        "numeric_comparisons_relaxed":False,
+        "qualification":"The frozen bootstrap uses built-in floating-point sum. Python 3.11 and 3.12 can differ in final bits. Strict numerical reproduction requires the original CPython 3.12.14 runtime. An explicit other-3.12-patch override still requires unchanged exact JSON comparisons and does not guarantee agreement."}
+
+
+def reproduce(bundle, output=None, skip_unit_tests=False, allow_other_python_3_12_patch=False):
     bundle=Path(bundle).resolve()
     output=Path(output or tempfile.mkdtemp(prefix="overt-covert-offline-")).resolve()
     if output==bundle or output.is_relative_to(bundle):
         raise ValueError("reproduction outputs must be outside the evidence bundle")
     output.mkdir(parents=True,exist_ok=True)
+    runtime=runtime_check(allow_other_python_3_12_patch)
+    (output/"OFFLINE_RUNTIME_CHECK.json").write_text(json.dumps(runtime,indent=2,sort_keys=True)+"\n")
+    if not runtime["passed"]:
+        raise ValueError("strict reproduction requires CPython 3.12.14; observed "
+            +runtime["observed_implementation"]+" "+runtime["observed_python_version"]
+            +". Runtime check recorded in "+str(output/"OFFLINE_RUNTIME_CHECK.json")
+            +". Only another CPython 3.12 patch may be tried with --allow-other-python-3-12-patch; exact numeric comparisons remain mandatory.")
     manifest=verify_manifest(bundle)
     env,removed=child_environment(output)
     comparisons=[];steps=[];primary_checks=[]
@@ -194,7 +219,7 @@ def reproduce(bundle, output=None, skip_unit_tests=False):
             comparisons.append(compare_json(archived,fresh,"continuation_analysis"))
     planned=command_plan(bundle,output,manifest,skip_unit_tests)
     passed=len(steps)==len(planned) and all(s["returncode"]==0 for s in steps)
-    report={"passed":passed,"steps":steps,"comparisons":comparisons,"independent_primary_checks":primary_checks,"output_dir":str(output),
+    report={"passed":passed,"runtime":runtime,"steps":steps,"comparisons":comparisons,"independent_primary_checks":primary_checks,"output_dir":str(output),
         "source_files_verified":len(manifest["files"]),"unit_tests_skipped":skip_unit_tests,
         "credential_variable_names_removed":removed,"network_blocked":True,"runners_launched":False,
         "scope":"Full raw-audit and numerical-analysis reproduction. Only declared path/time/provenance exceptions are excluded after substantive raw-report equality. No API credentials or network required."}
@@ -207,10 +232,12 @@ def main(argv=None):
     parser.add_argument("--bundle-root",type=Path,default=Path(__file__).resolve().parent)
     parser.add_argument("--output-dir",type=Path)
     parser.add_argument("--skip-unit-tests",action="store_true")
+    parser.add_argument("--allow-other-python-3-12-patch",action="store_true",
+        help="Explicitly try a CPython 3.12 patch other than 3.12.14; exact comparisons are unchanged and agreement is not guaranteed")
     parser.add_argument("--release",action="store_true")
     args=parser.parse_args(argv)
     if not args.release:parser.error("explicit release is required before opening actual evidence")
-    result=reproduce(args.bundle_root,args.output_dir,args.skip_unit_tests)
+    result=reproduce(args.bundle_root,args.output_dir,args.skip_unit_tests,args.allow_other_python_3_12_patch)
     print(json.dumps(result,indent=2,sort_keys=True))
     return 0 if result["passed"] else 1
 

@@ -22,6 +22,10 @@ CONTINUATION="overt_covert_continuations_20261016"
 TREES=("overt_covert_mechanisms_20261016","credential_transport_diagnostic_20261016",MAIN,"overt_covert_release_20261016")
 OPTIONAL_FILES=("README.md","research/README.md","docs/VALIDATION.md","docs/SPRINT_CONTRIBUTIONS.md",
     "docs/SPRINT_RESEARCH_BRIEF.md","docs/UNIFIED_RESEARCH_FINDING.md","docs/RESEARCH_CONTRIBUTIONS.md",
+    "docs/SPRINT_ALIGNMENT.md","docs/SPRINT_SUBMISSION_CHECKLIST.md","docs/SPRINT_TEMPLATE_MAP.md",
+    "docs/SPRINT_ETHICS_REVIEW.md","docs/SPRINT_EXECUTION_PLAN.md",
+    "docs/sprint_alignment_20261015/template/apart_submission_template.pdf",
+    "docs/sprint_alignment_20261015/template/TEMPLATE_SOURCE.json",
     "docs/environment/STARTUP_EXTENSION_PROPOSAL_20261016.md",".github/workflows/research.yml")
 OPTIONAL_TREES=("presentations/overt_covert_20261016",)
 IGNORED={"__pycache__",".git",".pytest_cache",".mypy_cache",".ruff_cache",".venv","node_modules",".locks"}
@@ -53,8 +57,12 @@ and local source mtimes provide reproducibility, not external attestation or a
 public preregistration. Credentials, environment files, locks, caches, Git data
 and nested archives are excluded; evidence bytes are never redacted or rewritten.
 
-Use Python 3.11+ and install `requirements-offline.txt` before entering an offline
-environment. Raw verifiers and numerical analyzers use the standard library;
+Use **CPython 3.12.14**, the original runtime, and install
+`requirements-offline.txt` before entering an offline environment. Strict
+numerical reproduction requires this runtime: the frozen bootstrap uses Python's
+built-in floating-point `sum`, whose algorithm changed between Python 3.11 and
+3.12 and can change the last bits of bootstrap summaries. This is not a claim of
+exact reproduction across Python versions. Raw verifiers and numerical analyzers use the standard library;
 the optional unit tests require jsonschema. No dependency installation or API
 call is attempted by the reproduction helper. Figures can be viewed directly;
 rebuilding them additionally requires Matplotlib and NumPy.
@@ -63,12 +71,20 @@ rebuilding them additionally requires Matplotlib and NumPy.
 python verify_offline.py --release --output-dir /tmp/overt-covert-reproduction
 ```
 
-The helper verifies bundle bytes first, runs bundled study unit tests, reconstructs
+The helper records and checks the Python implementation and version before
+opening evidence, then verifies bundle bytes, runs bundled study unit tests, reconstructs
 every main raw record, reproduces its frozen analysis to temporary output and
 compares substantive JSON. Completed continuations receive the same checks.
 `--skip-unit-tests` skips only the optional software tests, never the raw audit
 or numerical reproduction. Child processes have credentials removed, socket
 networking blocked, and bytecode writing disabled. No live runner is launched.
+The runtime check is saved as `OFFLINE_RUNTIME_CHECK.json`, including on a runtime
+mismatch. `--allow-other-python-3-12-patch` explicitly permits trying another
+CPython 3.12 patch; all exact numeric comparisons still apply and agreement is
+not guaranteed. Python 3.11, Python 3.13 and other implementations are rejected
+even with that override. Independent exact-test verification under another
+runtime is a separate, bounded check, not exact reproduction of frozen bootstrap
+JSON. No numerical tolerance is introduced by this helper.
 
 The main verifier writes **INDEPENDENT_VERIFICATION_ALL.json**. The continuation
 verifier writes **INDEPENDENT_VERIFICATION.json**. The archived continuation plan

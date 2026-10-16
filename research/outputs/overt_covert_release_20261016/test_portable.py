@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 import zipfile
@@ -135,6 +136,9 @@ class Fixture(unittest.TestCase):
         text=(bundle/"README_REPRODUCE.md").read_text()
         self.assertIn("reciprocity-evidence-20261016-final.zip",text)
         self.assertIn("not silently included",text)
+        self.assertIn("CPython 3.12.14",text)
+        self.assertNotIn("Python 3.11+",text)
+        self.assertIn("--allow-other-python-3-12-patch",text)
 
     def test_missing_optional_documents_and_presentation_are_allowed(self):
         files,_,_=p.collect(self.root)
@@ -183,6 +187,9 @@ class Fixture(unittest.TestCase):
         self.assertIn("OPENROUTER_API_KEY",report["credential_variable_names_removed"])
         self.assertTrue(report["network_blocked"])
         self.assertFalse(report["runners_launched"])
+        self.assertTrue(report["runtime"]["exact_runtime_match"])
+        self.assertFalse(report["runtime"]["numeric_comparisons_relaxed"])
+        self.assertEqual(json.loads((Path(report["output_dir"])/"OFFLINE_RUNTIME_CHECK.json").read_text()),report["runtime"])
 
     def test_completed_continuation_reproduces_after_raw_provenance_comparison(self):
         self.add_continuation();self.package();bundle=self.extract()
@@ -221,6 +228,48 @@ class Fixture(unittest.TestCase):
 
 
 class ComparisonAndPaths(unittest.TestCase):
+    def test_original_runtime_is_explicitly_recorded(self):
+        with patch.object(v.sys,"version_info",(3,12,14,"final",0)),patch.object(v.sys,"implementation",SimpleNamespace(name="cpython")):
+            result=v.runtime_check()
+        self.assertTrue(result["passed"])
+        self.assertTrue(result["exact_runtime_match"])
+        self.assertEqual(result["required_python_version"],"3.12.14")
+        self.assertFalse(result["other_3_12_patch_explicitly_allowed"])
+
+    def test_only_explicit_final_cpython_3_12_patch_override_is_allowed(self):
+        with patch.object(v.sys,"implementation",SimpleNamespace(name="cpython")):
+            with patch.object(v.sys,"version_info",(3,12,13,"final",0)):
+                self.assertFalse(v.runtime_check()["passed"])
+                result=v.runtime_check(True)
+                self.assertTrue(result["passed"])
+                self.assertFalse(result["exact_runtime_match"])
+                self.assertTrue(result["other_3_12_patch_explicitly_allowed"])
+                self.assertFalse(result["numeric_comparisons_relaxed"])
+            for version in ((3,11,14,"final",0),(3,13,0,"final",0),(3,12,14,"alpha",1)):
+                with patch.object(v.sys,"version_info",version):
+                    self.assertFalse(v.runtime_check(True)["passed"])
+        with patch.object(v.sys,"version_info",(3,12,14,"final",0)),patch.object(v.sys,"implementation",SimpleNamespace(name="pypy")):
+            self.assertFalse(v.runtime_check(True)["passed"])
+
+    def test_runtime_mismatch_is_recorded_before_evidence_reads_or_processes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            output=Path(tmp)/"output"
+            with patch.object(v.sys,"version_info",(3,11,14,"final",0)),patch.object(v,"verify_manifest") as manifest,patch.object(v.subprocess,"run") as process:
+                with self.assertRaisesRegex(ValueError,"requires CPython 3.12.14; observed"):
+                    v.reproduce(Path(tmp)/"unopened_evidence",output)
+                manifest.assert_not_called();process.assert_not_called()
+            check=json.loads((output/"OFFLINE_RUNTIME_CHECK.json").read_text())
+            self.assertFalse(check["passed"])
+            self.assertEqual(check["observed_python_version"],"3.11.14")
+
+    def test_runtime_override_does_not_relax_small_numeric_differences(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            a,b=Path(tmp)/"a.json",Path(tmp)/"b.json"
+            a.write_text(json.dumps({"bootstrap":0.123456789012345}))
+            b.write_text(json.dumps({"bootstrap":0.123456789012346}))
+            with self.assertRaisesRegex(ValueError,"substantive JSON differs"):
+                v.compare_json(a,b,"main_analysis")
+
     def test_only_declared_raw_path_timestamp_fields_ignored(self):
         with tempfile.TemporaryDirectory() as tmp:
             a,bpath=Path(tmp)/"a.json",Path(tmp)/"b.json"
