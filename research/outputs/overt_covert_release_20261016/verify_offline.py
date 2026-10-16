@@ -147,10 +147,12 @@ def child_environment(output):
     return env,sorted(removed)
 
 
-def validate_primary_check(report_path,verifier_path,plan_path,raw_path,reviews_path,analysis_path):
+def validate_primary_check(report_path,verifier_path,plan_path,raw_path,reviews_path,analysis_path,
+                           source_binding_validator_path):
     report=read(report_path)
     expected={"verifier":sha(verifier_path),"plan":sha(plan_path),"raw_audit":sha(raw_path),
-        "sealed_reviews":sha(reviews_path),"analysis":sha(analysis_path)}
+        "sealed_reviews":sha(reviews_path),"analysis":sha(analysis_path),
+        "source_binding_validator":sha(source_binding_validator_path)}
     if report.get("passed") is not True or report.get("failures")!=[]:
         raise ValueError("independent primary verification did not pass")
     if report.get("source_hashes")!=expected:
@@ -193,11 +195,14 @@ def reproduce(bundle, output=None, skip_unit_tests=False, allow_other_python_3_1
     archived_main_raw=checked_path(bundle,manifest["main_verification"])
     archived_main_analysis=checked_path(bundle,manifest["main_study"]+"/ANALYSIS.json")
     if manifest.get("main_primary_verification"):
+        source_binding_validator=checked_path(bundle,(PurePosixPath(manifest["main_study"]).parent
+            /"overt_covert_release_20261016"/"source_bindings.py").as_posix())
         primary_checks.append({"scope":"archived",**validate_primary_check(
             checked_path(bundle,manifest["main_primary_verification"]),
             checked_path(bundle,manifest["main_study"]+"/independent_primary.py"),
             checked_path(bundle,manifest["main_study"]+"/plan.json"),archived_main_raw,
-            checked_path(bundle,manifest["main_reviews"]),archived_main_analysis)})
+            checked_path(bundle,manifest["main_reviews"]),archived_main_analysis,
+            source_binding_validator)})
     for name,command in command_plan(bundle,output,manifest,skip_unit_tests):
         result=subprocess.run(command,cwd=bundle,env=env,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
         log=output/(name+".log");log.write_text(result.stdout)
@@ -216,7 +221,8 @@ def reproduce(bundle, output=None, skip_unit_tests=False, allow_other_python_3_1
                 checked_path(bundle,manifest["main_study"]+"/independent_primary.py"),
                 checked_path(bundle,manifest["main_study"]+"/plan.json"),
                 output/"main_raw"/"INDEPENDENT_VERIFICATION_ALL.json",
-                checked_path(bundle,manifest["main_reviews"]),output/"main_analysis.json")})
+                checked_path(bundle,manifest["main_reviews"]),output/"main_analysis.json",
+                source_binding_validator)})
         elif name=="continuation_raw":
             archived=checked_path(bundle,manifest["continuation_verification"])
             produced=output/"continuation_raw"/"INDEPENDENT_VERIFICATION.json"

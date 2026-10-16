@@ -108,8 +108,9 @@ continues to use its pinned archived main report; the helper first establishes
 that the freshly reconstructed main report is substantively identical.
 
 If the archived post-freeze independent primary check is present, its recorded
-source hashes must match the included verifier, plan, raw audit, sealed reviews
-and analysis. The helper then runs that separate checker on the freshly
+source hashes must match all six included inputs: verifier, plan, raw audit,
+sealed reviews, analysis and source-binding validator. The helper then runs that
+separate checker on the freshly
 reconstructed raw audit and analysis and requires PASS. This independently
 rechecks the primary metrics, exact tests, correction and unresolved-label policy;
 it does not import the frozen analyzer. Its new provenance hashes and timestamp
@@ -253,7 +254,8 @@ def build(destination,root=ROOT,prefix=PREFIX,*,main_reviews=None,main_verificat
         if result.get("passed") is not True or result.get("failures")!=[]:
             raise ValueError("archived independent primary check must pass")
         expected={"verifier":main/"independent_primary.py","plan":main/"plan.json",
-            "raw_audit":verification,"sealed_reviews":reviews,"analysis":main/"ANALYSIS.json"}
+            "raw_audit":verification,"sealed_reviews":reviews,"analysis":main/"ANALYSIS.json",
+            "source_binding_validator":root/REL/"overt_covert_release_20261016/source_bindings.py"}
         if result.get("source_hashes")!={k:sha(path) for k,path in expected.items()}:
             raise ValueError("independent primary source hashes do not bind included inputs")
     continuation=root/REL/CONTINUATION;complete=False

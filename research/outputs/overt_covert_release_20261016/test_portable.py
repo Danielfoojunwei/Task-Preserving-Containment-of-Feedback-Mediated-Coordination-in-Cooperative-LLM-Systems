@@ -52,7 +52,7 @@ PRIMARY_SCRIPT='''import argparse,json,hashlib
 from pathlib import Path
 q=argparse.ArgumentParser();q.add_argument('--root',type=Path);q.add_argument('--verified-rounds',type=Path);q.add_argument('--sealed-reviews',type=Path);q.add_argument('--analysis',type=Path);q.add_argument('--output',type=Path);q.add_argument('--release',action='store_true');a=q.parse_args();assert a.release
 def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
-d={'passed':True,'failures':[],'generated_at':'fresh','source_hashes':{'verifier':sha(Path(__file__)),'plan':sha(a.root/'plan.json'),'raw_audit':sha(a.verified_rounds),'sealed_reviews':sha(a.sealed_reviews),'analysis':sha(a.analysis)}}
+d={'passed':True,'failures':[],'generated_at':'fresh','source_hashes':{'verifier':sha(Path(__file__)),'plan':sha(a.root/'plan.json'),'raw_audit':sha(a.verified_rounds),'sealed_reviews':sha(a.sealed_reviews),'analysis':sha(a.analysis),'source_binding_validator':sha(a.root.parent/'overt_covert_release_20261016/source_bindings.py')}}
 a.output.parent.mkdir(parents=True);a.output.write_text(json.dumps(d))
 raise SystemExit(0 if d['passed'] else 1)
 '''
@@ -63,6 +63,8 @@ class Fixture(unittest.TestCase):
         self.tmp=tempfile.TemporaryDirectory();self.root=Path(self.tmp.name)/"repo";self.root.mkdir()
         for name in p.TREES:
             folder=self.root/p.REL/name;folder.mkdir(parents=True);(folder/"README.md").write_text("Synthetic fixture only\n")
+        self.validator=self.root/p.REL/"overt_covert_release_20261016/source_bindings.py"
+        self.validator.write_bytes((HERE/"source_bindings.py").read_bytes())
         self.main=self.root/p.REL/p.MAIN
         self.write(self.main/"independent_verify.py",MAIN_RAW_SCRIPT)
         self.write(self.main/"analyze.py",MAIN_ANALYSIS_SCRIPT)
@@ -106,7 +108,8 @@ class Fixture(unittest.TestCase):
         self.json(self.main/"plan.json",{"synthetic_only":True})
         report={"passed":True,"failures":[],"generated_at":"old","source_hashes":{
             "verifier":p.sha(self.main/"independent_primary.py"),"plan":p.sha(self.main/"plan.json"),
-            "raw_audit":p.sha(self.raw),"sealed_reviews":p.sha(self.reviews),"analysis":p.sha(self.main/"ANALYSIS.json")}}
+            "raw_audit":p.sha(self.raw),"sealed_reviews":p.sha(self.reviews),"analysis":p.sha(self.main/"ANALYSIS.json"),
+            "source_binding_validator":p.sha(self.validator)}}
         path=self.main/"independent/primary/INDEPENDENT_PRIMARY_VERIFICATION.json"
         self.json(path,report);return path
 
@@ -212,12 +215,57 @@ class Fixture(unittest.TestCase):
         self.assertEqual([c["scope"] for c in checks],["archived","freshly reproduced"])
         self.assertTrue(all(c["passed"] for c in checks))
         self.assertNotEqual(checks[0]["source_hashes"]["raw_audit"],checks[1]["source_hashes"]["raw_audit"])
+        expected_keys={"verifier","plan","raw_audit","sealed_reviews","analysis","source_binding_validator"}
+        for check in checks:
+            self.assertEqual(set(check["source_hashes"]),expected_keys)
+            self.assertEqual(check["source_hashes"]["source_binding_validator"],p.sha(self.validator))
 
     def test_primary_source_hash_mismatch_refuses_package(self):
         path=self.add_primary();d=json.loads(path.read_text());d["source_hashes"]["analysis"]="0"*64
         self.json(path,d)
         with self.assertRaisesRegex(ValueError,"primary source hashes"):self.package()
         self.assertFalse(self.archive.exists())
+
+    def change_primary_hashes(self,change):
+        path=self.add_primary();report=json.loads(path.read_text());change(report["source_hashes"])
+        self.json(path,report);return path
+
+    def check_primary(self,path):
+        return v.validate_primary_check(path,self.main/"independent_primary.py",self.main/"plan.json",
+            self.raw,self.reviews,self.main/"ANALYSIS.json",self.validator)
+
+    def test_primary_missing_validator_hash_refuses_package(self):
+        self.change_primary_hashes(lambda hashes:hashes.pop("source_binding_validator"))
+        with self.assertRaisesRegex(ValueError,"primary source hashes"):self.package()
+        self.assertFalse(self.archive.exists())
+
+    def test_primary_wrong_validator_hash_refuses_package(self):
+        self.change_primary_hashes(lambda hashes:hashes.update(source_binding_validator="0"*64))
+        with self.assertRaisesRegex(ValueError,"primary source hashes"):self.package()
+        self.assertFalse(self.archive.exists())
+
+    def test_primary_extra_hash_is_not_silently_ignored_by_package(self):
+        self.change_primary_hashes(lambda hashes:hashes.update(unexpected="0"*64))
+        with self.assertRaisesRegex(ValueError,"primary source hashes"):self.package()
+        self.assertFalse(self.archive.exists())
+
+    def test_offline_primary_missing_validator_hash_rejected(self):
+        path=self.change_primary_hashes(lambda hashes:hashes.pop("source_binding_validator"))
+        with self.assertRaisesRegex(ValueError,"input hashes differ"):self.check_primary(path)
+
+    def test_offline_primary_wrong_validator_hash_rejected(self):
+        path=self.change_primary_hashes(lambda hashes:hashes.update(source_binding_validator="0"*64))
+        with self.assertRaisesRegex(ValueError,"input hashes differ"):self.check_primary(path)
+
+    def test_offline_primary_extra_hash_is_not_silently_ignored(self):
+        path=self.change_primary_hashes(lambda hashes:hashes.update(unexpected="0"*64))
+        with self.assertRaisesRegex(ValueError,"input hashes differ"):self.check_primary(path)
+
+    def test_changed_validator_bytes_rejected_by_both_contracts(self):
+        path=self.add_primary();self.validator.write_bytes(self.validator.read_bytes()+b"\n# changed after primary check\n")
+        with self.assertRaisesRegex(ValueError,"primary source hashes"):self.package()
+        self.assertFalse(self.archive.exists())
+        with self.assertRaisesRegex(ValueError,"input hashes differ"):self.check_primary(path)
 
     def test_new_primary_failure_makes_offline_reproduction_fail(self):
         self.add_primary(fresh_pass=False);self.package();bundle=self.extract()
