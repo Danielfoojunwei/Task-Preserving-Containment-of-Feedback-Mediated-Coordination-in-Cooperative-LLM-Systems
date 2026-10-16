@@ -49,3 +49,17 @@ Reported expanded plus joint usage was 3,642,057 tokens and $1.618302 in provide
 Evidence: [main audit](../research/outputs/multiscenario_20261015/FINAL_AUDIT.json), [joint audit](../research/outputs/multiscenario_joint_20261015/JOINT_FINAL_AUDIT.json), [offline reproduction](../research/outputs/research_extension_20261015/OFFLINE_REPRODUCTION.json), [full source scope](../research/outputs/multiscenario_20261015/PAPER_SCOPE.md), [new bundle](../outputs/bundles/task-preserving-research-20261015-expanded.zip.parts/README.md).
 
 The resource action guard met the frozen primary and task-preservation criteria; its benefit primarily reflects avoided explicit contract-violation penalties. Procurement/review/artifact primary tests did not establish a benefit, and the review guard reduced legitimate performance. No universal collusion-prevention or full four-paper reproduction claim is made.
+
+
+## 16 October: financial follow-through closure
+
+- Frozen pre-call code/protocol commit09eb9126fcfd00acca9469d9498ae03cb3b3d0de;22 offline tests pass, plus3 correction-schema tests.
+- Controls36calls and pilot36calls passed validity, positive/negative numerical control and source-bound raw audits before576main calls.
+- All648 behavioral calls completed once; all16 source pairs and64main rounds retained.
+- Intent annotations96completed. Original parser left all labels NULL. Three public-review requests were rejected for a missing JSON instruction;29 were never dispatched. Original halt and reservations remain.
+- Separately frozen32-call public-only correction completed. Total779 requests:776 completed,3 rejected. No actor replay or replacement seeds.
+- Corrected independent raw audit reconstructs contexts/actions/payments/audits, verifies all779requests,776unique completed provider IDs, maximum3workers and8.50USD cohort/50USD aggregate caps. Source hashes stable.
+- Corrected label aggregation/provenance passes225checks. Independent original-wire integer-convolution statistic reproduces-1089/128 andp=1/16384 over65,536assignments.
+- All semantic positives/unclear execution cases checked against sources. Automatic candidate004 rejected for public disclosure; source case015 documents inherited covert execution while its machine majority remains NULL. No calibrated detector accuracy claim.
+- All financial loss results use the unchanged fixed endpoint. The original full annotation-release guard failed; the amendment is explicit in [protocol deviations](../research/outputs/covert_followthrough_20261016/release/PROTOCOL_DEVIATIONS.md).
+- Known provider cost4.647086USD plus0.0463376USD unknown rejected-call reservations =4.6934236USD; aggregate45.0460136USD.

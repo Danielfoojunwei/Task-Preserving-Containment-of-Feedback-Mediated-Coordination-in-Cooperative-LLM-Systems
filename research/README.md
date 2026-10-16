@@ -1,5 +1,8 @@
 # Research implementation and frozen evidence
 
+Latest completed studies: [1,494-call fresh-formation/clarification report](outputs/covert_extension_20261016/REPORT.md) and [779-request financial follow-through](outputs/covert_followthrough_20261016/REPORT.md). The latter has648 completed behavioral calls,128 completed research annotations and3 rejected review requests. Numerical endpoint: all16 paired sources, owner loss272.25→0 under receipt settlement, exact p=1/16384. It includes a qualified source-checked covert continuation and preserves annotation failures, original NULL labels and the separate correction. These are pre-sprint AI-assisted working reports.
+
+
 ## Completed consequential-oversight extension — 16 October 2026
 
 The consequential-oversight extension is complete: **6,608 main/control calls + 1,600 continuation calls**, using GPT-4.1 actors and GPT-4.1 mini auditors/annotators. Raw audits, archived source bindings and independent primary reconstruction pass. The new extension accounted for **US$33.4256496**, including the separately retained transport halt and neutral diagnostic. These are API dollars, not simulated payment units.

@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "/workspace/Task-Preserving-Containment-of-Feedback-Mediated-Coordination-in-Cooperative-LLM-Systems/research/outputs/covert_followthrough_20261016/review.py", line 171, in <module>
+    result={"prepare":prepare,"initial":lambda:initial(args.release),"seal":lambda:third_and_seal(args.release),"disclosure":lambda:disclosure(args.release)}[args.command]()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/Task-Preserving-Containment-of-Feedback-Mediated-Coordination-in-Cooperative-LLM-Systems/research/outputs/covert_followthrough_20261016/review.py", line 171, in <lambda>
+    result={"prepare":prepare,"initial":lambda:initial(args.release),"seal":lambda:third_and_seal(args.release),"disclosure":lambda:disclosure(args.release)}[args.command]()
+                                                                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/Task-Preserving-Containment-of-Feedback-Mediated-Coordination-in-Cooperative-LLM-Systems/research/outputs/covert_followthrough_20261016/review.py", line 166, in disclosure
+    return execute(P.load(HERE/"reviews/MANIFEST.json")["disclosure"],"disclosure",release)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/Task-Preserving-Containment-of-Feedback-Mediated-Coordination-in-Cooperative-LLM-Systems/research/outputs/covert_followthrough_20261016/review.py", line 122, in execute
+    if failures:raise RuntimeError("Annotation phase failed, no resume")
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Annotation phase failed, no resume

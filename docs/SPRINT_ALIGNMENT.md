@@ -25,6 +25,8 @@ below as historical positioning. It is not a substitute for evidence of an
 independently negotiated covert agreement. All work to date precedes the
 23–25 October event and must be disclosed as prior work.
 
+The [completed 1,494-call follow-up](../research/outputs/covert_extension_20261016/REPORT.md) moved oversight after committed actions and separated self-reported from trusted numeric reporting. Its fresh-formation primary tests were negative (0/36 accepted concealment; both adjusted p=1); one overt pact persisted under certain verification and negative post-fine returns. A separate scope clarification elicited new concealment intent in 3/8 dialogues versus 0/8 standard continuations, without executing money actions. An all-sixteen-history financial continuation was separately frozen to test execution and receipt-cap containment. It is now complete: owner loss272.25→0 with the cap, exact paired p=1/16384, full receipt coverage in both arms, and a qualified inherited-plan covert-execution witness. Formatting failures and the separate annotation correction are disclosed in the follow-through report. Its source-conditioned results must not be presented as fresh spontaneous formation. These additions connect Q3.4 to Q2.2/Q2.3 and the restriction trade-off in Q1.5, while retaining Track 3 as the anchor.
+
 ## Earlier carrier-study question
 
 Track 3, Collusion Carriers and Countermeasures, Q3.1 asks: “Beyond colluding directly via text, can actions, tools or side channels be the conduit for collusion?”

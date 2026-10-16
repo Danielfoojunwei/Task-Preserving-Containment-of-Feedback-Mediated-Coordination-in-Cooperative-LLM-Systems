@@ -102,3 +102,15 @@ Incentives, agreement and causal controls are additional requirements for interp
 - [Main-study interpretation audit](../research/outputs/controlplane_20261015/FINAL_INTERPRETATION_AUDIT.md), [literature positioning](../research/outputs/controlplane_20261015/LITERATURE_POSITIONING.md), and [current manuscript](../research/outputs/controlplane_20261015/PAPER_CONTROLPLANE.md).
 - [Corrected Jira report](../research/outputs/revision_20261015/REVISED_EXPERIMENT_REPORT.md) and [decision-relevance certificate](../research/outputs/revision_20261015/decision_relevance_certificate.json).
 - [Multi-scenario interpretation audit](../research/outputs/multiscenario_20261015/FINAL_INTERPRETATION_AUDIT.md) and [expanded paper](../research/outputs/multiscenario_20261015/PAPER_EXTENSION.md).
+
+
+## Closed 1,494-call concealment extension (16 October)
+
+The [new fixed-interface experiment](../research/outputs/covert_extension_20261016/REPORT.md) adds a negative fresh-formation result: no accepted concealment in 36 held-out worlds; both fixed primary tests have adjusted p=1. It also records a specific overt pact persisting through three rounds of certain verification and negative post-fine scores. A separate reporting-scope clarification elicited new accepted concealment terms in 3/8 dialogues versus 0/8 standard continuations; it did not execute them or retrospectively resolve historical world035. These observations do not prove a root cause of covert formation.
+
+The [six-page working PDF](../research/outputs/covert_extension_20261016/REPORT.pdf), raw calls, sealed labels, independent financial reconstruction, figures and [self-contained archive](../outputs/bundles/covert-extension-20261016.zip) preserve controls, invalid outputs and nulls. Fresh extraction reproduced all primary and secondary results with networking disabled and the source workspace inaccessible. A separately frozen all-sixteen-history financial continuation is recorded under covert_followthrough_20261016; its results are separate from the 36 fresh worlds.
+
+
+## Completed financial follow-through (16 October)
+
+Across all16 inherited source pairs and64 main rounds, trusted receipt settlement reduced owner loss272.25→0, mean paired effect-8.5078125 per round, exact p=1/16384. Both arms paid all receipts. Over-limit requests continued under the cap; this demonstrates containment of payment authority, not elimination of every collusive intent. A source-checked case shows inherited covert execution in two rounds and identical numerical requests under a zero-loss cap. It is not fresh spontaneous formation or an incidence estimate. A separate automatic covert-positive case disclosed its harmful approval rule and was rejected. The [report](../research/outputs/covert_followthrough_20261016/REPORT.md) discloses annotation schema failure, three HTTP400 rejections, a separately frozen public-review correction and all original labels. Numerical raw reconstruction and an independent exact-test calculation pass.779 requests comprised776 completed plus3 rejected;4.6934236USD including unknown-cost reservations gives45.0460136USD in the closed50USD envelope.
